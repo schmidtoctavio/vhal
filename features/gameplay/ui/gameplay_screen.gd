@@ -1,6 +1,16 @@
 class_name GameplayScreen
 extends Control
 
+
+# =========================================================
+# PLAYER ACTOR
+# =========================================================
+
+const PLAYER_ACTOR_SCENE: PackedScene = preload(
+	"res://features/player/runtime/player_actor.tscn"
+)
+
+
 # =========================================================
 # SEÑALES
 # =========================================================
@@ -9,12 +19,25 @@ signal world_load_failed(
 	message: String
 )
 
+signal player_spawn_failed(
+	message: String
+)
+
+
 # =========================================================
 # REFERENCIAS
 # =========================================================
 
 @onready var world_root: Node3D = (
 	$WorldRoot
+)
+
+@onready var map_root: Node3D = (
+	$WorldRoot/MapRoot
+)
+
+@onready var actors_root: Node3D = (
+	$WorldRoot/ActorsRoot
 )
 
 @onready var gameplay_ui: GameplayUI = (
@@ -35,6 +58,7 @@ var player_state: PlayerRuntimeState = null
 
 var account_state: AccountState = null
 
+
 # =========================================================
 # ESTADO DEL MUNDO
 # =========================================================
@@ -42,6 +66,14 @@ var account_state: AccountState = null
 var active_map: Node3D = null
 
 var active_map_definition: MapDefinition = null
+
+
+# =========================================================
+# PLAYER ACTIVO
+# =========================================================
+
+var active_player_actor: PlayerActor = null
+
 
 # =========================================================
 # CONFIGURACIÓN
@@ -60,7 +92,7 @@ func setup(
 		return
 
 
-	if not _load_world_from_state():
+	if not _prepare_gameplay():
 		return
 
 
@@ -68,19 +100,37 @@ func setup(
 
 	_refresh_character_debug()
 
+
 # =========================================================
 # CICLO DE VIDA
 # =========================================================
 
 func _ready() -> void:
 	if player_state != null:
-		if not _load_world_from_state():
+		if not _prepare_gameplay():
 			return
 
 
 	_apply_states()
 
 	_refresh_character_debug()
+
+
+# =========================================================
+# PREPARAR GAMEPLAY
+# =========================================================
+
+func _prepare_gameplay() -> bool:
+	if not _load_world_from_state():
+		return false
+
+
+	if not _spawn_player_from_state():
+		return false
+
+
+	return true
+
 
 # =========================================================
 # CARGAR MUNDO
@@ -90,6 +140,14 @@ func _load_world_from_state() -> bool:
 	if world_root == null:
 		world_load_failed.emit(
 			"No existe el contenedor del mundo."
+		)
+
+		return false
+
+
+	if map_root == null:
+		world_load_failed.emit(
+			"No existe el contenedor de mapas."
 		)
 
 		return false
@@ -184,7 +242,7 @@ func _load_world_from_state() -> bool:
 	_clear_active_map()
 
 
-	world_root.add_child(
+	map_root.add_child(
 		map_node
 	)
 
@@ -195,6 +253,7 @@ func _load_world_from_state() -> bool:
 
 
 	return true
+
 
 # =========================================================
 # LIMPIAR MUNDO
@@ -214,6 +273,111 @@ func _clear_active_map() -> void:
 	active_map = null
 
 	active_map_definition = null
+
+
+# =========================================================
+# SPAWN DEL PLAYER
+# =========================================================
+
+func _spawn_player_from_state() -> bool:
+	if actors_root == null:
+		player_spawn_failed.emit(
+			"No existe el contenedor de actores."
+		)
+
+		return false
+
+
+	if player_state == null:
+		player_spawn_failed.emit(
+			"No existe el estado del jugador."
+		)
+
+		return false
+
+
+	if player_state.world == null:
+		player_spawn_failed.emit(
+			"No existe el estado del mundo del jugador."
+		)
+
+		return false
+
+
+	_clear_active_player()
+
+
+	var actor_instance: Node = (
+		PLAYER_ACTOR_SCENE.instantiate()
+	)
+
+
+	if actor_instance == null:
+		player_spawn_failed.emit(
+			"No se pudo instanciar el actor del jugador."
+		)
+
+		return false
+
+
+	var player_actor := (
+		actor_instance
+		as PlayerActor
+	)
+
+
+	if player_actor == null:
+		actor_instance.free()
+
+
+		player_spawn_failed.emit(
+			"No se pudo crear el actor del jugador."
+		)
+
+		return false
+
+
+	actors_root.add_child(
+		player_actor
+	)
+
+
+	if not player_actor.setup(
+		player_state
+	):
+		player_actor.queue_free()
+
+
+		player_spawn_failed.emit(
+			"No se pudo configurar el actor del jugador."
+		)
+
+		return false
+
+
+	active_player_actor = player_actor
+
+
+	return true
+
+
+# =========================================================
+# LIMPIAR PLAYER
+# =========================================================
+
+func _clear_active_player() -> void:
+	if (
+		active_player_actor != null
+		and
+		is_instance_valid(
+			active_player_actor
+		)
+	):
+		active_player_actor.queue_free()
+
+
+	active_player_actor = null
+
 
 # =========================================================
 # APLICAR ESTADOS

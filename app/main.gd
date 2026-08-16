@@ -90,6 +90,7 @@ func _ready() -> void:
 
 	_show_login()
 
+
 # =========================================================
 # CONFIGURAR SERVICIOS
 # =========================================================
@@ -122,6 +123,7 @@ func _setup_services() -> void:
 		http_character_service
 	)
 
+
 # =========================================================
 # SERVICIOS
 # =========================================================
@@ -145,7 +147,8 @@ func _bind_services() -> void:
 		auth_service.login_failed.connect(
 			_on_auth_login_failed
 		)
-	
+
+
 	if not auth_service.logout_succeeded.is_connected(
 		_on_auth_logout_succeeded
 	):
@@ -613,10 +616,13 @@ func _on_game_session_started(
 
 		return
 
+
 	if player_state.world == null:
 		pending_game_character = null
 
+
 		game_session_service.end_session()
+
 
 		return
 
@@ -624,9 +630,12 @@ func _on_game_session_started(
 	if player_state.world.map_id.strip_edges().is_empty():
 		pending_game_character = null
 
+
 		game_session_service.end_session()
 
+
 		return
+
 
 	if (
 		pending_game_character.character_id
@@ -731,6 +740,7 @@ func _on_game_session_ended() -> void:
 		return_slot
 	)
 
+
 # =========================================================
 # LOADING
 # =========================================================
@@ -758,6 +768,7 @@ func _show_loading(
 		character.display_name
 	)
 
+
 # =========================================================
 # GAMEPLAY
 # =========================================================
@@ -780,32 +791,44 @@ func _show_gameplay(
 	if gameplay_screen == null:
 		return
 
+
 	if not gameplay_screen.world_load_failed.is_connected(
-		_on_gameplay_world_load_failed
+		_on_gameplay_load_failed
 	):
 		gameplay_screen.world_load_failed.connect(
-			_on_gameplay_world_load_failed
+			_on_gameplay_load_failed
 		)
+
+
+	if not gameplay_screen.player_spawn_failed.is_connected(
+		_on_gameplay_load_failed
+	):
+		gameplay_screen.player_spawn_failed.connect(
+			_on_gameplay_load_failed
+		)
+
 
 	gameplay_screen.setup(
 		player_state,
 		ClientSession.account_state
 	)
 
+
 # =========================================================
-# ERROR AL CARGAR MUNDO
+# ERROR AL PREPARAR GAMEPLAY
 # =========================================================
 
-func _on_gameplay_world_load_failed(
+func _on_gameplay_load_failed(
 	message: String
 ) -> void:
 	print(
-		"GameplayScreen | Error al cargar mundo: ",
+		"GameplayScreen | Error al preparar gameplay: ",
 		message
 	)
 
 
 	game_session_service.end_session()
+
 
 # =========================================================
 # VOLVER AL LOGIN
@@ -814,12 +837,14 @@ func _on_gameplay_world_load_failed(
 func _on_character_select_back_requested() -> void:
 	if not ClientSession.authenticated:
 		_finish_logout()
+
 		return
 
 
 	auth_service.logout(
 		ClientSession.access_token
 	)
+
 
 func _on_auth_logout_succeeded() -> void:
 	_finish_logout()
@@ -846,6 +871,7 @@ func _finish_logout() -> void:
 
 
 	_show_login()
+
 
 # =========================================================
 # CHARACTER CREATE

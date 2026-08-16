@@ -28,6 +28,10 @@ layout_mode = 1
 
 [node name="WorldRoot" type="Node3D" parent="." unique_id=1637394235]
 
+[node name="MapRoot" type="Node3D" parent="WorldRoot" unique_id=1168824081]
+
+[node name="ActorsRoot" type="Node3D" parent="WorldRoot" unique_id=650207808]
+
 [node name="DebugCamera3D" type="Camera3D" parent="WorldRoot" unique_id=1201140865]
 transform = Transform3D(1, 0, 0, 0, 0.81915206, 0.57357645, 0, -0.57357645, 0.81915206, 0, 10, 14)
 current = true
