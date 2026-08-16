@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://dxl80eojyr500"]
 
-[ext_resource type="Texture2D" uid="uid://c44dvek1tqhn6" path="res://assets/ui/kenney_adventure/pannels/panel_brown_dark.png" id="1_ouemw"]
-[ext_resource type="Script" uid="uid://b7as3icl778ky" path="res://features/inventory/ui/item_tooltip.gd" id="2_nnuu7"]
+[ext_resource type="Texture2D" uid="uid://c44dvek1tqhn6" path="res://assets/ui/kenney_adventure/pannels/panel_brown_dark.png" id="1_nx7wl"]
+[ext_resource type="Script" uid="uid://b7as3icl778ky" path="res://features/items/ui/item_tooltip.gd" id="2_hhyhp"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_nnuu7"]
-texture = ExtResource("1_ouemw")
+texture = ExtResource("1_nx7wl")
 texture_margin_left = 8.0
 texture_margin_top = 8.0
 texture_margin_right = 8.0
@@ -16,7 +16,7 @@ offset_right = 220.0
 offset_bottom = 175.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxTexture_nnuu7")
-script = ExtResource("2_nnuu7")
+script = ExtResource("2_hhyhp")
 
 [node name="Margin" type="MarginContainer" parent="." unique_id=2093901541]
 layout_mode = 2

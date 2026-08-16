@@ -6,7 +6,7 @@ signal item_activated(
 )
 
 const ITEM_TOOLTIP_SCENE := preload(
-	"res://features/inventory/ui/item_tooltip.tscn"
+    "res://features/items/ui/item_tooltip.tscn"
 )
 
 # =========================================================
