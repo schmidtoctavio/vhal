@@ -73,6 +73,9 @@ var characters: Array[CharacterSummary] = []
 
 var selected_slot_index: int = 0
 
+var delete_confirmation_dialog: ConfirmationDialog = null
+
+var pending_delete_character: CharacterSummary = null
 
 # =========================================================
 # CICLO DE VIDA
@@ -80,6 +83,8 @@ var selected_slot_index: int = 0
 
 func _ready() -> void:
 	_bind_signals()
+
+	_setup_delete_confirmation()
 
 
 	if characters.size() != SLOT_COUNT:
@@ -92,6 +97,58 @@ func _ready() -> void:
 		selected_slot_index
 	)
 
+# =========================================================
+# CONFIRMACIÓN DE ELIMINACIÓN
+# =========================================================
+
+func _setup_delete_confirmation() -> void:
+	if delete_confirmation_dialog != null:
+		return
+
+
+	delete_confirmation_dialog = (
+		ConfirmationDialog.new()
+	)
+
+
+	delete_confirmation_dialog.name = (
+		"DeleteConfirmationDialog"
+	)
+
+	delete_confirmation_dialog.title = (
+		"Eliminar personaje"
+	)
+
+	delete_confirmation_dialog.ok_button_text = (
+		"Eliminar"
+	)
+
+	delete_confirmation_dialog.cancel_button_text = (
+		"Cancelar"
+	)
+
+	delete_confirmation_dialog.dialog_autowrap = true
+
+
+	add_child(
+		delete_confirmation_dialog
+	)
+
+
+	if not delete_confirmation_dialog.confirmed.is_connected(
+		_on_delete_confirmed
+	):
+		delete_confirmation_dialog.confirmed.connect(
+			_on_delete_confirmed
+		)
+
+
+	if not delete_confirmation_dialog.canceled.is_connected(
+		_on_delete_canceled
+	):
+		delete_confirmation_dialog.canceled.connect(
+			_on_delete_canceled
+		)
 
 # =========================================================
 # CONFIGURACIÓN EXTERNA
@@ -289,10 +346,46 @@ func _on_delete_button_pressed() -> void:
 		return
 
 
+	if delete_confirmation_dialog == null:
+		return
+
+
+	pending_delete_character = character
+
+
+	delete_confirmation_dialog.dialog_text = (
+		"¿Seguro que querés eliminar a '%s'?\n\n"
+		+ "Esta acción eliminará el personaje de forma permanente."
+	) % character.display_name
+
+
+	delete_confirmation_dialog.popup_centered_clamped(
+		Vector2i(
+			440,
+			180
+		)
+	)
+
+func _on_delete_confirmed() -> void:
+	if pending_delete_character == null:
+		return
+
+
+	var character := (
+		pending_delete_character
+	)
+
+
+	pending_delete_character = null
+
+
 	delete_character_requested.emit(
 		character
 	)
 
+
+func _on_delete_canceled() -> void:
+	pending_delete_character = null
 
 func _on_enter_world_button_pressed() -> void:
 	var character: CharacterSummary = (
