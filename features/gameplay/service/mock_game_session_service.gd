@@ -51,32 +51,157 @@ func start_session(
 	)
 
 
-	# -----------------------------------------------------
-	# VITALES MOCK TEMPORALES
-	#
-	# En F05 esto se moverá a DebugPlayerStateFactory.
-	# -----------------------------------------------------
-
-	active_player_state.vitals.set_max_hp(
-		MOCK_MAX_HP
+	_setup_mock_vitals(
+		active_player_state
 	)
 
-	active_player_state.vitals.set_hp(
-		MOCK_MAX_HP
-	)
 
-	active_player_state.vitals.set_max_mp(
-		MOCK_MAX_MP
-	)
-
-	active_player_state.vitals.set_mp(
-		MOCK_MAX_MP
+	_setup_mock_skills(
+		active_player_state
 	)
 
 
 	session_started.emit(
 		active_character_id,
 		active_player_state
+	)
+
+
+# =========================================================
+# VITALES MOCK TEMPORALES
+# =========================================================
+
+func _setup_mock_vitals(
+	state: PlayerRuntimeState
+) -> void:
+	if state == null:
+		return
+
+
+	if state.vitals == null:
+		return
+
+
+	state.vitals.set_max_hp(
+		MOCK_MAX_HP
+	)
+
+	state.vitals.set_hp(
+		MOCK_MAX_HP
+	)
+
+
+	state.vitals.set_max_mp(
+		MOCK_MAX_MP
+	)
+
+	state.vitals.set_mp(
+		MOCK_MAX_MP
+	)
+
+
+# =========================================================
+# SKILLS MOCK TEMPORALES
+# =========================================================
+
+func _setup_mock_skills(
+	state: PlayerRuntimeState
+) -> void:
+	if state == null:
+		return
+
+
+	if state.skill_book == null:
+		return
+
+
+	if state.skill_hotbar == null:
+		return
+
+
+	var fire_ball := load(
+		"res://features/skills/definitions/catalog/fire_ball.tres"
+	) as SkillDefinition
+
+	var poison := load(
+		"res://features/skills/definitions/catalog/poison.tres"
+	) as SkillDefinition
+
+	var heal := load(
+		"res://features/skills/definitions/catalog/heal.tres"
+	) as SkillDefinition
+
+
+	# -----------------------------------------------------
+	# VALIDACIÓN
+	# -----------------------------------------------------
+
+	if fire_ball == null:
+		print(
+			"ERROR: no se pudo cargar fire_ball.tres"
+		)
+
+
+	if poison == null:
+		print(
+			"ERROR: no se pudo cargar poison.tres"
+		)
+
+
+	if heal == null:
+		print(
+			"ERROR: no se pudo cargar heal.tres"
+		)
+
+
+	if (
+		fire_ball == null
+		or
+		poison == null
+		or
+		heal == null
+	):
+		return
+
+
+	# -----------------------------------------------------
+	# SKILL BOOK
+	# -----------------------------------------------------
+
+	state.skill_book.learn_skill(
+		fire_ball
+	)
+
+	state.skill_book.learn_skill(
+		poison
+	)
+
+	state.skill_book.learn_skill(
+		heal
+	)
+
+
+	# -----------------------------------------------------
+	# HOTBAR
+	#
+	# índice 0 → tecla 1
+	# índice 1 → tecla 2
+	# índice 2 → tecla 3
+	# -----------------------------------------------------
+
+	state.skill_hotbar.set_skill(
+		0,
+		fire_ball
+	)
+
+	state.skill_hotbar.set_skill(
+		1,
+		poison
+	)
+
+	state.skill_hotbar.set_skill(
+		2,
+		heal
 	)
 
 
