@@ -14,6 +14,7 @@ extends Control
 	$BottomHUD/MPBar
 )
 
+
 # =========================================================
 # ESTADO DEL JUGADOR
 # =========================================================
@@ -73,6 +74,7 @@ var skill_book_data: SkillBookData = null
 	$WindowsLayer/SkillsWindow
 )
 
+
 # =========================================================
 # PLAYER STATE
 # =========================================================
@@ -82,9 +84,7 @@ func bind_player_state(
 ) -> void:
 	if player_state == state:
 		if is_node_ready():
-			_refresh_vitals_from_state(
-				false
-			)
+			_activate_player_state()
 
 		return
 
@@ -104,6 +104,16 @@ func _activate_player_state() -> void:
 		return
 
 
+	_activate_vitals_state()
+
+	_activate_skill_state()
+
+
+# =========================================================
+# VITALS STATE
+# =========================================================
+
+func _activate_vitals_state() -> void:
 	if player_state.vitals == null:
 		return
 
@@ -129,30 +139,150 @@ func _activate_player_state() -> void:
 	)
 
 
+# =========================================================
+# SKILL STATE
+# =========================================================
+
+func _activate_skill_state() -> void:
+	skill_book_data = (
+		player_state.skill_book
+	)
+
+	skill_hotbar_data = (
+		player_state.skill_hotbar
+	)
+
+
+	# -----------------------------------------------------
+	# SKILL BOOK
+	# -----------------------------------------------------
+
+	skills_window.bind_skill_book(
+		skill_book_data
+	)
+
+
+	# -----------------------------------------------------
+	# HOTBAR
+	# -----------------------------------------------------
+
+	if skill_hotbar_data == null:
+		return
+
+
+	if not skill_hotbar_data.slot_changed.is_connected(
+		_on_hotbar_slot_changed
+	):
+		skill_hotbar_data.slot_changed.connect(
+			_on_hotbar_slot_changed
+		)
+
+
+	if not skill_hotbar_data.selection_changed.is_connected(
+		_on_hotbar_selection_changed
+	):
+		skill_hotbar_data.selection_changed.connect(
+			_on_hotbar_selection_changed
+		)
+
+
+	# -----------------------------------------------------
+	# Vincular los slots visuales con el modelo.
+	# -----------------------------------------------------
+
+	_bind_hotbar_slots()
+
+
+	# -----------------------------------------------------
+	# Restaurar selección actual.
+	# -----------------------------------------------------
+
+	_on_hotbar_selection_changed(
+		skill_hotbar_data.selected_index,
+		skill_hotbar_data.get_selected_skill()
+	)
+
+
+	# -----------------------------------------------------
+	# Actualizar disponibilidad según mana.
+	# -----------------------------------------------------
+
+	_refresh_skill_mana_states(
+		mp_bar.current_value
+	)
+
+
+# =========================================================
+# DESCONECTAR PLAYER STATE
+# =========================================================
+
 func _disconnect_player_state() -> void:
-	if player_state == null:
-		return
+	# -----------------------------------------------------
+	# VITALS
+	# -----------------------------------------------------
 
-
-	if player_state.vitals == null:
-		return
-
-
-	if player_state.vitals.hp_changed.is_connected(
-		_on_vitals_hp_changed
+	if (
+		player_state != null
+		and
+		player_state.vitals != null
 	):
-		player_state.vitals.hp_changed.disconnect(
+		if player_state.vitals.hp_changed.is_connected(
 			_on_vitals_hp_changed
-		)
+		):
+			player_state.vitals.hp_changed.disconnect(
+				_on_vitals_hp_changed
+			)
 
 
-	if player_state.vitals.mp_changed.is_connected(
-		_on_vitals_mp_changed
-	):
-		player_state.vitals.mp_changed.disconnect(
+		if player_state.vitals.mp_changed.is_connected(
 			_on_vitals_mp_changed
+		):
+			player_state.vitals.mp_changed.disconnect(
+				_on_vitals_mp_changed
+			)
+
+
+	# -----------------------------------------------------
+	# HOTBAR
+	# -----------------------------------------------------
+
+	if skill_hotbar_data != null:
+		if skill_hotbar_data.slot_changed.is_connected(
+			_on_hotbar_slot_changed
+		):
+			skill_hotbar_data.slot_changed.disconnect(
+				_on_hotbar_slot_changed
+			)
+
+
+		if skill_hotbar_data.selection_changed.is_connected(
+			_on_hotbar_selection_changed
+		):
+			skill_hotbar_data.selection_changed.disconnect(
+				_on_hotbar_selection_changed
+			)
+
+
+	# -----------------------------------------------------
+	# SKILL BOOK
+	#
+	# SkillsWindow administra la conexión con SkillBookData.
+	# -----------------------------------------------------
+
+	if is_node_ready():
+		skills_window.bind_skill_book(
+			null
 		)
 
+
+	skill_hotbar_data = null
+
+	skill_book_data = null
+
+
+# =========================================================
+# REFRESCAR VITALES
+# =========================================================
 
 func _refresh_vitals_from_state(
 	animated: bool = false
@@ -199,6 +329,7 @@ func _on_vitals_mp_changed(
 		float(maximum),
 		true
 	)
+
 
 # =========================================================
 # READY
@@ -283,208 +414,15 @@ func _ready() -> void:
 
 
 	# =====================================================
-	# SISTEMA DE SKILLS
+	# PLAYER STATE
 	# =====================================================
 
-	_setup_test_skill_system()
-
-
-	# =====================================================
-	# ESTADO INICIAL DE MANA
-	# =====================================================
-
-	_refresh_skill_mana_states(
-		mp_bar.current_value
-	)
-	
 	if player_state != null:
 		_activate_player_state()
 
+
 func _exit_tree() -> void:
 	_disconnect_player_state()
-
-# =========================================================
-# SISTEMA DE SKILLS - SETUP
-# =========================================================
-
-func _setup_test_skill_system() -> void:
-
-	# =====================================================
-	# MODELOS
-	# =====================================================
-
-	skill_hotbar_data = (
-		SkillHotbarData.new()
-	)
-
-	skill_book_data = (
-		SkillBookData.new()
-	)
-
-
-	# =====================================================
-	# SEÑALES DEL HOTBAR
-	# =====================================================
-
-	if not skill_hotbar_data.slot_changed.is_connected(
-		_on_hotbar_slot_changed
-	):
-		skill_hotbar_data.slot_changed.connect(
-			_on_hotbar_slot_changed
-		)
-
-
-	# =====================================================
-	# VINCULAMOS LOS TRES SLOTS VISUALES
-	# =====================================================
-
-	_bind_hotbar_slots()
-
-
-	# =====================================================
-	# CARGAMOS DEFINICIONES DE PRUEBA
-	# =====================================================
-
-	var fire_ball := load(
-	    "res://features/skills/definitions/catalog/fire_ball.tres"
-	) as SkillDefinition
-
-	var poison := load(
-	    "res://features/skills/definitions/catalog/poison.tres"
-	) as SkillDefinition
-
-	var heal := load(
-	    "res://features/skills/definitions/catalog/heal.tres"
-	) as SkillDefinition
-
-
-	# =====================================================
-	# VALIDACIÓN
-	# =====================================================
-
-	if fire_ball == null:
-		print(
-			"ERROR: no se pudo cargar fire_ball.tres"
-		)
-
-
-	if poison == null:
-		print(
-			"ERROR: no se pudo cargar poison.tres"
-		)
-
-
-	if heal == null:
-		print(
-			"ERROR: no se pudo cargar heal.tres"
-		)
-
-
-	if (
-		fire_ball == null
-		or
-		poison == null
-		or
-		heal == null
-	):
-		return
-
-
-	# =====================================================
-	# LIBRO DE HABILIDADES
-	#
-	# Estas son las habilidades que el personaje conoce.
-	# =====================================================
-
-	skill_book_data.learn_skill(
-		fire_ball
-	)
-
-	skill_book_data.learn_skill(
-		poison
-	)
-
-	skill_book_data.learn_skill(
-		heal
-	)
-
-	# =====================================================
-	# VINCULAMOS SKILL BOOK CON SU VENTANA
-	# =====================================================
-
-	skills_window.bind_skill_book(
-		skill_book_data
-	)
-
-	print(
-		"Skills aprendidas: ",
-		skill_book_data.get_skill_count()
-	)
-
-
-	# =====================================================
-	# HOTBAR INICIAL
-	#
-	# índice 0 → tecla 1
-	# índice 1 → tecla 2
-	# índice 2 → tecla 3
-	# =====================================================
-
-	skill_hotbar_data.set_skill(
-		0,
-		fire_ball
-	)
-
-	skill_hotbar_data.set_skill(
-		1,
-		poison
-	)
-
-	skill_hotbar_data.set_skill(
-		2,
-		heal
-	)
-
-
-	# =====================================================
-	# CAMBIOS DE SELECCIÓN
-	# =====================================================
-
-	if not skill_hotbar_data.selection_changed.is_connected(
-		_on_hotbar_selection_changed
-	):
-		skill_hotbar_data.selection_changed.connect(
-			_on_hotbar_selection_changed
-		)
-
-
-	# =====================================================
-	# SELECCIÓN INICIAL
-	#
-	# selected_index comienza en 0.
-	# =====================================================
-
-	_on_hotbar_selection_changed(
-		skill_hotbar_data.selected_index,
-		skill_hotbar_data.get_selected_skill()
-	)
-
-
-	var initial_skill := (
-		skill_hotbar_data
-		.get_selected_skill()
-	)
-
-
-	if initial_skill != null:
-		print(
-			"Skill inicial: ",
-			initial_skill.display_name
-		)
-	else:
-		print(
-			"Skill inicial: VACÍA"
-		)
 
 
 # =========================================================
@@ -522,10 +460,7 @@ func _bind_hotbar_slots() -> void:
 
 
 		# -------------------------------------------------
-		# Durante el setup todavía están vacíos.
-		#
-		# slot_changed los actualizará cuando asignemos
-		# las SkillDefinition.
+		# El contenido viene ahora del PlayerRuntimeState.
 		# -------------------------------------------------
 
 		slot.set_skill(
@@ -546,7 +481,8 @@ func _bind_hotbar_slots() -> void:
 			slot.selection_requested.connect(
 				_on_skill_slot_selection_requested
 			)
-		
+
+
 		# -------------------------------------------------
 		# DRAG & DROP DESDE SKILL BOOK
 		# → solicita asignar una skill a este hotbar.
@@ -578,6 +514,7 @@ func _on_skill_slot_selection_requested(
 		index
 	)
 
+
 # =========================================================
 # HOTBAR - DROP DE SKILL
 # =========================================================
@@ -598,6 +535,7 @@ func _on_skill_slot_assignment_requested(
 		index,
 		skill
 	)
+
 
 # =========================================================
 # HOTBAR - TECLADO
