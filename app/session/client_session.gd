@@ -27,6 +27,11 @@ var account_name: String = ""
 
 var authenticated: bool = false
 
+# =========================================================
+# ESTADO DE CUENTA
+# =========================================================
+
+var account_state: AccountState = null
 
 # =========================================================
 # PERSONAJES
@@ -53,6 +58,7 @@ func authenticate(
 
 	authenticated = true
 
+	account_state = AccountState.new()
 
 	authentication_changed.emit(
 		authenticated
@@ -128,6 +134,7 @@ func clear_session() -> void:
 
 	authenticated = false
 
+	account_state = null
 
 	character_summaries.clear()
 
