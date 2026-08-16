@@ -3,7 +3,7 @@ extends TextureButton
 
 
 const SKILL_TOOLTIP_SCENE := preload(
-	"res://scenes/ui/components/skill_tooltip.tscn"
+    "res://features/skills/ui/skill_tooltip.tscn"
 )
 
 

@@ -8,7 +8,7 @@ extends BaseWindow
 # =========================================================
 
 const SKILL_BOOK_SLOT_SCENE := preload(
-	"res://scenes/ui/components/skill_book_slot.tscn"
+    "res://features/skills/ui/skill_book_slot.tscn"
 )
 
 

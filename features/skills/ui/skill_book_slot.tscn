@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://dppbcprorsb43" path="res://assets/ui/vhal/slots/slot_normal.png" id="1_g4ls5"]
 [ext_resource type="Texture2D" uid="uid://b66uhojhdhppt" path="res://assets/ui/vhal/slots/slot_hover.png" id="2_i8y6m"]
-[ext_resource type="Script" uid="uid://cc8i77rsv57mx" path="res://scenes/ui/components/skill_book_slot.gd" id="3_8tux4"]
+[ext_resource type="Script" uid="uid://cc8i77rsv57mx" path="res://features/skills/ui/skill_book_slot.gd" id="3_8tux4"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ft44e"]
 texture = ExtResource("1_g4ls5")

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://k5jvtb8gcj4y"]
 
-[ext_resource type="Script" uid="uid://dho3yv0hn183n" path="res://scenes/ui/components/selected_skill_slot.gd" id="1_2omo7"]
+[ext_resource type="Script" uid="uid://dho3yv0hn183n" path="res://features/skills/ui/selected_skill_slot.gd" id="1_2omo7"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_tnipg"]
 

@@ -7,8 +7,8 @@
 [ext_resource type="Texture2D" uid="uid://dc2e4u414phmm" path="res://assets/ui/vhal/hud/bar_hp_fill.png" id="5_bmbc7"]
 [ext_resource type="Texture2D" uid="uid://qma4nh5f04jr" path="res://assets/ui/vhal/hud/bar_mp_fill.png" id="6_cjdji"]
 [ext_resource type="Texture2D" uid="uid://kxumo3ux3kq8" path="res://assets/ui/vhal/hud/bar_xp_fill.png" id="7_dxgd5"]
-[ext_resource type="PackedScene" uid="uid://k5jvtb8gcj4y" path="res://scenes/ui/components/selected_skill_slot.tscn" id="8_fk0pr"]
-[ext_resource type="PackedScene" uid="uid://cem6doovgumg" path="res://scenes/ui/components/skill_slot.tscn" id="9_8tqwb"]
+[ext_resource type="PackedScene" uid="uid://k5jvtb8gcj4y" path="res://features/skills/ui/selected_skill_slot.tscn" id="8_fk0pr"]
+[ext_resource type="PackedScene" uid="uid://cem6doovgumg" path="res://features/skills/ui/skill_slot.tscn" id="9_8tqwb"]
 [ext_resource type="PackedScene" uid="uid://ccqtg6hafw57t" path="res://scenes/ui/components/hud_action_button.tscn" id="10_f8he3"]
 [ext_resource type="PackedScene" uid="uid://ddpiaayu5jlw6" path="res://features/inventory/ui/inventory_window.tscn" id="11_8lp4b"]
 [ext_resource type="PackedScene" uid="uid://cp3bh3xmtvcsl" path="res://scenes/ui/components/vault_window.tscn" id="12_tegix"]
@@ -113,17 +113,14 @@ theme_override_constants/separation = 17
 [node name="SkillSlot" parent="BottomHUD/SkillsArea/HBoxContainer" unique_id=1425373822 instance=ExtResource("9_8tqwb")]
 layout_mode = 2
 tooltip_text = "Fireball"
-hotbar_index = 0
 
 [node name="SkillSlot2" parent="BottomHUD/SkillsArea/HBoxContainer" unique_id=1651349152 instance=ExtResource("9_8tqwb")]
 layout_mode = 2
 tooltip_text = "Ice Nova"
-hotbar_index = 0
 
 [node name="SkillSlot3" parent="BottomHUD/SkillsArea/HBoxContainer" unique_id=190231310 instance=ExtResource("9_8tqwb")]
 layout_mode = 2
 tooltip_text = "Shield"
-hotbar_index = 0
 
 [node name="HudActionsArea" type="Control" parent="BottomHUD" unique_id=1658507271]
 anchors_preset = 0

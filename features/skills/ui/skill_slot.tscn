@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cem6doovgumg"]
 
-[ext_resource type="Script" uid="uid://bmlnc8k247sgt" path="res://scenes/ui/components/skill_slot.gd" id="1_c3lm7"]
-[ext_resource type="Script" uid="uid://dhywshr7p1ksk" path="res://scenes/ui/components/skill_button.gd" id="2_c3lm7"]
+[ext_resource type="Script" uid="uid://bmlnc8k247sgt" path="res://features/skills/ui/skill_slot.gd" id="1_c3lm7"]
+[ext_resource type="Script" uid="uid://dhywshr7p1ksk" path="res://features/skills/ui/skill_button.gd" id="2_c3lm7"]
 
 [node name="SkillSlot" type="Control" unique_id=1425373822]
 custom_minimum_size = Vector2(94, 94)
