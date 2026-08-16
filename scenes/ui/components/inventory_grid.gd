@@ -677,12 +677,12 @@ func _create_debug_items() -> void:
 
 
 	var sword_definition := load(
-		"res://data/items/definitions/bronze_sword.tres"
+		"res://features/inventory/definitions/items/bronze_sword.tres"
 	) as ItemDefinition
 
 
 	var potion_definition := load(
-		"res://data/items/definitions/health_potion.tres"
+		"res://features/inventory/definitions/items/health_potion.tres"
 	) as ItemDefinition
 
 	inventory_data.create_item(
