@@ -1,16 +1,23 @@
 [gd_scene format=3 uid="uid://ypa007l3k838"]
 
 [ext_resource type="Script" uid="uid://24lexutc7hot" path="res://features/player/runtime/player_actor.gd" id="1_wpuot"]
+[ext_resource type="PackedScene" uid="uid://em77q7ge8ffh" path="res://features/player/visual/character_visual.tscn" id="2_iuu3g"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_e1xxj"]
-size = Vector3(0.8, 1.8, 0.8)
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_dnfx6"]
+radius = 0.4
+height = 1.8
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_iuu3g"]
+radius = 1.5
 
 [node name="PlayerActor" type="CharacterBody3D" unique_id=287642804]
 script = ExtResource("1_wpuot")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1960001476]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-shape = SubResource("BoxShape3D_e1xxj")
+shape = SubResource("CapsuleShape3D_dnfx6")
+
+[node name="CharacterVisual" parent="." unique_id=882147995 instance=ExtResource("2_iuu3g")]
 
 [node name="CameraTarget" type="Marker3D" parent="." unique_id=780833614]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
@@ -18,6 +25,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
 [node name="InteractionArea" type="Area3D" parent="." unique_id=1404386655]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea" unique_id=127308050]
+shape = SubResource("SphereShape3D_iuu3g")
 
 [node name="NameplateAnchor" type="Marker3D" parent="." unique_id=1359163387]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0)

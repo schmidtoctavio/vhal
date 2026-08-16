@@ -2,5 +2,24 @@
 
 [ext_resource type="Script" uid="uid://d1duw26nuysas" path="res://features/player/visual/character_visual.gd" id="1_ef3e4"]
 
+[sub_resource type="BoxMesh" id="BoxMesh_ef3e4"]
+size = Vector3(0.8, 1.8, 0.8)
+
 [node name="CharacterVisual" type="Node3D" unique_id=882147995]
 script = ExtResource("1_ef3e4")
+
+[node name="ModelRoot" type="Node3D" parent="." unique_id=715436970]
+
+[node name="PlaceholderMesh" type="MeshInstance3D" parent="ModelRoot" unique_id=822779182]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+mesh = SubResource("BoxMesh_ef3e4")
+
+[node name="EquipmentVisuals" type="Node3D" parent="." unique_id=350215216]
+
+[node name="WeaponRoot" type="Node3D" parent="EquipmentVisuals" unique_id=573962279]
+
+[node name="OffhandRoot" type="Node3D" parent="EquipmentVisuals" unique_id=15400215]
+
+[node name="WingsRoot" type="Node3D" parent="EquipmentVisuals" unique_id=1944908099]
+
+[node name="AnimationRoot" type="Node3D" parent="." unique_id=1719502437]
