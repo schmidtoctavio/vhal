@@ -780,12 +780,32 @@ func _show_gameplay(
 	if gameplay_screen == null:
 		return
 
+	if not gameplay_screen.world_load_failed.is_connected(
+		_on_gameplay_world_load_failed
+	):
+		gameplay_screen.world_load_failed.connect(
+			_on_gameplay_world_load_failed
+		)
 
 	gameplay_screen.setup(
 		player_state,
 		ClientSession.account_state
 	)
 
+# =========================================================
+# ERROR AL CARGAR MUNDO
+# =========================================================
+
+func _on_gameplay_world_load_failed(
+	message: String
+) -> void:
+	print(
+		"GameplayScreen | Error al cargar mundo: ",
+		message
+	)
+
+
+	game_session_service.end_session()
 
 # =========================================================
 # VOLVER AL LOGIN
