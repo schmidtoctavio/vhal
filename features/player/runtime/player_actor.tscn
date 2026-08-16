@@ -23,6 +23,7 @@ shape = SubResource("CapsuleShape3D_dnfx6")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
 
 [node name="InteractionArea" type="Area3D" parent="." unique_id=1404386655]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea" unique_id=127308050]
 shape = SubResource("SphereShape3D_iuu3g")
