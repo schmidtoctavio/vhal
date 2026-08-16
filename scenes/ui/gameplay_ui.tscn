@@ -10,7 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://k5jvtb8gcj4y" path="res://scenes/ui/components/selected_skill_slot.tscn" id="8_fk0pr"]
 [ext_resource type="PackedScene" uid="uid://cem6doovgumg" path="res://scenes/ui/components/skill_slot.tscn" id="9_8tqwb"]
 [ext_resource type="PackedScene" uid="uid://ccqtg6hafw57t" path="res://scenes/ui/components/hud_action_button.tscn" id="10_f8he3"]
-[ext_resource type="PackedScene" uid="uid://ddpiaayu5jlw6" path="res://scenes/ui/windows/inventory_window.tscn" id="11_8lp4b"]
+[ext_resource type="PackedScene" uid="uid://ddpiaayu5jlw6" path="res://features/inventory/ui/inventory_window.tscn" id="11_8lp4b"]
 [ext_resource type="PackedScene" uid="uid://cp3bh3xmtvcsl" path="res://scenes/ui/components/vault_window.tscn" id="12_tegix"]
 [ext_resource type="PackedScene" uid="uid://c4tom142cqmlj" path="res://scenes/ui/windows/skills_window.tscn" id="13_ka0vh"]
 

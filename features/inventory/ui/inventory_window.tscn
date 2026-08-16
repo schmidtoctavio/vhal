@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://ck6ftdrkiei54" path="res://scenes/ui/components/base_window.tscn" id="1_sfiul"]
 [ext_resource type="PackedScene" uid="uid://b0n65pcpcprme" path="res://scenes/ui/components/equipment_panel.tscn" id="2_hqc3h"]
-[ext_resource type="Script" uid="uid://5hqw626hbeqv" path="res://scenes/ui/windows/inventory_window.gd" id="2_i4tql"]
+[ext_resource type="Script" uid="uid://5hqw626hbeqv" path="res://features/inventory/ui/inventory_window.gd" id="2_i4tql"]
 [ext_resource type="Texture2D" uid="uid://bmkg1abftmrnr" path="res://assets/ui/kenney_adventure/pannels/panel_border_brown.png" id="3_i4tql"]
 [ext_resource type="PackedScene" uid="uid://bwwkopw7i2hwa" path="res://scenes/ui/components/generic_button.tscn" id="4_i4tql"]
 [ext_resource type="PackedScene" uid="uid://ce5vhd2a5hewq" path="res://features/inventory/ui/inventory_grid.tscn" id="7_7ob7p"]
@@ -19,6 +19,9 @@ custom_minimum_size = Vector2(310, 520)
 offset_right = 341.0
 script = ExtResource("2_i4tql")
 window_title = "INVENTARIO"
+
+[node name="TitleLabel" parent="ContentMargin/Content/Header" parent_id_path=PackedInt32Array(1938107997) index="0" unique_id=1114458321]
+text = "INVENTARIO"
 
 [node name="InventoryContent" type="VBoxContainer" parent="ContentMargin/Content/Body" parent_id_path=PackedInt32Array(521580399) index="0" unique_id=1022942919]
 custom_minimum_size = Vector2(285, 0)
