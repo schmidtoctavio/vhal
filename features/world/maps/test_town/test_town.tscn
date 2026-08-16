@@ -1,10 +1,37 @@
 [gd_scene format=3 uid="uid://4f5qx1e0udbr"]
 
+[sub_resource type="Environment" id="Environment_4ny0v"]
+background_mode = 1
+ambient_light_color = Color(0.12591085, 0.12591085, 0.12591082, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_4ny0v"]
+size = Vector3(30, 0.2, 30)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tnipg"]
+size = Vector3(30, 0.2, 30)
+
+[sub_resource type="BoxMesh" id="BoxMesh_tnipg"]
+size = Vector3(2, 2, 2)
+
 [node name="TestTown" type="Node3D" unique_id=1025751366]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1776765362]
+environment = SubResource("Environment_4ny0v")
 
 [node name="Geometry" type="Node3D" parent="." unique_id=362607783]
+
+[node name="Ground" type="StaticBody3D" parent="Geometry" unique_id=1261335292]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+
+[node name="GroundMesh" type="MeshInstance3D" parent="Geometry/Ground" unique_id=1668041452]
+mesh = SubResource("BoxMesh_4ny0v")
+
+[node name="GroundCollision" type="CollisionShape3D" parent="Geometry/Ground" unique_id=1767300007]
+shape = SubResource("BoxShape3D_tnipg")
+
+[node name="DebugLandmark" type="MeshInstance3D" parent="Geometry" unique_id=1818149232]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+mesh = SubResource("BoxMesh_tnipg")
 
 [node name="NavigationRegion3D" type="NavigationRegion3D" parent="." unique_id=1577774751]
 
@@ -21,3 +48,7 @@
 [node name="Effects" type="Node3D" parent="." unique_id=1362168381]
 
 [node name="Audio" type="Node3D" parent="." unique_id=1212337135]
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1186955832]
+transform = Transform3D(0.8660254, 0.40957603, -0.28678823, 0, 0.57357645, 0.81915206, 0.5, -0.7094065, 0.49673176, 0, 0, 0)
+shadow_enabled = true

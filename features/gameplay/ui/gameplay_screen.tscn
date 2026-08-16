@@ -13,6 +13,7 @@ grow_vertical = 2
 script = ExtResource("1_cmpyh")
 
 [node name="Background" type="ColorRect" parent="." unique_id=403828465]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -26,3 +27,7 @@ color = Color(0.03529412, 0.043137256, 0.0627451, 1)
 layout_mode = 1
 
 [node name="WorldRoot" type="Node3D" parent="." unique_id=1637394235]
+
+[node name="DebugCamera3D" type="Camera3D" parent="WorldRoot" unique_id=1201140865]
+transform = Transform3D(1, 0, 0, 0, 0.81915206, 0.57357645, 0, -0.57357645, 0.81915206, 0, 10, 14)
+current = true
