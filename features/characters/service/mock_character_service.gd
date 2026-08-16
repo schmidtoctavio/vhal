@@ -3,19 +3,14 @@ extends CharacterService
 
 
 # =========================================================
-# CONSTANTES
-# =========================================================
-
-const CHARACTER_SLOT_COUNT: int = 5
-
-
-# =========================================================
 # ESTADO MOCK
 # =========================================================
 
 var _characters: Array[CharacterSummary] = []
 
-var _next_character_id: int = 100
+var _next_character_id: int = (
+	DebugCharacterFactory.FIRST_DYNAMIC_CHARACTER_ID
+)
 
 
 # =========================================================
@@ -25,7 +20,14 @@ var _next_character_id: int = 100
 func load_characters(
 	_account_id: int
 ) -> void:
-	_reset_mock_characters()
+	_characters = (
+		DebugCharacterFactory.create_default_roster()
+	)
+
+
+	_next_character_id = (
+		DebugCharacterFactory.FIRST_DYNAMIC_CHARACTER_ID
+	)
 
 
 	characters_loaded.emit(
@@ -170,53 +172,12 @@ func delete_character(
 
 
 # =========================================================
-# DATOS MOCK
-# =========================================================
-
-func _reset_mock_characters() -> void:
-	_characters.clear()
-
-	_characters.resize(
-		CHARACTER_SLOT_COUNT
-	)
-
-
-	_characters[0] = CharacterSummary.new(
-		1,
-		"Atilio",
-		"Dark Knight",
-		120,
-		0
-	)
-
-
-	_characters[1] = CharacterSummary.new(
-		2,
-		"Lyra",
-		"Elf",
-		85,
-		1
-	)
-
-
-	_characters[2] = CharacterSummary.new(
-		3,
-		"Merlin",
-		"Dark Wizard",
-		57,
-		2
-	)
-
-
-	_next_character_id = 100
-
-
-# =========================================================
 # COPIA SEGURA
 # =========================================================
 
 func _copy_characters() -> Array[CharacterSummary]:
 	var result: Array[CharacterSummary] = []
+
 
 	result.assign(
 		_characters
