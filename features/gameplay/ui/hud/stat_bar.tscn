@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://df83x8geja3w1"]
 
-[ext_resource type="Script" uid="uid://c880yanvgju2a" path="res://scenes/ui/components/stat_bar.gd" id="1_73n0g"]
+[ext_resource type="Script" uid="uid://c880yanvgju2a" path="res://features/gameplay/ui/hud/stat_bar.gd" id="1_73n0g"]
 
 [node name="StatBar" type="Control" unique_id=1592399703]
 custom_minimum_size = Vector2(300, 26)

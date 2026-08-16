@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://ccqtg6hafw57t"]
 
-[ext_resource type="Script" uid="uid://cx6u0ray5pr8y" path="res://scenes/ui/components/hud_action_button.gd" id="1_1e5ob"]
+[ext_resource type="Script" uid="uid://cx6u0ray5pr8y" path="res://features/gameplay/ui/hud/hud_action_button.gd" id="1_1e5ob"]
 [ext_resource type="Texture2D" uid="uid://be1uhivjnxitb" path="res://assets/ui/vhal/buttons/button_rect_normal.png" id="1_ku6gw"]
 [ext_resource type="Texture2D" uid="uid://dsaum7wytba8a" path="res://assets/ui/vhal/buttons/button_rect_hover.png" id="2_tt446"]
 
