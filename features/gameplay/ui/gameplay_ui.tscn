@@ -152,7 +152,7 @@ action_tooltip = "Inventario"
 [node name="VaultButton" parent="BottomHUD/HudActionsArea/ButtonsRow" unique_id=573642265 instance=ExtResource("10_f8he3")]
 layout_mode = 2
 tooltip_text = "Baúl"
-hotkey_text = "B"
+hotkey_text = "V"
 action_tooltip = "Baúl"
 
 [node name="ActionButton3" parent="BottomHUD/HudActionsArea/ButtonsRow" unique_id=817076166 instance=ExtResource("10_f8he3")]

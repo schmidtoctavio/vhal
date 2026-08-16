@@ -926,68 +926,23 @@ func _unhandled_input(
 
 
 	# =====================================================
-	# DEBUG DAMAGE
+	# VAULT
 	# =====================================================
 
-	if InputMap.has_action(
-		&"debug_damage"
+	if event.is_action_pressed(
+		&"toggle_vault"
 	):
-		if event.is_action_pressed(
-			&"debug_damage"
-		):
-			if (
-				player_state != null
-				and
-				player_state.vitals != null
-			):
-				player_state.vitals.set_hp(
-					player_state.vitals.hp
-					-
-					350
-				)
+		_toggle_vault()
 
 
 	# =====================================================
-	# DEBUG HEAL
+	# SKILLS
 	# =====================================================
 
-	if InputMap.has_action(
-		&"debug_heal"
+	if event.is_action_pressed(
+		&"toggle_skills"
 	):
-		if event.is_action_pressed(
-			&"debug_heal"
-		):
-			if (
-				player_state != null
-				and
-				player_state.vitals != null
-			):
-				player_state.vitals.set_hp(
-					player_state.vitals.hp
-					+
-					350
-				)
-
-
-	# =====================================================
-	# DEBUG RESTORE MANA
-	# =====================================================
-
-	if InputMap.has_action(
-		&"debug_restore_mana"
-	):
-		if event.is_action_pressed(
-			&"debug_restore_mana"
-		):
-			if (
-				player_state != null
-				and
-				player_state.vitals != null
-			):
-				player_state.vitals.set_mp(
-					player_state.vitals.max_mp
-				)
-
+		_toggle_skills_window()
 
 # =========================================================
 # INVENTARIO
