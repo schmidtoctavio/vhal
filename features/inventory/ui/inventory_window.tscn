@@ -1,11 +1,11 @@
 [gd_scene format=3 uid="uid://ddpiaayu5jlw6"]
 
-[ext_resource type="PackedScene" uid="uid://ck6ftdrkiei54" path="res://scenes/ui/components/base_window.tscn" id="1_2spkk"]
+[ext_resource type="PackedScene" uid="uid://ck6ftdrkiei54" path="res://shared/ui/base_window.tscn" id="1_2spkk"]
 [ext_resource type="Script" uid="uid://5hqw626hbeqv" path="res://features/inventory/ui/inventory_window.gd" id="2_dkwng"]
 [ext_resource type="PackedScene" uid="uid://b0n65pcpcprme" path="res://features/equipment/ui/equipment_panel.tscn" id="3_rfkf3"]
 [ext_resource type="Texture2D" uid="uid://bmkg1abftmrnr" path="res://assets/ui/kenney_adventure/pannels/panel_border_brown.png" id="4_wdifc"]
 [ext_resource type="PackedScene" uid="uid://ce5vhd2a5hewq" path="res://features/inventory/ui/inventory_grid.tscn" id="5_1oyce"]
-[ext_resource type="PackedScene" uid="uid://bwwkopw7i2hwa" path="res://scenes/ui/components/generic_button.tscn" id="6_mgp0s"]
+[ext_resource type="PackedScene" uid="uid://bwwkopw7i2hwa" path="res://shared/ui/generic_button.tscn" id="6_mgp0s"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_tnipg"]
 texture = ExtResource("4_wdifc")

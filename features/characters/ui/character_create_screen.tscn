@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b50hn6l67nwcv"]
 
-[ext_resource type="PackedScene" uid="uid://bwwkopw7i2hwa" path="res://scenes/ui/components/generic_button.tscn" id="1_76jom"]
-[ext_resource type="Script" uid="uid://cs1nv835806qx" path="res://features/characters/ui/character_create_screen.gd" id="1_oev8a"]
+[ext_resource type="Script" uid="uid://cs1nv835806qx" path="res://features/characters/ui/character_create_screen.gd" id="1_7g6dn"]
+[ext_resource type="PackedScene" uid="uid://bwwkopw7i2hwa" path="res://shared/ui/generic_button.tscn" id="2_el51j"]
 
 [node name="CharacterCreateScreen" type="Control" unique_id=93574927]
 layout_mode = 3
@@ -10,7 +10,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_oev8a")
+script = ExtResource("1_7g6dn")
 
 [node name="Background" type="ColorRect" parent="." unique_id=8506279]
 layout_mode = 1
@@ -111,15 +111,15 @@ horizontal_alignment = 1
 [node name="ClassList" type="VBoxContainer" parent="UILayer/CreationPanel/ContentMargin/CreationContent" unique_id=500466006]
 layout_mode = 2
 
-[node name="WarriorButton" parent="UILayer/CreationPanel/ContentMargin/CreationContent/ClassList" unique_id=4979020 instance=ExtResource("1_76jom")]
+[node name="WarriorButton" parent="UILayer/CreationPanel/ContentMargin/CreationContent/ClassList" unique_id=4979020 instance=ExtResource("2_el51j")]
 layout_mode = 2
 text = "GUERRERO"
 
-[node name="MageButton" parent="UILayer/CreationPanel/ContentMargin/CreationContent/ClassList" unique_id=841318924 instance=ExtResource("1_76jom")]
+[node name="MageButton" parent="UILayer/CreationPanel/ContentMargin/CreationContent/ClassList" unique_id=841318924 instance=ExtResource("2_el51j")]
 layout_mode = 2
 text = "MAGO"
 
-[node name="ArcherButton" parent="UILayer/CreationPanel/ContentMargin/CreationContent/ClassList" unique_id=1673757968 instance=ExtResource("1_76jom")]
+[node name="ArcherButton" parent="UILayer/CreationPanel/ContentMargin/CreationContent/ClassList" unique_id=1673757968 instance=ExtResource("2_el51j")]
 layout_mode = 2
 text = "ARQUERO"
 
@@ -152,10 +152,10 @@ grow_vertical = 0
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="CreateButton" parent="UILayer/ActionsRow" unique_id=1486526609 instance=ExtResource("1_76jom")]
+[node name="CreateButton" parent="UILayer/ActionsRow" unique_id=1486526609 instance=ExtResource("2_el51j")]
 layout_mode = 2
 text = "CREAR"
 
-[node name="CancelButton" parent="UILayer/ActionsRow" unique_id=1040102094 instance=ExtResource("1_76jom")]
+[node name="CancelButton" parent="UILayer/ActionsRow" unique_id=1040102094 instance=ExtResource("2_el51j")]
 layout_mode = 2
 text = "CANCELAR"
