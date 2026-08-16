@@ -50,14 +50,18 @@ var auth_service: AuthService = (
 	MockAuthService.new()
 )
 
+var character_service: CharacterService = (
+	MockCharacterService.new()
+)
+
 
 # =========================================================
-# DATOS TEMPORALES
+# ESTADO TEMPORAL DEL FLUJO
 # =========================================================
 
 var pending_create_slot: int = -1
 
-var next_debug_character_id: int = 100
+var waiting_for_characters_after_login: bool = false
 
 
 # =========================================================
@@ -84,6 +88,10 @@ func _ready() -> void:
 # =========================================================
 
 func _bind_services() -> void:
+	# -----------------------------------------------------
+	# AUTH
+	# -----------------------------------------------------
+
 	if not auth_service.login_succeeded.is_connected(
 		_on_auth_login_succeeded
 	):
@@ -100,48 +108,40 @@ func _bind_services() -> void:
 		)
 
 
-# =========================================================
-# DATOS DEBUG TEMPORALES
-# =========================================================
+	# -----------------------------------------------------
+	# CHARACTERS
+	# -----------------------------------------------------
 
-func _setup_debug_account() -> void:
-	var debug_characters: Array[CharacterSummary] = []
-
-	debug_characters.resize(
-		CHARACTER_SLOT_COUNT
-	)
-
-
-	debug_characters[0] = CharacterSummary.new(
-		1,
-		"Atilio",
-		"Dark Knight",
-		120,
-		0
-	)
+	if not character_service.characters_loaded.is_connected(
+		_on_characters_loaded
+	):
+		character_service.characters_loaded.connect(
+			_on_characters_loaded
+		)
 
 
-	debug_characters[1] = CharacterSummary.new(
-		2,
-		"Lyra",
-		"Elf",
-		85,
-		1
-	)
+	if not character_service.character_created.is_connected(
+		_on_character_created
+	):
+		character_service.character_created.connect(
+			_on_character_created
+		)
 
 
-	debug_characters[2] = CharacterSummary.new(
-		3,
-		"Merlin",
-		"Dark Wizard",
-		57,
-		2
-	)
+	if not character_service.character_deleted.is_connected(
+		_on_character_deleted
+	):
+		character_service.character_deleted.connect(
+			_on_character_deleted
+		)
 
 
-	ClientSession.set_character_summaries(
-		debug_characters
-	)
+	if not character_service.request_failed.is_connected(
+		_on_character_request_failed
+	):
+		character_service.request_failed.connect(
+			_on_character_request_failed
+		)
 
 
 # =========================================================
@@ -206,17 +206,17 @@ func _on_auth_login_succeeded(
 	)
 
 
-	_setup_debug_account()
-
-
 	print(
 		"Login temporal aceptado | Cuenta: ",
 		ClientSession.account_name
 	)
 
 
-	_show_character_select(
-		0
+	waiting_for_characters_after_login = true
+
+
+	character_service.load_characters(
+		ClientSession.account_id
 	)
 
 
@@ -245,6 +245,139 @@ func _on_auth_login_failed(
 
 func _on_exit_requested() -> void:
 	get_tree().quit()
+
+
+# =========================================================
+# RESULTADOS DEL SERVICIO DE PERSONAJES
+# =========================================================
+
+func _on_characters_loaded(
+	characters: Array[CharacterSummary]
+) -> void:
+	ClientSession.set_character_summaries(
+		characters
+	)
+
+
+	if not waiting_for_characters_after_login:
+		return
+
+
+	waiting_for_characters_after_login = false
+
+
+	_show_character_select(
+		0
+	)
+
+
+func _on_character_created(
+	character: CharacterSummary
+) -> void:
+	if character == null:
+		return
+
+
+	ClientSession.select_character(
+		character
+	)
+
+
+	var created_slot := (
+		character.slot_index
+	)
+
+
+	pending_create_slot = -1
+
+
+	_show_character_select(
+		created_slot
+	)
+
+
+func _on_character_deleted(
+	character_id: int,
+	slot_index: int
+) -> void:
+	if (
+		ClientSession.selected_character_id
+		==
+		character_id
+	):
+		ClientSession.clear_character_selection()
+
+
+	_show_character_select(
+		slot_index
+	)
+
+
+func _on_character_request_failed(
+	message: String
+) -> void:
+	# -----------------------------------------------------
+	# ERROR DURANTE CREACIÓN
+	# -----------------------------------------------------
+
+	var create_screen := (
+		screen_router.current_screen
+		as CharacterCreateScreen
+	)
+
+
+	if create_screen != null:
+		create_screen.set_loading(
+			false
+		)
+
+
+		create_screen.show_error(
+			message
+		)
+
+
+		return
+
+
+	# -----------------------------------------------------
+	# ERROR DURANTE CARGA INICIAL
+	# -----------------------------------------------------
+
+	var login_screen := (
+		screen_router.current_screen
+		as LoginScreen
+	)
+
+
+	if login_screen != null:
+		waiting_for_characters_after_login = false
+
+
+		ClientSession.clear_session()
+
+
+		login_screen.set_loading(
+			false
+		)
+
+
+		login_screen.show_error(
+			message
+		)
+
+
+		return
+
+
+	# -----------------------------------------------------
+	# FALLBACK TEMPORAL
+	# -----------------------------------------------------
+
+	print(
+		"CharacterService | Error: ",
+		message
+	)
 
 
 # =========================================================
@@ -324,7 +457,7 @@ func _on_create_character_requested(
 
 
 # =========================================================
-# ELIMINAR PERSONAJE - TEMPORAL
+# ELIMINAR PERSONAJE
 # =========================================================
 
 func _on_delete_character_requested(
@@ -334,49 +467,18 @@ func _on_delete_character_requested(
 		return
 
 
-	var slot_index := character.slot_index
-
-
-	if slot_index < 0:
+	if not ClientSession.authenticated:
 		return
 
 
-	if slot_index >= ClientSession.character_summaries.size():
-		return
-
-
-	var updated_characters: Array[CharacterSummary] = []
-
-	updated_characters.assign(
-		ClientSession.character_summaries
-	)
-
-
-	updated_characters[
-		slot_index
-	] = null
-
-
-	ClientSession.set_character_summaries(
-		updated_characters
-	)
-
-
-	if (
-		ClientSession.selected_character_id
-		==
+	character_service.delete_character(
+		ClientSession.account_id,
 		character.character_id
-	):
-		ClientSession.clear_character_selection()
-
-
-	_show_character_select(
-		slot_index
 	)
 
 
 # =========================================================
-# ENTRAR AL MUNDO - TODAVÍA TEMPORAL
+# ENTRAR AL MUNDO
 # =========================================================
 
 func _on_enter_world_requested(
@@ -431,7 +533,10 @@ func _show_gameplay(
 func _on_character_select_back_requested() -> void:
 	ClientSession.clear_session()
 
+
 	pending_create_slot = -1
+
+	waiting_for_characters_after_login = false
 
 
 	_show_login()
@@ -479,57 +584,27 @@ func _on_character_creation_confirmed(
 		return
 
 
-	if pending_create_slot >= ClientSession.character_summaries.size():
+	if not ClientSession.authenticated:
 		return
 
 
-	if ClientSession.character_summaries[
-		pending_create_slot
-	] != null:
-		return
+	var create_screen := (
+		screen_router.current_screen
+		as CharacterCreateScreen
+	)
 
 
-	var new_character := CharacterSummary.new(
-		next_debug_character_id,
+	if create_screen != null:
+		create_screen.set_loading(
+			true
+		)
+
+
+	character_service.create_character(
+		ClientSession.account_id,
+		pending_create_slot,
 		character_name,
-		character_class.display_name,
-		1,
-		pending_create_slot
-	)
-
-
-	next_debug_character_id += 1
-
-
-	var updated_characters: Array[CharacterSummary] = []
-
-	updated_characters.assign(
-		ClientSession.character_summaries
-	)
-
-
-	updated_characters[
-		pending_create_slot
-	] = new_character
-
-
-	ClientSession.set_character_summaries(
-		updated_characters
-	)
-
-
-	ClientSession.select_character(
-		new_character
-	)
-
-
-	var created_slot := pending_create_slot
-
-	pending_create_slot = -1
-
-
-	_show_character_select(
-		created_slot
+		character_class
 	)
 
 

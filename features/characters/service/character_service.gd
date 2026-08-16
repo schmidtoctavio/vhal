@@ -6,19 +6,23 @@ extends RefCounted
 # SEÑALES
 # =========================================================
 
+@warning_ignore("unused_signal")
 signal characters_loaded(
 	characters: Array[CharacterSummary]
 )
 
+@warning_ignore("unused_signal")
 signal character_created(
 	character: CharacterSummary
 )
 
+@warning_ignore("unused_signal")
 signal character_deleted(
 	character_id: int,
 	slot_index: int
 )
 
+@warning_ignore("unused_signal")
 signal request_failed(
 	message: String
 )
