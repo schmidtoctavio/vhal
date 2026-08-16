@@ -10,11 +10,11 @@ const LOGIN_SCREEN_SCENE := preload(
 )
 
 const CHARACTER_SELECT_SCREEN_SCENE := preload(
-	"res://scenes/screens/character_select/character_select_screen.tscn"
+	"res://features/characters/ui/character_select_screen.tscn"
 )
 
 const CHARACTER_CREATE_SCREEN_SCENE := preload(
-	"res://scenes/screens/character_create/character_create_screen.tscn"
+	"res://features/characters/ui/character_create_screen.tscn"
 )
 
 const GAMEPLAY_SCREEN_SCENE := preload(

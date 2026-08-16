@@ -19,15 +19,15 @@ signal cancel_requested
 # =========================================================
 
 const WARRIOR_CLASS: CharacterClassDefinition = preload(
-	"res://data/characters/classes/warrior.tres"
+	"res://features/characters/definitions/classes/warrior.tres"
 )
 
 const MAGE_CLASS: CharacterClassDefinition = preload(
-	"res://data/characters/classes/mage.tres"
+	"res://features/characters/definitions/classes/mage.tres"
 )
 
 const ARCHER_CLASS: CharacterClassDefinition = preload(
-	"res://data/characters/classes/archer.tres"
+	"res://features/characters/definitions/classes/archer.tres"
 )
 
 

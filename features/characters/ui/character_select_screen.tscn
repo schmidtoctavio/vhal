@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://714i0frowacj"]
 
 [ext_resource type="PackedScene" uid="uid://bwwkopw7i2hwa" path="res://scenes/ui/components/generic_button.tscn" id="1_f6jtq"]
-[ext_resource type="Script" uid="uid://dkqutsqmddunn" path="res://scenes/screens/character_select/character_select_screen.gd" id="1_gkxc0"]
+[ext_resource type="Script" uid="uid://dkqutsqmddunn" path="res://features/characters/ui/character_select_screen.gd" id="1_gkxc0"]
 
 [node name="CharacterSelectScreen" type="Control" unique_id=655020592]
 layout_mode = 3

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b50hn6l67nwcv"]
 
 [ext_resource type="PackedScene" uid="uid://bwwkopw7i2hwa" path="res://scenes/ui/components/generic_button.tscn" id="1_76jom"]
-[ext_resource type="Script" uid="uid://cs1nv835806qx" path="res://scenes/screens/character_create/character_create_screen.gd" id="1_oev8a"]
+[ext_resource type="Script" uid="uid://cs1nv835806qx" path="res://features/characters/ui/character_create_screen.gd" id="1_oev8a"]
 
 [node name="CharacterCreateScreen" type="Control" unique_id=93574927]
 layout_mode = 3
