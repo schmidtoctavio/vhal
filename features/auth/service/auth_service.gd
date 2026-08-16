@@ -6,11 +6,13 @@ extends RefCounted
 # SEÑALES
 # =========================================================
 
+@warning_ignore("unused_signal")
 signal login_succeeded(
 	account_id: int,
 	account_name: String
 )
 
+@warning_ignore("unused_signal")
 signal login_failed(
 	message: String
 )
