@@ -15,6 +15,11 @@ var character_summary: CharacterSummary = null
 
 var vitals: VitalsState = null
 
+# =========================================================
+# EXPERIENCIA
+# =========================================================
+
+var experience: ExperienceState = null
 
 # =========================================================
 # INVENTARIO
@@ -57,6 +62,9 @@ func _init(
 
 
 	vitals = VitalsState.new()
+
+
+	experience = ExperienceState.new()
 
 
 	inventory = InventoryData.new()

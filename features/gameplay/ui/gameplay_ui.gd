@@ -14,6 +14,9 @@ extends Control
 	$BottomHUD/MPBar
 )
 
+@onready var xp_bar: StatBar = (
+	$BottomHUD/XPBar
+)
 
 # =========================================================
 # ESTADO DEL JUGADOR
@@ -106,6 +109,8 @@ func _activate_player_state() -> void:
 
 	_activate_vitals_state()
 
+	_activate_experience_state()
+
 	_activate_skill_state()
 
 	_activate_inventory_state()
@@ -140,6 +145,63 @@ func _activate_vitals_state() -> void:
 		false
 	)
 
+# =========================================================
+# EXPERIENCE STATE
+# =========================================================
+
+func _activate_experience_state() -> void:
+	if player_state == null:
+		return
+
+
+	if player_state.experience == null:
+		return
+
+
+	if not player_state.experience.experience_changed.is_connected(
+		_on_experience_changed
+	):
+		player_state.experience.experience_changed.connect(
+			_on_experience_changed
+		)
+
+
+	_refresh_experience_from_state(
+		false
+	)
+
+
+func _refresh_experience_from_state(
+	animated: bool = false
+) -> void:
+	if player_state == null:
+		return
+
+
+	if player_state.experience == null:
+		return
+
+
+	xp_bar.set_values(
+		float(
+			player_state.experience.experience
+		),
+		float(
+			player_state.experience.experience_required
+		),
+		animated
+	)
+
+
+func _on_experience_changed(
+	current: int,
+	required: int
+) -> void:
+	xp_bar.set_values(
+		float(current),
+		float(required),
+		true
+	)
 
 # =========================================================
 # SKILL STATE
@@ -256,6 +318,21 @@ func _disconnect_player_state() -> void:
 				_on_vitals_mp_changed
 			)
 
+	# -----------------------------------------------------
+	# EXPERIENCE
+	# -----------------------------------------------------
+
+	if (
+		player_state != null
+		and
+		player_state.experience != null
+	):
+		if player_state.experience.experience_changed.is_connected(
+			_on_experience_changed
+		):
+			player_state.experience.experience_changed.disconnect(
+				_on_experience_changed
+			)
 
 	# -----------------------------------------------------
 	# HOTBAR

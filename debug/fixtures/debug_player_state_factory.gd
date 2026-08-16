@@ -8,6 +8,10 @@ extends RefCounted
 
 const DEFAULT_MAX_HP: int = 100000
 const DEFAULT_MAX_MP: int = 350
+
+const DEFAULT_EXPERIENCE: int = 42000
+const DEFAULT_EXPERIENCE_REQUIRED: int = 100000
+
 const DEFAULT_ZEN: int = 125000
 
 
@@ -50,6 +54,10 @@ static func create_default() -> PlayerRuntimeState:
 
 
 	_setup_vitals(
+		state
+	)
+
+	_setup_experience(
 		state
 	)
 
@@ -101,6 +109,29 @@ static func _setup_vitals(
 		DEFAULT_MAX_MP
 	)
 
+# =========================================================
+# EXPERIENCIA
+# =========================================================
+
+static func _setup_experience(
+	state: PlayerRuntimeState
+) -> void:
+	if state == null:
+		return
+
+
+	if state.experience == null:
+		return
+
+
+	state.experience.set_experience_required(
+		DEFAULT_EXPERIENCE_REQUIRED
+	)
+
+
+	state.experience.set_experience(
+		DEFAULT_EXPERIENCE
+	)
 
 # =========================================================
 # INVENTARIO
