@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://s4c4onontmm4" path="res://assets/ui/vhal/panels/panel_frame_ornate_red.png" id="1_0q7kw"]
 [ext_resource type="PackedScene" uid="uid://bwwkopw7i2hwa" path="res://scenes/ui/components/generic_button.tscn" id="1_1datf"]
-[ext_resource type="Script" uid="uid://bsdcr5e5qdi22" path="res://scenes/screens/login/login_screen.gd" id="1_nf0l5"]
+[ext_resource type="Script" uid="uid://bsdcr5e5qdi22" path="res://features/auth/ui/login_screen.gd" id="1_nf0l5"]
 
 [node name="LoginScreen" type="Control" unique_id=1223611037]
 layout_mode = 3

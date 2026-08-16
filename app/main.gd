@@ -6,7 +6,7 @@ extends Node
 # =========================================================
 
 const LOGIN_SCREEN_SCENE := preload(
-	"res://scenes/screens/login/login_screen.tscn"
+	"res://features/auth/ui/login_screen.tscn"
 )
 
 const CHARACTER_SELECT_SCREEN_SCENE := preload(

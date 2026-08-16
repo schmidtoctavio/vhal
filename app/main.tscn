@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://3s48rb0tm7dr"]
 
-[ext_resource type="Script" uid="uid://c8ooupvxypfb4" path="res://app/main.gd" id="1_0udfb"]
+[ext_resource type="Script" uid="uid://c8ooupvxypfb4" path="res://app/main.gd" id="1_yblnd"]
 
 [node name="Main" type="Node" unique_id=240590346]
-script = ExtResource("1_0udfb")
+script = ExtResource("1_yblnd")
 
 [node name="ScreenRoot" type="Control" parent="." unique_id=216504356]
 layout_mode = 3
