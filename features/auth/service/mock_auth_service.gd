@@ -68,5 +68,7 @@ func login(
 
 	login_succeeded.emit(
 		account_id,
-		account_name
+		account_name,
+		"",
+		""
 	)

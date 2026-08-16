@@ -28,6 +28,14 @@ var account_name: String = ""
 var authenticated: bool = false
 
 # =========================================================
+# TOKEN API
+# =========================================================
+
+var access_token: String = ""
+
+var access_token_expires_at: String = ""
+
+# =========================================================
 # ESTADO DE CUENTA
 # =========================================================
 
@@ -50,20 +58,30 @@ var selected_character_slot: int = -1
 
 func authenticate(
 	new_account_id: int,
-	new_account_name: String
+	new_account_name: String,
+	new_access_token: String,
+	new_access_token_expires_at: String
 ) -> void:
 	account_id = new_account_id
 
-	account_name = new_account_name.strip_edges()
+	account_name = (
+		new_account_name.strip_edges()
+	)
+
+	access_token = new_access_token
+
+	access_token_expires_at = (
+		new_access_token_expires_at
+	)
 
 	authenticated = true
 
 	account_state = AccountState.new()
 
+
 	authentication_changed.emit(
 		authenticated
 	)
-
 
 # =========================================================
 # PERSONAJES DE LA CUENTA
@@ -133,6 +151,10 @@ func clear_session() -> void:
 	account_name = ""
 
 	authenticated = false
+
+	access_token = ""
+
+	access_token_expires_at = ""
 
 	account_state = null
 

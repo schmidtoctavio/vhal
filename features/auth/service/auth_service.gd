@@ -9,7 +9,9 @@ extends RefCounted
 @warning_ignore("unused_signal")
 signal login_succeeded(
 	account_id: int,
-	account_name: String
+	account_name: String,
+	access_token: String,
+	expires_at: String
 )
 
 @warning_ignore("unused_signal")

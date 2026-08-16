@@ -46,9 +46,7 @@ const CHARACTER_SLOT_COUNT: int = 5
 # SERVICIOS
 # =========================================================
 
-var auth_service: AuthService = (
-	MockAuthService.new()
-)
+var auth_service: AuthService = null
 
 var character_service: CharacterService = (
 	MockCharacterService.new()
@@ -80,6 +78,8 @@ func _ready() -> void:
 	)
 
 
+	_setup_services()
+
 	_bind_services()
 
 
@@ -88,6 +88,22 @@ func _ready() -> void:
 
 	_show_login()
 
+# =========================================================
+# CONFIGURAR SERVICIOS
+# =========================================================
+
+func _setup_services() -> void:
+	var http_auth_service := (
+		HttpAuthService.new()
+	)
+
+
+	http_auth_service.setup(
+		self
+	)
+
+
+	auth_service = http_auth_service
 
 # =========================================================
 # SERVICIOS
@@ -232,16 +248,20 @@ func _on_login_requested(
 
 func _on_auth_login_succeeded(
 	account_id: int,
-	account_name: String
+	account_name: String,
+	access_token: String,
+	expires_at: String
 ) -> void:
 	ClientSession.authenticate(
 		account_id,
-		account_name
+		account_name,
+		access_token,
+		expires_at
 	)
 
 
 	print(
-		"Login temporal aceptado | Cuenta: ",
+		"Login API aceptado | Cuenta: ",
 		ClientSession.account_name
 	)
 
