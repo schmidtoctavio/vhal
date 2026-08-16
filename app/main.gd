@@ -49,10 +49,6 @@ var current_screen: Control = null
 # DATOS TEMPORALES DE CUENTA
 # =========================================================
 
-var account_characters: Array[CharacterSummary] = []
-
-var selected_character_slot: int = 0
-
 var pending_create_slot: int = -1
 
 var next_debug_character_id: int = 100
@@ -63,7 +59,7 @@ var next_debug_character_id: int = 100
 # =========================================================
 
 func _ready() -> void:
-	_setup_debug_account()
+	ClientSession.clear_session()
 
 	_show_login()
 
@@ -73,14 +69,14 @@ func _ready() -> void:
 # =========================================================
 
 func _setup_debug_account() -> void:
-	account_characters.clear()
+	var debug_characters: Array[CharacterSummary] = []
 
-	account_characters.resize(
+	debug_characters.resize(
 		CHARACTER_SLOT_COUNT
 	)
 
 
-	account_characters[0] = CharacterSummary.new(
+	debug_characters[0] = CharacterSummary.new(
 		1,
 		"Atilio",
 		"Dark Knight",
@@ -89,7 +85,7 @@ func _setup_debug_account() -> void:
 	)
 
 
-	account_characters[1] = CharacterSummary.new(
+	debug_characters[1] = CharacterSummary.new(
 		2,
 		"Lyra",
 		"Elf",
@@ -98,7 +94,7 @@ func _setup_debug_account() -> void:
 	)
 
 
-	account_characters[2] = CharacterSummary.new(
+	debug_characters[2] = CharacterSummary.new(
 		3,
 		"Merlin",
 		"Dark Wizard",
@@ -107,7 +103,9 @@ func _setup_debug_account() -> void:
 	)
 
 
-	# Slots 3 y 4 quedan vacíos.
+	ClientSession.set_character_summaries(
+		debug_characters
+	)
 
 
 # =========================================================
@@ -181,14 +179,23 @@ func _on_login_requested(
 	account: String,
 	_password: String
 ) -> void:
-	print(
-		"Login temporal aceptado | Cuenta: ",
+	ClientSession.authenticate(
+		1,
 		account
 	)
 
 
+	_setup_debug_account()
+
+
+	print(
+		"Login temporal aceptado | Cuenta: ",
+		ClientSession.account_name
+	)
+
+
 	_show_character_select(
-		selected_character_slot
+		0
 	)
 
 
@@ -215,7 +222,7 @@ func _show_character_select(
 		return
 
 
-	selected_character_slot = clampi(
+	var safe_slot := clampi(
 		initial_slot,
 		0,
 		CHARACTER_SLOT_COUNT - 1
@@ -223,8 +230,8 @@ func _show_character_select(
 
 
 	select_screen.setup(
-		account_characters,
-		selected_character_slot
+		ClientSession.character_summaries,
+		safe_slot
 	)
 
 
@@ -244,7 +251,6 @@ func _show_character_select(
 		_on_character_select_back_requested
 	)
 
-
 # =========================================================
 # PEDIR CREACIÓN
 # =========================================================
@@ -256,17 +262,15 @@ func _on_create_character_requested(
 		return
 
 
-	if slot_index >= account_characters.size():
+	if slot_index >= ClientSession.character_summaries.size():
 		return
 
 
-	if account_characters[
+	if ClientSession.character_summaries[
 		slot_index
 	] != null:
 		return
 
-
-	selected_character_slot = slot_index
 
 	pending_create_slot = slot_index
 
@@ -285,31 +289,45 @@ func _on_delete_character_requested(
 		return
 
 
-	var slot_index: int = (
-		character.slot_index
-	)
+	var slot_index := character.slot_index
 
 
 	if slot_index < 0:
 		return
 
 
-	if slot_index >= account_characters.size():
+	if slot_index >= ClientSession.character_summaries.size():
 		return
 
 
-	account_characters[
+	var updated_characters: Array[CharacterSummary] = []
+
+	updated_characters.assign(
+		ClientSession.character_summaries
+	)
+
+
+	updated_characters[
 		slot_index
 	] = null
 
 
-	selected_character_slot = slot_index
+	ClientSession.set_character_summaries(
+		updated_characters
+	)
+
+
+	if (
+		ClientSession.selected_character_id
+		==
+		character.character_id
+	):
+		ClientSession.clear_character_selection()
 
 
 	_show_character_select(
 		slot_index
 	)
-
 
 # =========================================================
 # ENTRAR AL MUNDO - TODAVÍA TEMPORAL
@@ -322,8 +340,8 @@ func _on_enter_world_requested(
 		return
 
 
-	selected_character_slot = (
-		character.slot_index
+	ClientSession.select_character(
+		character
 	)
 
 
@@ -364,6 +382,11 @@ func _show_gameplay(
 # =========================================================
 
 func _on_character_select_back_requested() -> void:
+	ClientSession.clear_session()
+
+	pending_create_slot = -1
+
+
 	_show_login()
 
 
@@ -409,11 +432,11 @@ func _on_character_creation_confirmed(
 		return
 
 
-	if pending_create_slot >= account_characters.size():
+	if pending_create_slot >= ClientSession.character_summaries.size():
 		return
 
 
-	if account_characters[
+	if ClientSession.character_summaries[
 		pending_create_slot
 	] != null:
 		return
@@ -431,21 +454,35 @@ func _on_character_creation_confirmed(
 	next_debug_character_id += 1
 
 
-	account_characters[
+	var updated_characters: Array[CharacterSummary] = []
+
+	updated_characters.assign(
+		ClientSession.character_summaries
+	)
+
+
+	updated_characters[
 		pending_create_slot
 	] = new_character
 
 
-	selected_character_slot = (
-		pending_create_slot
+	ClientSession.set_character_summaries(
+		updated_characters
 	)
 
+
+	ClientSession.select_character(
+		new_character
+	)
+
+
+	var created_slot := pending_create_slot
 
 	pending_create_slot = -1
 
 
 	_show_character_select(
-		selected_character_slot
+		created_slot
 	)
 
 
@@ -454,13 +491,14 @@ func _on_character_creation_confirmed(
 # =========================================================
 
 func _on_character_creation_cancelled() -> void:
-	var return_slot: int = (
-		selected_character_slot
-	)
+	var return_slot := pending_create_slot
 
 
-	if pending_create_slot >= 0:
-		return_slot = pending_create_slot
+	if return_slot < 0:
+		return_slot = maxi(
+			ClientSession.selected_character_slot,
+			0
+		)
 
 
 	pending_create_slot = -1
