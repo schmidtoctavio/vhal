@@ -48,9 +48,7 @@ const CHARACTER_SLOT_COUNT: int = 5
 
 var auth_service: AuthService = null
 
-var character_service: CharacterService = (
-	MockCharacterService.new()
-)
+var character_service: CharacterService = null
 
 var game_session_service: GameSessionService = (
 	MockGameSessionService.new()
@@ -104,6 +102,21 @@ func _setup_services() -> void:
 
 
 	auth_service = http_auth_service
+
+
+	var http_character_service := (
+		HttpCharacterService.new()
+	)
+
+
+	http_character_service.setup(
+		self
+	)
+
+
+	character_service = (
+		http_character_service
+	)
 
 # =========================================================
 # SERVICIOS
