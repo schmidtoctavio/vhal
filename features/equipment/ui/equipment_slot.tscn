@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://dppbcprorsb43" path="res://assets/ui/vhal/slots/slot_normal.png" id="1_8ue5k"]
 [ext_resource type="Texture2D" uid="uid://b66uhojhdhppt" path="res://assets/ui/vhal/slots/slot_hover.png" id="2_v1ywr"]
-[ext_resource type="Script" uid="uid://d4anv3up6oy2c" path="res://scenes/ui/components/equipment_slot.gd" id="2_y30yd"]
+[ext_resource type="Script" uid="uid://d4anv3up6oy2c" path="res://features/equipment/ui/equipment_slot.gd" id="2_y30yd"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ft44e"]
 texture = ExtResource("1_8ue5k")
@@ -27,9 +27,6 @@ theme_override_styles/hover = SubResource("StyleBoxTexture_0mh36")
 theme_override_styles/hover_pressed = SubResource("StyleBoxTexture_lu7ke")
 theme_override_styles/disabled = SubResource("StyleBoxTexture_wtsi1")
 script = ExtResource("2_y30yd")
-slot_type = null
-valid_drop_tint = null
-invalid_drop_tint = null
 
 [node name="IconMargin" type="MarginContainer" parent="." unique_id=954940864]
 layout_mode = 1

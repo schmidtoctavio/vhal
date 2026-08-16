@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://b0n65pcpcprme"]
 
 [ext_resource type="Texture2D" uid="uid://c44dvek1tqhn6" path="res://assets/ui/kenney_adventure/pannels/panel_brown_dark.png" id="1_e20hi"]
-[ext_resource type="Script" uid="uid://cxhibxq8d6buh" path="res://scenes/ui/components/equipment_panel.gd" id="2_57add"]
-[ext_resource type="PackedScene" uid="uid://bfd8lhb01abi3" path="res://scenes/ui/components/equipment_slot.tscn" id="2_e20hi"]
+[ext_resource type="Script" uid="uid://cxhibxq8d6buh" path="res://features/equipment/ui/equipment_panel.gd" id="2_57add"]
+[ext_resource type="PackedScene" uid="uid://bfd8lhb01abi3" path="res://features/equipment/ui/equipment_slot.tscn" id="2_e20hi"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_tnipg"]
 texture = ExtResource("1_e20hi")
