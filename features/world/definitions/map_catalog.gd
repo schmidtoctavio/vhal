@@ -8,7 +8,7 @@ extends RefCounted
 
 const MAP_DEFINITION_PATHS: Dictionary = {
 	"test_town": (
-		"res://world/definitions/catalog/test_town.tres"
+		"res://features/world/definitions/catalog/test_town.tres"
 	),
 }
 

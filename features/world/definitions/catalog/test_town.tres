@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="MapDefinition" format=3 uid="uid://dtykvsag6dxw4"]
 
 [ext_resource type="PackedScene" uid="uid://4f5qx1e0udbr" path="res://features/world/maps/test_town/test_town.tscn" id="1_m3mje"]
-[ext_resource type="Script" uid="uid://c4v0sn81euvdj" path="res://features/world/maps/map_definition.gd" id="1_nprai"]
+[ext_resource type="Script" uid="uid://c4v0sn81euvdj" path="res://features/world/definitions/map_definition.gd" id="1_nprai"]
 
 [resource]
 script = ExtResource("1_nprai")
