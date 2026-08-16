@@ -141,6 +141,21 @@ func _bind_services() -> void:
 		auth_service.login_failed.connect(
 			_on_auth_login_failed
 		)
+	
+	if not auth_service.logout_succeeded.is_connected(
+		_on_auth_logout_succeeded
+	):
+		auth_service.logout_succeeded.connect(
+			_on_auth_logout_succeeded
+		)
+
+
+	if not auth_service.logout_failed.is_connected(
+		_on_auth_logout_failed
+	):
+		auth_service.logout_failed.connect(
+			_on_auth_logout_failed
+		)
 
 
 	# -----------------------------------------------------
@@ -714,6 +729,29 @@ func _show_gameplay(
 # =========================================================
 
 func _on_character_select_back_requested() -> void:
+	if not ClientSession.authenticated:
+		_finish_logout()
+		return
+
+
+	auth_service.logout(
+		ClientSession.access_token
+	)
+
+func _on_auth_logout_succeeded() -> void:
+	_finish_logout()
+
+
+func _on_auth_logout_failed(
+	message: String
+) -> void:
+	print(
+		"AuthService | Error al cerrar sesión: ",
+		message
+	)
+
+
+func _finish_logout() -> void:
 	ClientSession.clear_session()
 
 
@@ -725,7 +763,6 @@ func _on_character_select_back_requested() -> void:
 
 
 	_show_login()
-
 
 # =========================================================
 # CHARACTER CREATE

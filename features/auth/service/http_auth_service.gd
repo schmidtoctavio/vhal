@@ -19,6 +19,9 @@ var _http_request: HTTPRequest = null
 
 var _request_in_flight: bool = false
 
+var _logout_http_request: HTTPRequest = null
+
+var _logout_in_flight: bool = false
 
 # =========================================================
 # SETUP
@@ -45,6 +48,25 @@ func setup(
 	request_owner.add_child(
 		_http_request
 	)
+	
+	_logout_http_request = HTTPRequest.new()
+
+	_logout_http_request.name = (
+		"LogoutHttpRequest"
+	)
+
+
+	request_owner.add_child(
+		_logout_http_request
+	)
+
+
+	if not _logout_http_request.request_completed.is_connected(
+		_on_logout_request_completed
+	):
+		_logout_http_request.request_completed.connect(
+			_on_logout_request_completed
+		)
 
 
 	if not _http_request.request_completed.is_connected(
@@ -276,3 +298,106 @@ func _on_request_completed(
 		access_token,
 		expires_at
 	)
+
+# =========================================================
+# LOGOUT
+# =========================================================
+
+func logout(
+	access_token: String
+) -> void:
+	if _logout_in_flight:
+		return
+
+
+	if _logout_http_request == null:
+		logout_failed.emit(
+			"El servicio de autenticación no está disponible."
+		)
+
+		return
+
+
+	var normalized_token := (
+		access_token.strip_edges()
+	)
+
+
+	if normalized_token.is_empty():
+		logout_succeeded.emit()
+		return
+
+
+	var headers := PackedStringArray([
+		"Accept: application/json",
+		"Authorization: Bearer %s" % normalized_token,
+	])
+
+
+	_logout_in_flight = true
+
+
+	var request_error := (
+		_logout_http_request.request(
+			API_BASE_URL + "/api/auth/logout",
+			headers,
+			HTTPClient.METHOD_POST
+		)
+	)
+
+
+	if request_error != OK:
+		_logout_in_flight = false
+
+
+		logout_failed.emit(
+			"No se pudo iniciar el cierre de sesión."
+		)
+
+
+# =========================================================
+# RESPUESTA DE LOGOUT
+# =========================================================
+
+func _on_logout_request_completed(
+	result: int,
+	response_code: int,
+	_headers: PackedStringArray,
+	_body: PackedByteArray
+) -> void:
+	_logout_in_flight = false
+
+
+	if result != HTTPRequest.RESULT_SUCCESS:
+		logout_failed.emit(
+			"No se pudo conectar con el servidor para cerrar sesión."
+		)
+
+		return
+
+
+	# -----------------------------------------------------
+	# 401 = el token ya no es válido.
+	#
+	# Desde el punto de vista del cliente, igualmente
+	# podemos considerar la sesión cerrada.
+	# -----------------------------------------------------
+
+	if response_code == 401:
+		logout_succeeded.emit()
+		return
+
+
+	if (
+		response_code < 200
+		or
+		response_code >= 300
+	):
+		logout_failed.emit(
+			"No se pudo cerrar la sesión."
+		)
+
+		return
+
+
+	logout_succeeded.emit()
