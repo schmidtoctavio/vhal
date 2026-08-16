@@ -37,12 +37,10 @@ const CHARACTER_SLOT_COUNT: int = 5
 	$ScreenRoot
 )
 
+@onready var screen_router: ScreenRouter = (
+	$ScreenRouter
+)
 
-# =========================================================
-# PANTALLA ACTUAL
-# =========================================================
-
-var current_screen: Control = null
 
 
 # =========================================================
@@ -59,7 +57,13 @@ var next_debug_character_id: int = 100
 # =========================================================
 
 func _ready() -> void:
+	screen_router.setup(
+		screen_root
+	)
+
+
 	ClientSession.clear_session()
+
 
 	_show_login()
 
@@ -108,46 +112,6 @@ func _setup_debug_account() -> void:
 	)
 
 
-# =========================================================
-# CAMBIO DE PANTALLA
-# =========================================================
-
-func _change_screen(
-	screen_scene: PackedScene
-) -> Control:
-	if current_screen != null:
-		current_screen.queue_free()
-
-
-	var new_screen := (
-		screen_scene.instantiate()
-		as Control
-	)
-
-
-	if new_screen == null:
-		push_error(
-			"No se pudo instanciar la pantalla."
-		)
-
-		return null
-
-
-	screen_root.add_child(
-		new_screen
-	)
-
-
-	new_screen.set_anchors_and_offsets_preset(
-		Control.PRESET_FULL_RECT
-	)
-
-
-	current_screen = new_screen
-
-
-	return new_screen
-
 
 # =========================================================
 # LOGIN
@@ -155,7 +119,7 @@ func _change_screen(
 
 func _show_login() -> void:
 	var login_screen := (
-		_change_screen(
+		screen_router.change_screen(
 			LOGIN_SCREEN_SCENE
 		)
 		as LoginScreen
@@ -211,7 +175,7 @@ func _show_character_select(
 	initial_slot: int = 0
 ) -> void:
 	var select_screen := (
-		_change_screen(
+		screen_router.change_screen(
 			CHARACTER_SELECT_SCREEN_SCENE
 		)
 		as CharacterSelectScreen
@@ -362,7 +326,7 @@ func _show_gameplay(
 
 
 	var gameplay_screen := (
-		_change_screen(
+		screen_router.change_screen(
 			GAMEPLAY_SCREEN_SCENE
 		)
 		as GameplayScreen
@@ -396,7 +360,7 @@ func _on_character_select_back_requested() -> void:
 
 func _show_character_create() -> void:
 	var create_screen := (
-		_change_screen(
+		screen_router.change_screen(
 			CHARACTER_CREATE_SCREEN_SCENE
 		)
 		as CharacterCreateScreen

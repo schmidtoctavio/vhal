@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://3s48rb0tm7dr"]
 
 [ext_resource type="Script" uid="uid://c8ooupvxypfb4" path="res://app/main.gd" id="1_yblnd"]
+[ext_resource type="Script" uid="uid://bglardw4iy7db" path="res://app/navigation/screen_router.gd" id="2_s58fy"]
 
 [node name="Main" type="Node" unique_id=240590346]
 script = ExtResource("1_yblnd")
@@ -12,3 +13,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="ScreenRouter" type="Node" parent="." unique_id=266365152]
+script = ExtResource("2_s58fy")
