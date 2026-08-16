@@ -208,17 +208,15 @@ func _setup_test_skill_system() -> void:
 	# =====================================================
 
 	var fire_ball := load(
-		"res://data/skills/definitions/fire_ball.tres"
+	    "res://features/skills/definitions/catalog/fire_ball.tres"
 	) as SkillDefinition
-
 
 	var poison := load(
-		"res://data/skills/definitions/poison.tres"
+	    "res://features/skills/definitions/catalog/poison.tres"
 	) as SkillDefinition
 
-
 	var heal := load(
-		"res://data/skills/definitions/heal.tres"
+	    "res://features/skills/definitions/catalog/heal.tres"
 	) as SkillDefinition
 
 
