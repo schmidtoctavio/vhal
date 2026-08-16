@@ -38,6 +38,9 @@ var _http_request: HTTPRequest = null
 
 var _request_in_flight: bool = false
 
+var _create_http_request: HTTPRequest = null
+
+var _create_in_flight: bool = false
 
 # =========================================================
 # SETUP
@@ -71,6 +74,25 @@ func setup(
 	):
 		_http_request.request_completed.connect(
 			_on_request_completed
+		)
+	
+		_create_http_request = HTTPRequest.new()
+
+	_create_http_request.name = (
+		"CharacterCreateHttpRequest"
+	)
+
+
+	request_owner.add_child(
+		_create_http_request
+	)
+
+
+	if not _create_http_request.request_completed.is_connected(
+		_on_create_request_completed
+	):
+		_create_http_request.request_completed.connect(
+			_on_create_request_completed
 		)
 
 
@@ -388,14 +410,369 @@ func _get_class_definition(
 
 func create_character(
 	_account_id: int,
-	_slot_index: int,
-	_character_name: String,
-	_character_class: CharacterClassDefinition
+	slot_index: int,
+	character_name: String,
+	character_class: CharacterClassDefinition
 ) -> void:
-	request_failed.emit(
-		"La creación de personajes todavía no está conectada al servidor."
+	if _create_in_flight:
+		return
+
+
+	if _create_http_request == null:
+		request_failed.emit(
+			"El servicio de creación de personajes no está disponible."
+		)
+
+		return
+
+
+	if not ClientSession.authenticated:
+		request_failed.emit(
+			"No hay una sesión autenticada."
+		)
+
+		return
+
+
+	var access_token := (
+		ClientSession.access_token.strip_edges()
 	)
 
+
+	if access_token.is_empty():
+		request_failed.emit(
+			"La sesión no posee un token válido."
+		)
+
+		return
+
+
+	if character_class == null:
+		request_failed.emit(
+			"La clase seleccionada no es válida."
+		)
+
+		return
+
+
+	var class_id := (
+		character_class.class_id.strip_edges()
+	)
+
+
+	if class_id.is_empty():
+		request_failed.emit(
+			"La clase seleccionada no posee un ID válido."
+		)
+
+		return
+
+
+	var normalized_name := (
+		character_name.strip_edges()
+	)
+
+
+	if normalized_name.is_empty():
+		request_failed.emit(
+			"Ingresá un nombre para el personaje."
+		)
+
+		return
+
+
+	var payload := {
+		"slot_index": slot_index,
+		"name": normalized_name,
+		"class_id": class_id,
+	}
+
+
+	var headers := PackedStringArray([
+		"Content-Type: application/json",
+		"Accept: application/json",
+		"Authorization: Bearer %s" % access_token,
+	])
+
+
+	_create_in_flight = true
+
+
+	var request_error := (
+		_create_http_request.request(
+			API_BASE_URL + "/api/characters",
+			headers,
+			HTTPClient.METHOD_POST,
+			JSON.stringify(
+				payload
+			)
+		)
+	)
+
+
+	if request_error != OK:
+		_create_in_flight = false
+
+
+		request_failed.emit(
+			"No se pudo iniciar la creación del personaje."
+		)
+
+# =========================================================
+# RESPUESTA DE CREACIÓN
+# =========================================================
+
+func _on_create_request_completed(
+	result: int,
+	response_code: int,
+	_headers: PackedStringArray,
+	body: PackedByteArray
+) -> void:
+	_create_in_flight = false
+
+
+	if result != HTTPRequest.RESULT_SUCCESS:
+		request_failed.emit(
+			"No se pudo conectar con el servidor."
+		)
+
+		return
+
+
+	var body_text := (
+		body.get_string_from_utf8()
+	)
+
+
+	var parsed: Variant = (
+		JSON.parse_string(
+			body_text
+		)
+	)
+
+
+	if typeof(parsed) != TYPE_DICTIONARY:
+		request_failed.emit(
+			"El servidor devolvió una respuesta inválida."
+		)
+
+		return
+
+
+	var response: Dictionary = parsed
+
+
+	# -----------------------------------------------------
+	# ERROR HTTP
+	# -----------------------------------------------------
+
+	if (
+		response_code < 200
+		or
+		response_code >= 300
+	):
+		if response_code == 401:
+			request_failed.emit(
+				"La sesión expiró o ya no es válida."
+			)
+
+			return
+
+
+		request_failed.emit(
+			_extract_error_message(
+				response,
+				"No se pudo crear el personaje."
+			)
+		)
+
+		return
+
+
+	# -----------------------------------------------------
+	# PERSONAJE CREADO
+	# -----------------------------------------------------
+
+	var data: Dictionary = response.get(
+		"data",
+		{}
+	)
+
+
+	var character_data: Dictionary = data.get(
+		"character",
+		{}
+	)
+
+
+	var character_id := int(
+		character_data.get(
+			"id",
+			-1
+		)
+	)
+
+
+	var slot_index := int(
+		character_data.get(
+			"slot_index",
+			-1
+		)
+	)
+
+
+	var character_name := String(
+		character_data.get(
+			"name",
+			""
+		)
+	)
+
+
+	var class_id := String(
+		character_data.get(
+			"class_id",
+			""
+		)
+	)
+
+
+	var level := int(
+		character_data.get(
+			"level",
+			1
+		)
+	)
+
+
+	if (
+		character_id < 0
+		or
+		slot_index < 0
+		or
+		slot_index >= CHARACTER_SLOT_COUNT
+		or
+		character_name.is_empty()
+		or
+		class_id.is_empty()
+	):
+		request_failed.emit(
+			"El servidor devolvió datos incompletos del personaje creado."
+		)
+
+		return
+
+
+	var class_definition := (
+		_get_class_definition(
+			class_id
+		)
+	)
+
+
+	if class_definition == null:
+		request_failed.emit(
+			"Este cliente no reconoce la clase '%s'."
+			% class_id
+		)
+
+		return
+
+
+	var new_character := CharacterSummary.new(
+		character_id,
+		character_name,
+		class_definition.display_name,
+		level,
+		slot_index,
+		class_id
+	)
+
+
+	# -----------------------------------------------------
+	# ACTUALIZAR ROSTER LOCAL
+	#
+	# Mantenemos el mismo orden de señales que utilizaba
+	# MockCharacterService:
+	#
+	# 1. characters_loaded
+	# 2. character_created
+	# -----------------------------------------------------
+
+	var characters: Array[CharacterSummary] = []
+
+	characters.assign(
+		ClientSession.character_summaries
+	)
+
+
+	if characters.size() != CHARACTER_SLOT_COUNT:
+		characters.resize(
+			CHARACTER_SLOT_COUNT
+		)
+
+
+	characters[
+		slot_index
+	] = new_character
+
+
+	characters_loaded.emit(
+		characters
+	)
+
+
+	character_created.emit(
+		new_character
+	)
+
+# =========================================================
+# MENSAJE DE ERROR API
+# =========================================================
+
+func _extract_error_message(
+	response: Dictionary,
+	fallback: String
+) -> String:
+	var errors: Variant = response.get(
+		"errors",
+		{}
+	)
+
+
+	if typeof(errors) == TYPE_DICTIONARY:
+		var error_dictionary: Dictionary = errors
+
+
+		for field in error_dictionary:
+			var field_errors: Variant = (
+				error_dictionary[field]
+			)
+
+
+			if (
+				typeof(field_errors) == TYPE_ARRAY
+				and
+				not field_errors.is_empty()
+			):
+				return String(
+					field_errors[0]
+				)
+
+
+	var message := String(
+		response.get(
+			"message",
+			fallback
+		)
+	)
+
+
+	if message.is_empty():
+		return fallback
+
+
+	return message
 
 func delete_character(
 	_account_id: int,
