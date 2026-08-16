@@ -1,0 +1,173 @@
+[gd_scene format=3 uid="uid://ca00xmfs71qab"]
+
+[ext_resource type="Script" uid="uid://us0yd0hhoejt" path="res://scenes/ui/gameplay_ui.gd" id="1_4bogw"]
+[ext_resource type="Script" uid="uid://c880yanvgju2a" path="res://scenes/ui/components/stat_bar.gd" id="2_tbr0n"]
+[ext_resource type="Texture2D" uid="uid://kpgfqqcq78n7" path="res://assets/ui/vhal/hud/hud_frame.png" id="3_4iv7f"]
+[ext_resource type="PackedScene" uid="uid://df83x8geja3w1" path="res://scenes/ui/components/stat_bar.tscn" id="4_l3eag"]
+[ext_resource type="Texture2D" uid="uid://dc2e4u414phmm" path="res://assets/ui/vhal/hud/bar_hp_fill.png" id="5_bmbc7"]
+[ext_resource type="Texture2D" uid="uid://qma4nh5f04jr" path="res://assets/ui/vhal/hud/bar_mp_fill.png" id="6_cjdji"]
+[ext_resource type="Texture2D" uid="uid://kxumo3ux3kq8" path="res://assets/ui/vhal/hud/bar_xp_fill.png" id="7_dxgd5"]
+[ext_resource type="PackedScene" uid="uid://k5jvtb8gcj4y" path="res://scenes/ui/components/selected_skill_slot.tscn" id="8_fk0pr"]
+[ext_resource type="PackedScene" uid="uid://cem6doovgumg" path="res://scenes/ui/components/skill_slot.tscn" id="9_8tqwb"]
+[ext_resource type="PackedScene" uid="uid://ccqtg6hafw57t" path="res://scenes/ui/components/hud_action_button.tscn" id="10_f8he3"]
+[ext_resource type="PackedScene" uid="uid://ddpiaayu5jlw6" path="res://scenes/ui/windows/inventory_window.tscn" id="11_8lp4b"]
+[ext_resource type="PackedScene" uid="uid://cp3bh3xmtvcsl" path="res://scenes/ui/components/vault_window.tscn" id="12_tegix"]
+[ext_resource type="PackedScene" uid="uid://c4tom142cqmlj" path="res://scenes/ui/windows/skills_window.tscn" id="13_ka0vh"]
+
+[node name="GameplayUI" type="Control" unique_id=79183495]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_4bogw")
+
+[node name="BottomHUD" type="Control" parent="." unique_id=859955859]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -943.5
+offset_top = -432.0
+offset_right = 943.5
+grow_horizontal = 2
+grow_vertical = 0
+scale = Vector2(0.65, 0.65)
+pivot_offset = Vector2(943.5, 432)
+script = ExtResource("2_tbr0n")
+
+[node name="HudFrame" type="TextureRect" parent="BottomHUD" unique_id=1059599411]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("3_4iv7f")
+stretch_mode = 2
+
+[node name="HPBar" parent="BottomHUD" unique_id=1592399703 instance=ExtResource("4_l3eag")]
+layout_mode = 0
+offset_left = 271.5
+offset_top = 205.0
+offset_right = 787.5
+offset_bottom = 261.0
+progress_texture = ExtResource("5_bmbc7")
+max_value = 100000.0
+current_value = 100000.0
+smooth_duration = 0.15000000000000002
+ghost_delay = 0.2
+
+[node name="MPBar" parent="BottomHUD" unique_id=741189681 instance=ExtResource("4_l3eag")]
+layout_mode = 0
+offset_left = 272.5
+offset_top = 302.0
+offset_right = 784.5
+offset_bottom = 354.0
+progress_texture = ExtResource("6_cjdji")
+max_value = 350.0
+current_value = 350.0
+
+[node name="XPBar" parent="BottomHUD" unique_id=1930856002 instance=ExtResource("4_l3eag")]
+layout_mode = 0
+offset_left = 494.5
+offset_top = 106.0
+offset_right = 1664.5
+offset_bottom = 132.0
+progress_texture = ExtResource("7_dxgd5")
+text_mode = 0
+
+[node name="SelectedSkillSlot" parent="BottomHUD" unique_id=63119530 instance=ExtResource("8_fk0pr")]
+layout_mode = 0
+offset_left = 1098.8848
+offset_top = 182.76923
+offset_right = 1211.1924
+offset_bottom = 296.61542
+tooltip_text = "Habilidades"
+
+[node name="SkillsArea" type="Control" parent="BottomHUD" unique_id=2129318606]
+anchors_preset = 0
+offset_left = 1239.5
+offset_top = 144.0
+offset_right = 1578.5
+offset_bottom = 317.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="BottomHUD/SkillsArea" unique_id=165844917]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -2.0
+offset_top = 42.0
+offset_right = -20.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 17
+
+[node name="SkillSlot" parent="BottomHUD/SkillsArea/HBoxContainer" unique_id=1425373822 instance=ExtResource("9_8tqwb")]
+layout_mode = 2
+tooltip_text = "Fireball"
+hotbar_index = 0
+
+[node name="SkillSlot2" parent="BottomHUD/SkillsArea/HBoxContainer" unique_id=1651349152 instance=ExtResource("9_8tqwb")]
+layout_mode = 2
+tooltip_text = "Ice Nova"
+hotbar_index = 0
+
+[node name="SkillSlot3" parent="BottomHUD/SkillsArea/HBoxContainer" unique_id=190231310 instance=ExtResource("9_8tqwb")]
+layout_mode = 2
+tooltip_text = "Shield"
+hotbar_index = 0
+
+[node name="HudActionsArea" type="Control" parent="BottomHUD" unique_id=1658507271]
+anchors_preset = 0
+offset_left = 1494.2692
+offset_top = 371.99988
+offset_right = 1811.1924
+offset_bottom = 418.1538
+
+[node name="ButtonsRow" type="HBoxContainer" parent="BottomHUD/HudActionsArea" unique_id=1202331905]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -9.230772
+offset_top = -1.5381947
+offset_right = 7.8460083
+offset_bottom = 2.3078766
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 17
+alignment = 1
+
+[node name="InventoryButton" parent="BottomHUD/HudActionsArea/ButtonsRow" unique_id=957472092 instance=ExtResource("10_f8he3")]
+layout_mode = 2
+tooltip_text = "Inventario"
+hotkey_text = "I"
+action_tooltip = "Inventario"
+
+[node name="VaultButton" parent="BottomHUD/HudActionsArea/ButtonsRow" unique_id=573642265 instance=ExtResource("10_f8he3")]
+layout_mode = 2
+tooltip_text = "Baúl"
+hotkey_text = "B"
+action_tooltip = "Baúl"
+
+[node name="ActionButton3" parent="BottomHUD/HudActionsArea/ButtonsRow" unique_id=817076166 instance=ExtResource("10_f8he3")]
+layout_mode = 2
+
+[node name="WindowsLayer" type="CanvasLayer" parent="." unique_id=1098177483]
+
+[node name="InventoryWindow" parent="WindowsLayer" unique_id=1417963305 instance=ExtResource("11_8lp4b")]
+visible = false
+
+[node name="VaultWindow" parent="WindowsLayer" unique_id=43266073 instance=ExtResource("12_tegix")]
+visible = false
+
+[node name="SkillsWindow" parent="WindowsLayer" unique_id=1284364103 instance=ExtResource("13_ka0vh")]
+visible = false

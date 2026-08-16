@@ -1,0 +1,63 @@
+[gd_scene format=3 uid="uid://s7leud2k6pax"]
+
+[ext_resource type="Texture2D" uid="uid://dppbcprorsb43" path="res://assets/ui/vhal/slots/slot_normal.png" id="1_fs6j1"]
+[ext_resource type="Texture2D" uid="uid://b66uhojhdhppt" path="res://assets/ui/vhal/slots/slot_hover.png" id="2_5owf7"]
+[ext_resource type="Script" uid="uid://cfrh15df8f4n" path="res://scenes/ui/components/item_slot.gd" id="2_fs6j1"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ft44e"]
+texture = ExtResource("1_fs6j1")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_0mh36"]
+texture = ExtResource("2_5owf7")
+modulate_color = Color(0.7666196, 0.76661956, 0.76661956, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_lu7ke"]
+texture = ExtResource("2_5owf7")
+modulate_color = Color(0.36282945, 0.36282945, 0.36282945, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_wtsi1"]
+texture = ExtResource("1_fs6j1")
+modulate_color = Color(0.09239707, 0.09239706, 0.09239706, 1)
+
+[node name="ItemSlot" type="Button" unique_id=447231750]
+custom_minimum_size = Vector2(64, 64)
+offset_right = 8.0
+offset_bottom = 8.0
+theme_override_styles/normal = SubResource("StyleBoxTexture_ft44e")
+theme_override_styles/hover = SubResource("StyleBoxTexture_0mh36")
+theme_override_styles/hover_pressed = SubResource("StyleBoxTexture_lu7ke")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_wtsi1")
+toggle_mode = true
+button_pressed = true
+script = ExtResource("2_fs6j1")
+
+[node name="IconMargin" type="MarginContainer" parent="." unique_id=459367540]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 7
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_right = 7
+theme_override_constants/margin_bottom = 7
+
+[node name="ItemIcon" type="TextureRect" parent="IconMargin" unique_id=769564442]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="QuantityLabel" type="Label" parent="." unique_id=614532375]
+visible = false
+custom_minimum_size = Vector2(50, 30)
+layout_mode = 0
+offset_left = 7.0
+offset_top = 20.0
+offset_right = 57.0
+offset_bottom = 43.0
+horizontal_alignment = 2
+vertical_alignment = 2

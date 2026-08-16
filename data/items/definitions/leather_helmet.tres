@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://dqsc8wkbx7xia"]
+
+[ext_resource type="Script" uid="uid://dtvmrylljplgs" path="res://data/items/item_definition.gd" id="1_swnxn"]
+[ext_resource type="Texture2D" uid="uid://sh5fj2ywxpfb" path="res://icon.svg" id="1_tvj0g"]
+
+[resource]
+script = ExtResource("1_swnxn")
+item_id = &"leather_helmet"
+display_name = "Leather Helmet"
+description = "Un casco de cuero básico."
+icon = ExtResource("1_tvj0g")
+item_type = 2
+equipment_type = 1
+grid_width = 2
+grid_height = 2
+metadata/_custom_type_script = "uid://dtvmrylljplgs"

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="CharacterClassDefinition" format=3 uid="uid://bl135kgxd60fv"]
+
+[ext_resource type="Script" uid="uid://clpae8arfd3er" path="res://data/characters/character_class_definition.gd" id="1_7yay7"]
+
+[resource]
+script = ExtResource("1_7yay7")
+class_id = "mage"
+display_name = "Mago"
+description = "Especialista en magia ofensiva. Utiliza poderosos hechizos a distancia a cambio de una menor resistencia física."
+metadata/_custom_type_script = "uid://clpae8arfd3er"

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://byynrq2l85dr3"]
+
+[ext_resource type="Texture2D" uid="uid://sh5fj2ywxpfb" path="res://icon.svg" id="1_8qhco"]
+[ext_resource type="Script" uid="uid://dtvmrylljplgs" path="res://data/items/item_definition.gd" id="1_cgknl"]
+
+[resource]
+script = ExtResource("1_cgknl")
+item_id = &"health_potion"
+display_name = "Health Potion"
+description = "Restaura puntos de vida."
+icon = ExtResource("1_8qhco")
+item_type = 1
+max_stack = 50
+metadata/_custom_type_script = "uid://dtvmrylljplgs"

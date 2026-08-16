@@ -1,0 +1,56 @@
+[gd_resource type="Theme" format=3 uid="uid://cpskxhwof0dbj"]
+
+[ext_resource type="Texture2D" uid="uid://dmqe0f54mw3" path="res://assets/ui/kenney_adventure/scrollbar/scrollbar_brown_small.png" id="1_uxs62"]
+[ext_resource type="Texture2D" uid="uid://ctfaudfgdhg2f" path="res://assets/ui/kenney_adventure/scrollbar/scrollbar_brown.png" id="2_ki8n6"]
+
+[sub_resource type="ImageTexture" id="ImageTexture_5pk70"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_uxs62"]
+texture = ExtResource("1_uxs62")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ki8n6"]
+texture = ExtResource("1_uxs62")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+modulate_color = Color(1.2742168, 1.2742168, 1.2742168, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_5pk70"]
+texture = ExtResource("1_uxs62")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+modulate_color = Color(0.69099766, 0.69099766, 0.69099766, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_4q4mv"]
+texture = ExtResource("2_ki8n6")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_tv84y"]
+texture = ExtResource("2_ki8n6")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+
+[resource]
+VScrollBar/icons/decrement = SubResource("ImageTexture_5pk70")
+VScrollBar/icons/decrement_highlight = SubResource("ImageTexture_5pk70")
+VScrollBar/icons/decrement_pressed = SubResource("ImageTexture_5pk70")
+VScrollBar/icons/increment = SubResource("ImageTexture_5pk70")
+VScrollBar/icons/increment_highlight = SubResource("ImageTexture_5pk70")
+VScrollBar/icons/increment_pressed = SubResource("ImageTexture_5pk70")
+VScrollBar/styles/grabber = SubResource("StyleBoxTexture_uxs62")
+VScrollBar/styles/grabber_highlight = SubResource("StyleBoxTexture_ki8n6")
+VScrollBar/styles/grabber_pressed = SubResource("StyleBoxTexture_5pk70")
+VScrollBar/styles/scroll = SubResource("StyleBoxTexture_4q4mv")
+VScrollBar/styles/scroll_focus = SubResource("StyleBoxTexture_tv84y")

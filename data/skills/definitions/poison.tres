@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillDefinition" format=3 uid="uid://b1j7xxniautft"]
+
+[ext_resource type="Script" uid="uid://bsoahwcjkolb0" path="res://data/skills/skill_definition.gd" id="1_3tnsa"]
+[ext_resource type="Texture2D" uid="uid://sh5fj2ywxpfb" path="res://icon.svg" id="1_ag85c"]
+
+[resource]
+script = ExtResource("1_3tnsa")
+skill_id = &"poison"
+display_name = "Poison"
+description = "Envenena al objetivo durante varios segundos."
+icon = ExtResource("1_ag85c")
+mana_cost = 20
+cooldown_duration = 5.0
+metadata/_custom_type_script = "uid://bsoahwcjkolb0"

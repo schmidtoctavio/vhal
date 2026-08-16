@@ -1,0 +1,145 @@
+[gd_scene format=3 uid="uid://714i0frowacj"]
+
+[ext_resource type="PackedScene" uid="uid://bwwkopw7i2hwa" path="res://scenes/ui/components/generic_button.tscn" id="1_f6jtq"]
+[ext_resource type="Script" uid="uid://dkqutsqmddunn" path="res://scenes/screens/character_select/character_select_screen.gd" id="1_gkxc0"]
+
+[node name="CharacterSelectScreen" type="Control" unique_id=655020592]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gkxc0")
+
+[node name="Background" type="ColorRect" parent="." unique_id=509208887]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.03529412, 0.043137256, 0.0627451, 1)
+
+[node name="CharactersArea" type="Control" parent="." unique_id=569377424]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="UILayer" type="Control" parent="." unique_id=1075975549]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleLabel" type="Label" parent="UILayer" unique_id=1765182826]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -151.0
+offset_right = 151.0
+offset_bottom = 34.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 24
+text = "SELECCIÓN DE PERSONAJE"
+horizontal_alignment = 1
+
+[node name="CharacterInfoPanel" type="Control" parent="UILayer" unique_id=1863252509]
+custom_minimum_size = Vector2(300, 170)
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="PanelBackground" type="ColorRect" parent="UILayer/CharacterInfoPanel" unique_id=1513401535]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.6666667, 0.039215688, 0.047058824, 0.0627451)
+
+[node name="ContentMargin" type="MarginContainer" parent="UILayer/CharacterInfoPanel" unique_id=1508704078]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 14
+
+[node name="InfoContent" type="VBoxContainer" parent="UILayer/CharacterInfoPanel/ContentMargin" unique_id=1457876337]
+layout_mode = 2
+
+[node name="CharacterNameLabel" type="Label" parent="UILayer/CharacterInfoPanel/ContentMargin/InfoContent" unique_id=992010961]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "NOMBRE DEL PERSONAJE"
+horizontal_alignment = 1
+
+[node name="ClassLabel" type="Label" parent="UILayer/CharacterInfoPanel/ContentMargin/InfoContent" unique_id=1161106990]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Clase: -"
+horizontal_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="UILayer/CharacterInfoPanel/ContentMargin/InfoContent" unique_id=267015113]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Nivel: -"
+horizontal_alignment = 1
+
+[node name="SlotLabel" type="Label" parent="UILayer/CharacterInfoPanel/ContentMargin/InfoContent" unique_id=554783399]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Personaje 1 / 5"
+horizontal_alignment = 1
+
+[node name="ActionsRow" type="HBoxContainer" parent="UILayer" unique_id=1737990113]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="CreateButton" parent="UILayer/ActionsRow" unique_id=4979020 instance=ExtResource("1_f6jtq")]
+layout_mode = 2
+text = "CREAR"
+
+[node name="DeleteButton" parent="UILayer/ActionsRow" unique_id=993219371 instance=ExtResource("1_f6jtq")]
+layout_mode = 2
+text = "ELIMINAR"
+
+[node name="EnterWorldButton" parent="UILayer/ActionsRow" unique_id=1640936837 instance=ExtResource("1_f6jtq")]
+layout_mode = 2
+text = "ENTRAR"
+
+[node name="BackButton" parent="UILayer" unique_id=2030068184 instance=ExtResource("1_f6jtq")]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -48.0
+offset_right = 128.0
+offset_bottom = 0.0
+grow_vertical = 0
+text = "VOLVER"

@@ -1,0 +1,47 @@
+[gd_scene format=3 uid="uid://by52v0mj5nyxq"]
+
+[ext_resource type="Texture2D" uid="uid://dppbcprorsb43" path="res://assets/ui/vhal/slots/slot_normal.png" id="1_g4ls5"]
+[ext_resource type="Texture2D" uid="uid://b66uhojhdhppt" path="res://assets/ui/vhal/slots/slot_hover.png" id="2_i8y6m"]
+[ext_resource type="Script" uid="uid://cc8i77rsv57mx" path="res://scenes/ui/components/skill_book_slot.gd" id="3_8tux4"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ft44e"]
+texture = ExtResource("1_g4ls5")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_0mh36"]
+texture = ExtResource("2_i8y6m")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_lu7ke"]
+texture = ExtResource("2_i8y6m")
+modulate_color = Color(0.85430586, 0.85430586, 0.85430586, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_wtsi1"]
+texture = ExtResource("1_g4ls5")
+modulate_color = Color(0.58383155, 0.58383155, 0.58383155, 1)
+
+[node name="SkillBookSlot" type="Button" unique_id=1392839855]
+custom_minimum_size = Vector2(64, 64)
+focus_mode = 0
+theme_override_styles/normal = SubResource("StyleBoxTexture_ft44e")
+theme_override_styles/hover = SubResource("StyleBoxTexture_0mh36")
+theme_override_styles/hover_pressed = SubResource("StyleBoxTexture_lu7ke")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_wtsi1")
+script = ExtResource("3_8tux4")
+
+[node name="IconMargin" type="MarginContainer" parent="." unique_id=1957964442]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="SkillIcon" type="TextureRect" parent="IconMargin" unique_id=653338102]
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5

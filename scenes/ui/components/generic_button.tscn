@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://bwwkopw7i2hwa"]
+
+[ext_resource type="Texture2D" uid="uid://be1uhivjnxitb" path="res://assets/ui/vhal/buttons/button_rect_normal.png" id="1_ssq7h"]
+[ext_resource type="Texture2D" uid="uid://dsaum7wytba8a" path="res://assets/ui/vhal/buttons/button_rect_hover.png" id="2_iqpf1"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_cle6k"]
+texture = ExtResource("1_ssq7h")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_iqpf1"]
+texture = ExtResource("2_iqpf1")
+modulate_color = Color(0.5411765, 0.5411765, 0.5411765, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ssq7h"]
+texture = ExtResource("2_iqpf1")
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_866no"]
+texture = ExtResource("1_ssq7h")
+modulate_color = Color(0.12591085, 0.12591085, 0.12591082, 1)
+
+[node name="GenericButton" type="Button" unique_id=4979020]
+custom_minimum_size = Vector2(128, 48)
+offset_right = 8.0
+offset_bottom = 8.0
+theme_override_styles/normal = SubResource("StyleBoxTexture_cle6k")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_iqpf1")
+theme_override_styles/hover = SubResource("StyleBoxTexture_ssq7h")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_866no")
+text = "COMPRAR"

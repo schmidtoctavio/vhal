@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://df83x8geja3w1"]
+
+[ext_resource type="Script" uid="uid://c880yanvgju2a" path="res://scenes/ui/components/stat_bar.gd" id="1_73n0g"]
+
+[node name="StatBar" type="Control" unique_id=1592399703]
+custom_minimum_size = Vector2(300, 26)
+clip_contents = true
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_73n0g")
+
+[node name="GhostBar" type="TextureProgressBar" parent="." unique_id=1587261735]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+value = 100.0
+tint_progress = Color(1, 1, 1, 0.55)
+
+[node name="ProgressBar" type="TextureProgressBar" parent="." unique_id=1481874453]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+value = 100.0
+
+[node name="ValueLabel" type="Label" parent="." unique_id=1958410659]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 25
+text = "100 / 100"
+horizontal_alignment = 1
+vertical_alignment = 1

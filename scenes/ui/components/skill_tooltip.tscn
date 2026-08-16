@@ -1,0 +1,39 @@
+[gd_scene format=3 uid="uid://bu72tuy1albg7"]
+
+[ext_resource type="Script" uid="uid://b3ufki1f8i3sq" path="res://scenes/ui/components/skill_tooltip.gd" id="1_tusr8"]
+
+[node name="SkillTooltip" type="PanelContainer" unique_id=1229127652]
+custom_minimum_size = Vector2(240, 0)
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_tusr8")
+
+[node name="ContentMargin" type="MarginContainer" parent="." unique_id=140307868]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="Content" type="VBoxContainer" parent="ContentMargin" unique_id=1910600190]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="NameLabel" type="Label" parent="ContentMargin/Content" unique_id=984415251]
+layout_mode = 2
+text = "Bola de fuego"
+
+[node name="DescriptionLabel" type="Label" parent="ContentMargin/Content" unique_id=581655993]
+layout_mode = 2
+text = "Lanza una bola de fuego contra el objetivo."
+
+[node name="Separator" type="Label" parent="ContentMargin/Content" unique_id=1972710409]
+layout_mode = 2
+
+[node name="ManaLabel" type="Label" parent="ContentMargin/Content" unique_id=1040047495]
+layout_mode = 2
+text = "Mana: 100"
+
+[node name="CooldownLabel" type="Label" parent="ContentMargin/Content" unique_id=1976485614]
+layout_mode = 2
+text = "Cooldown: 5.0 s"

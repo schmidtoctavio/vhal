@@ -1,0 +1,121 @@
+[gd_scene format=3 uid="uid://bnm2k0rnl6dp7"]
+
+[ext_resource type="PackedScene" uid="uid://s7leud2k6pax" path="res://scenes/ui/components/item_slot.tscn" id="1_6eitq"]
+[ext_resource type="Theme" uid="uid://cpskxhwof0dbj" path="res://assets/ui/kenney_adventure/kenney_adventure_theme.tres" id="1_bsps7"]
+
+[node name="ItemSlotTest" type="Control" unique_id=1232140787]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="InventoryScroll" type="ScrollContainer" parent="." unique_id=1017618923]
+layout_mode = 0
+offset_right = 380.0
+offset_bottom = 280.0
+theme = ExtResource("1_bsps7")
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 4
+
+[node name="GridMargin" type="MarginContainer" parent="InventoryScroll" unique_id=194898574]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="ItemGrid" type="GridContainer" parent="InventoryScroll/GridMargin" unique_id=2088680942]
+layout_mode = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+columns = 5
+
+[node name="ItemSlot" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=447231750 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot2" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=1128428463 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot3" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=377238264 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot4" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=298352323 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot5" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=1821069620 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot6" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=2109596944 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot7" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=843511898 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot8" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=923109377 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot9" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=616381656 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot10" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=222749027 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot11" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=859839995 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot12" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=960023077 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot13" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=28628029 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot14" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=407513435 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot15" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=354474123 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot16" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=522554991 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot17" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=1706771784 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot18" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=549742623 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot19" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=541741679 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot20" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=1940047421 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot21" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=625166951 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot22" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=1756870478 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot23" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=216824463 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot24" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=1429728841 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot25" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=1330533392 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot26" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=225016547 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot27" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=228688133 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot28" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=908544829 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot29" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=695538666 instance=ExtResource("1_6eitq")]
+layout_mode = 2
+
+[node name="ItemSlot30" parent="InventoryScroll/GridMargin/ItemGrid" unique_id=1811359542 instance=ExtResource("1_6eitq")]
+layout_mode = 2

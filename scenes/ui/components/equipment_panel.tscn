@@ -1,0 +1,156 @@
+[gd_scene format=3 uid="uid://b0n65pcpcprme"]
+
+[ext_resource type="Texture2D" uid="uid://c44dvek1tqhn6" path="res://assets/ui/kenney_adventure/pannels/panel_brown_dark.png" id="1_e20hi"]
+[ext_resource type="Script" uid="uid://cxhibxq8d6buh" path="res://scenes/ui/components/equipment_panel.gd" id="2_57add"]
+[ext_resource type="PackedScene" uid="uid://bfd8lhb01abi3" path="res://scenes/ui/components/equipment_slot.tscn" id="2_e20hi"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_tnipg"]
+texture = ExtResource("1_e20hi")
+texture_margin_left = 16.0
+texture_margin_top = 16.0
+texture_margin_right = 16.0
+texture_margin_bottom = 16.0
+
+[node name="EquipmentPanel" type="PanelContainer" unique_id=143240848]
+custom_minimum_size = Vector2(290, 300)
+offset_right = 360.0
+offset_bottom = 270.0
+theme_override_styles/panel = SubResource("StyleBoxTexture_tnipg")
+script = ExtResource("2_57add")
+
+[node name="ContentMargin" type="MarginContainer" parent="." unique_id=1550567042]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="EquipmentLayout" type="Control" parent="ContentMargin" unique_id=1305196880]
+layout_mode = 2
+
+[node name="EquipmentTitle" type="Label" parent="ContentMargin/EquipmentLayout" unique_id=612458491]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 5.0
+offset_right = 132.0
+offset_bottom = 28.0
+text = "EQUIPAMIENTO"
+horizontal_alignment = 1
+
+[node name="HeadSlot" parent="ContentMargin/EquipmentLayout" unique_id=1692424194 instance=ExtResource("2_e20hi")]
+layout_mode = 0
+offset_left = 118.0
+offset_top = 28.0
+offset_right = 172.0
+offset_bottom = 78.0
+text = "HEAD"
+slot_type = 0
+valid_drop_tint = Color(0.75, 1, 0.75, 1)
+invalid_drop_tint = Color(1, 0.65, 0.65, 1)
+
+[node name="ChestSlot" parent="ContentMargin/EquipmentLayout" unique_id=1661387509 instance=ExtResource("2_e20hi")]
+layout_mode = 0
+offset_left = 117.0
+offset_top = 84.0
+offset_right = 174.0
+offset_bottom = 134.0
+text = "CHEST"
+slot_type = 1
+valid_drop_tint = Color(0.75, 1, 0.75, 1)
+invalid_drop_tint = Color(1, 0.65, 0.65, 1)
+
+[node name="PantsSlot" parent="ContentMargin/EquipmentLayout" unique_id=1253355209 instance=ExtResource("2_e20hi")]
+layout_mode = 0
+offset_left = 118.0
+offset_top = 136.0
+offset_right = 176.0
+offset_bottom = 186.0
+text = "PANTS"
+slot_type = 2
+valid_drop_tint = Color(0.75, 1, 0.75, 1)
+invalid_drop_tint = Color(1, 0.65, 0.65, 1)
+
+[node name="GlovesSlot" parent="ContentMargin/EquipmentLayout" unique_id=1654688961 instance=ExtResource("2_e20hi")]
+layout_mode = 0
+offset_left = 82.0
+offset_top = 200.0
+offset_right = 145.0
+offset_bottom = 250.0
+text = "GLOVES"
+slot_type = 3
+valid_drop_tint = Color(0.75, 1, 0.75, 1)
+invalid_drop_tint = Color(1, 0.65, 0.65, 1)
+
+[node name="BootsSlot" parent="ContentMargin/EquipmentLayout" unique_id=240095784 instance=ExtResource("2_e20hi")]
+layout_mode = 0
+offset_left = 165.0
+offset_top = 214.0
+offset_right = 224.0
+offset_bottom = 264.0
+text = "BOOTS"
+slot_type = 4
+valid_drop_tint = Color(0.75, 1, 0.75, 1)
+invalid_drop_tint = Color(1, 0.65, 0.65, 1)
+
+[node name="LeftWeaponSlot" parent="ContentMargin/EquipmentLayout" unique_id=1217972902 instance=ExtResource("2_e20hi")]
+layout_mode = 0
+offset_left = 25.0
+offset_top = 100.0
+offset_right = 92.0
+offset_bottom = 151.0
+text = "WEAPON"
+slot_type = 5
+valid_drop_tint = Color(0.75, 1, 0.75, 1)
+invalid_drop_tint = Color(1, 0.65, 0.65, 1)
+
+[node name="RightWeaponSlot" parent="ContentMargin/EquipmentLayout" unique_id=464494350 instance=ExtResource("2_e20hi")]
+layout_mode = 0
+offset_left = 205.0
+offset_top = 102.0
+offset_right = 272.0
+offset_bottom = 152.0
+text = "WEAPON"
+slot_type = 6
+valid_drop_tint = Color(0.75, 1, 0.75, 1)
+invalid_drop_tint = Color(1, 0.65, 0.65, 1)
+
+[node name="WingsSlot" parent="ContentMargin/EquipmentLayout" unique_id=220090904 instance=ExtResource("2_e20hi")]
+layout_mode = 0
+offset_left = 190.0
+offset_top = 18.0
+offset_right = 249.0
+offset_bottom = 68.0
+text = "WINGS"
+slot_type = 7
+valid_drop_tint = Color(0.75, 1, 0.75, 1)
+invalid_drop_tint = Color(1, 0.65, 0.65, 1)
+
+[node name="PendantSlot" parent="ContentMargin/EquipmentLayout" unique_id=1173493330 instance=ExtResource("2_e20hi")]
+layout_mode = 0
+offset_left = 176.0
+offset_top = 74.0
+offset_right = 208.0
+offset_bottom = 106.0
+slot_type = 8
+valid_drop_tint = Color(0.75, 1, 0.75, 1)
+invalid_drop_tint = Color(1, 0.65, 0.65, 1)
+
+[node name="LeftRingSlot" parent="ContentMargin/EquipmentLayout" unique_id=879719064 instance=ExtResource("2_e20hi")]
+layout_mode = 0
+offset_left = 71.0
+offset_top = 157.0
+offset_right = 103.0
+offset_bottom = 189.0
+slot_type = 9
+valid_drop_tint = Color(0.75, 1, 0.75, 1)
+invalid_drop_tint = Color(1, 0.65, 0.65, 1)
+
+[node name="RightRingSlot" parent="ContentMargin/EquipmentLayout" unique_id=177346221 instance=ExtResource("2_e20hi")]
+layout_mode = 0
+offset_left = 186.0
+offset_top = 160.0
+offset_right = 218.0
+offset_bottom = 192.0
+slot_type = 10
+valid_drop_tint = Color(0.75, 1, 0.75, 1)
+invalid_drop_tint = Color(1, 0.65, 0.65, 1)

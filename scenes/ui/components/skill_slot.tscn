@@ -1,0 +1,71 @@
+[gd_scene format=3 uid="uid://cem6doovgumg"]
+
+[ext_resource type="Script" uid="uid://bmlnc8k247sgt" path="res://scenes/ui/components/skill_slot.gd" id="1_c3lm7"]
+[ext_resource type="Script" uid="uid://dhywshr7p1ksk" path="res://scenes/ui/components/skill_button.gd" id="2_c3lm7"]
+
+[node name="SkillSlot" type="Control" unique_id=1425373822]
+custom_minimum_size = Vector2(94, 94)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 56.0
+offset_bottom = 56.0
+script = ExtResource("1_c3lm7")
+
+[node name="IconMargin" type="MarginContainer" parent="." unique_id=413513930]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="SkillButton" type="TextureButton" parent="IconMargin" unique_id=1633178674]
+modulate = Color(0.45, 0.45, 0.45, 1)
+layout_mode = 2
+ignore_texture_size = true
+stretch_mode = 5
+script = ExtResource("2_c3lm7")
+
+[node name="UnavailableOverlay" type="ColorRect" parent="IconMargin" unique_id=1073980898]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.6745098, 0.2509804, 0.39215687, 0.6627451)
+
+[node name="CooldownOverlay" type="TextureProgressBar" parent="IconMargin" unique_id=1487406054]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+max_value = 5.0
+fill_mode = 4
+radial_initial_angle = 270.0
+nine_patch_stretch = true
+tint_progress = Color(0.04622181, 0.04622181, 0.04622181, 0.8784314)
+
+[node name="HotkeyLabel" type="Label" parent="." unique_id=762641863]
+modulate = Color(0.45, 0.45, 0.45, 1)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "1"
+horizontal_alignment = 2
+vertical_alignment = 2
+
+[node name="CooldownLabel" type="Label" parent="." unique_id=1849866542]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "5.0"
+horizontal_alignment = 1
+vertical_alignment = 1

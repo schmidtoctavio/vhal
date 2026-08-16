@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://c4tom142cqmlj"]
+
+[ext_resource type="PackedScene" uid="uid://ck6ftdrkiei54" path="res://scenes/ui/components/base_window.tscn" id="1_l0l8y"]
+[ext_resource type="Script" uid="uid://b76yeblxw7g5b" path="res://scenes/ui/windows/skills_window.gd" id="2_hdelq"]
+
+[node name="SkillsWindow" unique_id=1417963305 instance=ExtResource("1_l0l8y")]
+custom_minimum_size = Vector2(360, 300)
+offset_right = 360.0
+offset_bottom = 300.0
+script = ExtResource("2_hdelq")
+
+[node name="TitleLabel" parent="ContentMargin/Content/Header" parent_id_path=PackedInt32Array(1938107997) index="0" unique_id=1114458321]
+text = "HABILIDADES"
+
+[node name="SkillsContent" type="VBoxContainer" parent="ContentMargin/Content/Body" parent_id_path=PackedInt32Array(521580399) index="0" unique_id=913614272]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="InfoLabel" type="Label" parent="ContentMargin/Content/Body/SkillsContent" index="0" unique_id=1425463287]
+layout_mode = 2
+text = "Habilidades aprendidas"
+autowrap_mode = 3
+
+[node name="SkillsScroll" type="ScrollContainer" parent="ContentMargin/Content/Body/SkillsContent" index="1" unique_id=89739303]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SkillsGrid" type="GridContainer" parent="ContentMargin/Content/Body/SkillsContent/SkillsScroll" index="0" unique_id=258023419]
+layout_mode = 2
+theme_override_constants/h_separation = 6
+theme_override_constants/v_separation = 6
+columns = 4

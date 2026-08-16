@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://dxl80eojyr500"]
+
+[ext_resource type="Texture2D" uid="uid://c44dvek1tqhn6" path="res://assets/ui/kenney_adventure/pannels/panel_brown_dark.png" id="1_ouemw"]
+[ext_resource type="Script" uid="uid://b7as3icl778ky" path="res://scenes/ui/components/item_tooltip.gd" id="2_nnuu7"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_nnuu7"]
+texture = ExtResource("1_ouemw")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+
+[node name="ItemTooltip" type="PanelContainer" unique_id=210657702]
+custom_minimum_size = Vector2(230, 0)
+offset_right = 220.0
+offset_bottom = 175.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_nnuu7")
+script = ExtResource("2_nnuu7")
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=2093901541]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="Content" type="VBoxContainer" parent="Margin" unique_id=150562889]
+layout_mode = 2
+
+[node name="NameLabel" type="Label" parent="Margin/Content" unique_id=807309505]
+layout_mode = 2
+text = "ITEM NAME"
+
+[node name="TypeLabel" type="Label" parent="Margin/Content" unique_id=1342544542]
+layout_mode = 2
+text = "Equipment · Weapon"
+
+[node name="Separator" type="HSeparator" parent="Margin/Content" unique_id=1596593776]
+layout_mode = 2
+
+[node name="QuantityLabel" type="Label" parent="Margin/Content" unique_id=1762834685]
+layout_mode = 2
+text = "Cantidad: 20 / 50"
+
+[node name="SizeLabel" type="Label" parent="Margin/Content" unique_id=67273038]
+layout_mode = 2
+text = "Tamaño: 1 × 3"
+
+[node name="DescriptionLabel" type="Label" parent="Margin/Content" unique_id=951695761]
+layout_mode = 2
+autowrap_mode = 3

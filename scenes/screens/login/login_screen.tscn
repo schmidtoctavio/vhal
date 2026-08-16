@@ -1,0 +1,114 @@
+[gd_scene format=3 uid="uid://b0oajamd8txe4"]
+
+[ext_resource type="Texture2D" uid="uid://s4c4onontmm4" path="res://assets/ui/vhal/panels/panel_frame_ornate_red.png" id="1_0q7kw"]
+[ext_resource type="PackedScene" uid="uid://bwwkopw7i2hwa" path="res://scenes/ui/components/generic_button.tscn" id="1_1datf"]
+[ext_resource type="Script" uid="uid://bsdcr5e5qdi22" path="res://scenes/screens/login/login_screen.gd" id="1_nf0l5"]
+
+[node name="LoginScreen" type="Control" unique_id=1223611037]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_nf0l5")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1838439466]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.03529412, 0.043137256, 0.0627451, 1)
+
+[node name="CenterArea" type="CenterContainer" parent="." unique_id=692595790]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LoginPanel" type="Control" parent="CenterArea" unique_id=549437025]
+custom_minimum_size = Vector2(420, 350)
+layout_mode = 2
+
+[node name="PanelFrame" type="TextureRect" parent="CenterArea/LoginPanel" unique_id=212598043]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("1_0q7kw")
+expand_mode = 1
+
+[node name="ContentMargin" type="MarginContainer" parent="CenterArea/LoginPanel" unique_id=2116726544]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 58
+theme_override_constants/margin_top = 55
+theme_override_constants/margin_right = 58
+theme_override_constants/margin_bottom = 50
+
+[node name="LoginContent" type="VBoxContainer" parent="CenterArea/LoginPanel/ContentMargin" unique_id=1673552388]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="CenterArea/LoginPanel/ContentMargin/LoginContent" unique_id=601785888]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "INICIAR SESIÓN"
+horizontal_alignment = 1
+
+[node name="UsernameGroup" type="VBoxContainer" parent="CenterArea/LoginPanel/ContentMargin/LoginContent" unique_id=2114819344]
+layout_mode = 2
+
+[node name="UsernameLabel" type="Label" parent="CenterArea/LoginPanel/ContentMargin/LoginContent/UsernameGroup" unique_id=1190945602]
+layout_mode = 2
+text = "USUARIO"
+
+[node name="UsernameInput" type="LineEdit" parent="CenterArea/LoginPanel/ContentMargin/LoginContent/UsernameGroup" unique_id=1601696651]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+placeholder_text = "Ingresá tu usuario"
+
+[node name="PasswordGroup" type="VBoxContainer" parent="CenterArea/LoginPanel/ContentMargin/LoginContent" unique_id=560887325]
+layout_mode = 2
+
+[node name="PasswordLabel" type="Label" parent="CenterArea/LoginPanel/ContentMargin/LoginContent/PasswordGroup" unique_id=821303884]
+layout_mode = 2
+text = "CONTRASEÑA"
+
+[node name="PasswordInput" type="LineEdit" parent="CenterArea/LoginPanel/ContentMargin/LoginContent/PasswordGroup" unique_id=1719836682]
+custom_minimum_size = Vector2(0, 38)
+layout_mode = 2
+placeholder_text = "Ingresá tu contraseña"
+secret = true
+
+[node name="StatusLabel" type="Label" parent="CenterArea/LoginPanel/ContentMargin/LoginContent" unique_id=236718044]
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="ButtonsRow" type="HBoxContainer" parent="CenterArea/LoginPanel/ContentMargin/LoginContent" unique_id=356114189]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="LoginButton" parent="CenterArea/LoginPanel/ContentMargin/LoginContent/ButtonsRow" unique_id=4979020 instance=ExtResource("1_1datf")]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ENTRAR"
+
+[node name="ExitButton" parent="CenterArea/LoginPanel/ContentMargin/LoginContent/ButtonsRow" unique_id=1314387062 instance=ExtResource("1_1datf")]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "SALIR"

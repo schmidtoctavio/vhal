@@ -1,0 +1,834 @@
+extends Control
+
+
+# =========================================================
+# BARRAS
+# =========================================================
+
+@onready var hp_bar: StatBar = (
+	$BottomHUD/HPBar
+)
+
+@onready var mp_bar: StatBar = (
+	$BottomHUD/MPBar
+)
+
+
+# =========================================================
+# SKILLS / HOTBAR
+# =========================================================
+
+@onready var skills_container: HBoxContainer = (
+	$BottomHUD/SkillsArea/HBoxContainer
+)
+
+@onready var selected_skill_slot: SelectedSkillSlot = (
+	$BottomHUD/SelectedSkillSlot
+)
+
+
+var skill_hotbar_data: SkillHotbarData = null
+
+var skill_book_data: SkillBookData = null
+
+
+# =========================================================
+# INVENTARIO
+# =========================================================
+
+@onready var inventory_button: HudActionButton = (
+	$BottomHUD/HudActionsArea/ButtonsRow/InventoryButton
+)
+
+@onready var inventory_window: InventoryWindow = (
+	$WindowsLayer/InventoryWindow
+)
+
+
+# =========================================================
+# VAULT
+# =========================================================
+
+@onready var vault_button: HudActionButton = (
+	$BottomHUD/HudActionsArea/ButtonsRow/VaultButton
+)
+
+@onready var vault_window: BaseWindow = (
+	$WindowsLayer/VaultWindow
+)
+
+
+# =========================================================
+# SKILLS WINDOW
+# =========================================================
+
+@onready var skills_window: SkillsWindow = (
+	$WindowsLayer/SkillsWindow
+)
+
+
+# =========================================================
+# READY
+# =========================================================
+
+func _ready() -> void:
+
+	# =====================================================
+	# MANA
+	# =====================================================
+
+	if not mp_bar.value_changed.is_connected(
+		_on_mana_changed
+	):
+		mp_bar.value_changed.connect(
+			_on_mana_changed
+		)
+
+
+	# =====================================================
+	# INVENTARIO
+	# =====================================================
+
+	if not inventory_button.pressed.is_connected(
+		_on_inventory_button_pressed
+	):
+		inventory_button.pressed.connect(
+			_on_inventory_button_pressed
+		)
+
+
+	if not inventory_window.close_requested.is_connected(
+		_on_inventory_close_requested
+	):
+		inventory_window.close_requested.connect(
+			_on_inventory_close_requested
+		)
+
+
+	# =====================================================
+	# VAULT
+	# =====================================================
+
+	if not vault_button.pressed.is_connected(
+		_on_vault_button_pressed
+	):
+		vault_button.pressed.connect(
+			_on_vault_button_pressed
+		)
+
+
+	if not vault_window.close_requested.is_connected(
+		_on_vault_close_requested
+	):
+		vault_window.close_requested.connect(
+			_on_vault_close_requested
+		)
+
+
+	# =====================================================
+	# SELECTED SKILL SLOT
+	# =====================================================
+
+	if not selected_skill_slot.skills_panel_requested.is_connected(
+		_on_skills_panel_requested
+	):
+		selected_skill_slot.skills_panel_requested.connect(
+			_on_skills_panel_requested
+		)
+
+
+	# =====================================================
+	# SKILLS WINDOW
+	# =====================================================
+
+	if not skills_window.close_requested.is_connected(
+		_on_skills_window_close_requested
+	):
+		skills_window.close_requested.connect(
+			_on_skills_window_close_requested
+		)
+
+
+	# =====================================================
+	# SISTEMA DE SKILLS
+	# =====================================================
+
+	_setup_test_skill_system()
+
+
+	# =====================================================
+	# ESTADO INICIAL DE MANA
+	# =====================================================
+
+	_refresh_skill_mana_states(
+		mp_bar.current_value
+	)
+
+
+# =========================================================
+# SISTEMA DE SKILLS - SETUP
+# =========================================================
+
+func _setup_test_skill_system() -> void:
+
+	# =====================================================
+	# MODELOS
+	# =====================================================
+
+	skill_hotbar_data = (
+		SkillHotbarData.new()
+	)
+
+	skill_book_data = (
+		SkillBookData.new()
+	)
+
+
+	# =====================================================
+	# SEÑALES DEL HOTBAR
+	# =====================================================
+
+	if not skill_hotbar_data.slot_changed.is_connected(
+		_on_hotbar_slot_changed
+	):
+		skill_hotbar_data.slot_changed.connect(
+			_on_hotbar_slot_changed
+		)
+
+
+	# =====================================================
+	# VINCULAMOS LOS TRES SLOTS VISUALES
+	# =====================================================
+
+	_bind_hotbar_slots()
+
+
+	# =====================================================
+	# CARGAMOS DEFINICIONES DE PRUEBA
+	# =====================================================
+
+	var fire_ball := load(
+		"res://data/skills/definitions/fire_ball.tres"
+	) as SkillDefinition
+
+
+	var poison := load(
+		"res://data/skills/definitions/poison.tres"
+	) as SkillDefinition
+
+
+	var heal := load(
+		"res://data/skills/definitions/heal.tres"
+	) as SkillDefinition
+
+
+	# =====================================================
+	# VALIDACIÓN
+	# =====================================================
+
+	if fire_ball == null:
+		print(
+			"ERROR: no se pudo cargar fire_ball.tres"
+		)
+
+
+	if poison == null:
+		print(
+			"ERROR: no se pudo cargar poison.tres"
+		)
+
+
+	if heal == null:
+		print(
+			"ERROR: no se pudo cargar heal.tres"
+		)
+
+
+	if (
+		fire_ball == null
+		or
+		poison == null
+		or
+		heal == null
+	):
+		return
+
+
+	# =====================================================
+	# LIBRO DE HABILIDADES
+	#
+	# Estas son las habilidades que el personaje conoce.
+	# =====================================================
+
+	skill_book_data.learn_skill(
+		fire_ball
+	)
+
+	skill_book_data.learn_skill(
+		poison
+	)
+
+	skill_book_data.learn_skill(
+		heal
+	)
+
+	# =====================================================
+	# VINCULAMOS SKILL BOOK CON SU VENTANA
+	# =====================================================
+
+	skills_window.bind_skill_book(
+		skill_book_data
+	)
+
+	print(
+		"Skills aprendidas: ",
+		skill_book_data.get_skill_count()
+	)
+
+
+	# =====================================================
+	# HOTBAR INICIAL
+	#
+	# índice 0 → tecla 1
+	# índice 1 → tecla 2
+	# índice 2 → tecla 3
+	# =====================================================
+
+	skill_hotbar_data.set_skill(
+		0,
+		fire_ball
+	)
+
+	skill_hotbar_data.set_skill(
+		1,
+		poison
+	)
+
+	skill_hotbar_data.set_skill(
+		2,
+		heal
+	)
+
+
+	# =====================================================
+	# CAMBIOS DE SELECCIÓN
+	# =====================================================
+
+	if not skill_hotbar_data.selection_changed.is_connected(
+		_on_hotbar_selection_changed
+	):
+		skill_hotbar_data.selection_changed.connect(
+			_on_hotbar_selection_changed
+		)
+
+
+	# =====================================================
+	# SELECCIÓN INICIAL
+	#
+	# selected_index comienza en 0.
+	# =====================================================
+
+	_on_hotbar_selection_changed(
+		skill_hotbar_data.selected_index,
+		skill_hotbar_data.get_selected_skill()
+	)
+
+
+	var initial_skill := (
+		skill_hotbar_data
+		.get_selected_skill()
+	)
+
+
+	if initial_skill != null:
+		print(
+			"Skill inicial: ",
+			initial_skill.display_name
+		)
+	else:
+		print(
+			"Skill inicial: VACÍA"
+		)
+
+
+# =========================================================
+# HOTBAR - VINCULAR SLOTS VISUALES
+# =========================================================
+
+func _bind_hotbar_slots() -> void:
+	var index := 0
+
+
+	for child in skills_container.get_children():
+
+		if not (
+			child is SkillSlot
+		):
+			continue
+
+
+		if index >= SkillHotbarData.SLOT_COUNT:
+			break
+
+
+		var slot := (
+			child as SkillSlot
+		)
+
+
+		# -------------------------------------------------
+		# SkillSlot  → hotbar 0 → tecla 1
+		# SkillSlot2 → hotbar 1 → tecla 2
+		# SkillSlot3 → hotbar 2 → tecla 3
+		# -------------------------------------------------
+
+		slot.hotbar_index = index
+
+
+		# -------------------------------------------------
+		# Durante el setup todavía están vacíos.
+		#
+		# slot_changed los actualizará cuando asignemos
+		# las SkillDefinition.
+		# -------------------------------------------------
+
+		slot.set_skill(
+			skill_hotbar_data.get_skill(
+				index
+			)
+		)
+
+
+		# -------------------------------------------------
+		# CLICK IZQUIERDO
+		# → selecciona esta hotbar.
+		# -------------------------------------------------
+
+		if not slot.selection_requested.is_connected(
+			_on_skill_slot_selection_requested
+		):
+			slot.selection_requested.connect(
+				_on_skill_slot_selection_requested
+			)
+		
+		# -------------------------------------------------
+		# DRAG & DROP DESDE SKILL BOOK
+		# → solicita asignar una skill a este hotbar.
+		# -------------------------------------------------
+
+		if not slot.skill_assignment_requested.is_connected(
+			_on_skill_slot_assignment_requested
+		):
+			slot.skill_assignment_requested.connect(
+				_on_skill_slot_assignment_requested
+			)
+
+
+		index += 1
+
+
+# =========================================================
+# HOTBAR - CLICK EN SLOT
+# =========================================================
+
+func _on_skill_slot_selection_requested(
+	index: int
+) -> void:
+	if skill_hotbar_data == null:
+		return
+
+
+	skill_hotbar_data.select_slot(
+		index
+	)
+
+# =========================================================
+# HOTBAR - DROP DE SKILL
+# =========================================================
+
+func _on_skill_slot_assignment_requested(
+	index: int,
+	skill: SkillDefinition
+) -> void:
+	if skill_hotbar_data == null:
+		return
+
+
+	if skill == null:
+		return
+
+
+	skill_hotbar_data.set_skill(
+		index,
+		skill
+	)
+
+# =========================================================
+# HOTBAR - TECLADO
+# =========================================================
+
+func _select_hotbar_skill(
+	index: int
+) -> void:
+	if skill_hotbar_data == null:
+		return
+
+
+	skill_hotbar_data.select_slot(
+		index
+	)
+
+
+# =========================================================
+# HOTBAR - CAMBIÓ CONTENIDO
+# =========================================================
+
+func _on_hotbar_slot_changed(
+	index: int,
+	skill: SkillDefinition
+) -> void:
+	var slot := (
+		_get_hotbar_slot(
+			index
+		)
+	)
+
+
+	if slot == null:
+		return
+
+
+	slot.set_skill(
+		skill
+	)
+
+
+	# -----------------------------------------------------
+	# Puede haber cambiado el coste de mana.
+	# -----------------------------------------------------
+
+	_refresh_skill_mana_states(
+		mp_bar.current_value
+	)
+
+
+# =========================================================
+# HOTBAR - CAMBIÓ SELECCIÓN
+# =========================================================
+
+func _on_hotbar_selection_changed(
+	index: int,
+	skill: SkillDefinition
+) -> void:
+
+	# =====================================================
+	# SLOT GRANDE
+	# =====================================================
+
+	selected_skill_slot.set_skill(
+		skill
+	)
+
+
+	# =====================================================
+	# ESTADO VISUAL 1 / 2 / 3
+	# =====================================================
+
+	for child in skills_container.get_children():
+
+		if not (
+			child is SkillSlot
+		):
+			continue
+
+
+		var slot := (
+			child as SkillSlot
+		)
+
+
+		slot.set_selected(
+			slot.hotbar_index == index
+		)
+
+
+	# =====================================================
+	# DEBUG
+	# =====================================================
+
+	if skill == null:
+		print(
+			"Hotbar seleccionada: ",
+			index + 1,
+			" | VACÍA"
+		)
+
+		return
+
+
+	print(
+		"Hotbar seleccionada: ",
+		index + 1,
+		" | ",
+		skill.display_name
+	)
+
+
+# =========================================================
+# HOTBAR - OBTENER SLOT VISUAL
+# =========================================================
+
+func _get_hotbar_slot(
+	index: int
+) -> SkillSlot:
+	var current_index := 0
+
+
+	for child in skills_container.get_children():
+
+		if not (
+			child is SkillSlot
+		):
+			continue
+
+
+		if current_index == index:
+			return (
+				child as SkillSlot
+			)
+
+
+		current_index += 1
+
+
+	return null
+
+
+# =========================================================
+# MANA
+# =========================================================
+
+func _on_mana_changed(
+	current: float,
+	_maximum: float
+) -> void:
+	_refresh_skill_mana_states(
+		current
+	)
+
+
+func _refresh_skill_mana_states(
+	current_mana: float
+) -> void:
+
+	for child in skills_container.get_children():
+
+		if not (
+			child is SkillSlot
+		):
+			continue
+
+
+		var slot := (
+			child as SkillSlot
+		)
+
+
+		# -------------------------------------------------
+		# SLOT VACÍO
+		# -------------------------------------------------
+
+		if not slot.has_skill():
+
+			slot.set_can_afford_mana(
+				true
+			)
+
+			continue
+
+
+		# -------------------------------------------------
+		# SLOT CON SKILL
+		# -------------------------------------------------
+
+		var can_afford := (
+			current_mana
+			>=
+			float(
+				slot.get_mana_cost()
+			)
+		)
+
+
+		slot.set_can_afford_mana(
+			can_afford
+		)
+
+
+# =========================================================
+# INPUT
+# =========================================================
+
+func _unhandled_input(
+	event: InputEvent
+) -> void:
+
+	# =====================================================
+	# SKILL 1
+	# =====================================================
+
+	if event.is_action_pressed(
+		&"select_skill_1"
+	):
+		_select_hotbar_skill(
+			0
+		)
+
+
+	# =====================================================
+	# SKILL 2
+	# =====================================================
+
+	if event.is_action_pressed(
+		&"select_skill_2"
+	):
+		_select_hotbar_skill(
+			1
+		)
+
+
+	# =====================================================
+	# SKILL 3
+	# =====================================================
+
+	if event.is_action_pressed(
+		&"select_skill_3"
+	):
+		_select_hotbar_skill(
+			2
+		)
+
+
+	# =====================================================
+	# INVENTARIO
+	# =====================================================
+
+	if event.is_action_pressed(
+		&"toggle_inventory"
+	):
+		_toggle_inventory()
+
+
+	# =====================================================
+	# DEBUG DAMAGE
+	# =====================================================
+
+	if InputMap.has_action(
+		&"debug_damage"
+	):
+		if event.is_action_pressed(
+			&"debug_damage"
+		):
+			hp_bar.set_current_value(
+				hp_bar.current_value
+				-
+				350.0
+			)
+
+
+	# =====================================================
+	# DEBUG HEAL
+	# =====================================================
+
+	if InputMap.has_action(
+		&"debug_heal"
+	):
+		if event.is_action_pressed(
+			&"debug_heal"
+		):
+			hp_bar.set_current_value(
+				hp_bar.current_value
+				+
+				350.0
+			)
+
+
+	# =====================================================
+	# DEBUG RESTORE MANA
+	# =====================================================
+
+	if InputMap.has_action(
+		&"debug_restore_mana"
+	):
+		if event.is_action_pressed(
+			&"debug_restore_mana"
+		):
+			mp_bar.set_current_value(
+				mp_bar.max_value
+			)
+
+
+# =========================================================
+# INVENTARIO
+# =========================================================
+
+func _on_inventory_button_pressed() -> void:
+	_toggle_inventory()
+
+
+func _on_inventory_close_requested() -> void:
+	_close_inventory()
+
+
+func _toggle_inventory() -> void:
+	inventory_window.visible = (
+		not inventory_window.visible
+	)
+
+
+func _close_inventory() -> void:
+	inventory_window.visible = false
+
+
+# =========================================================
+# VAULT
+# =========================================================
+
+func _on_vault_button_pressed() -> void:
+	_toggle_vault()
+
+
+func _on_vault_close_requested() -> void:
+	_close_vault()
+
+
+func _toggle_vault() -> void:
+	vault_window.visible = (
+		not vault_window.visible
+	)
+
+
+func _close_vault() -> void:
+	vault_window.visible = false
+
+
+# =========================================================
+# SKILLS WINDOW
+# =========================================================
+
+func _on_skills_panel_requested() -> void:
+	_toggle_skills_window()
+
+
+func _on_skills_window_close_requested() -> void:
+	_close_skills_window()
+
+
+func _toggle_skills_window() -> void:
+	skills_window.visible = (
+		not skills_window.visible
+	)
+
+
+func _close_skills_window() -> void:
+	skills_window.visible = false

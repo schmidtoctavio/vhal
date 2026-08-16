@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://k5jvtb8gcj4y"]
+
+[ext_resource type="Script" uid="uid://dho3yv0hn183n" path="res://scenes/ui/components/selected_skill_slot.gd" id="1_2omo7"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_tnipg"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_niee7"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_50dd6"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ds76r"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_3vv11"]
+
+[node name="SelectedSkillSlot" type="Button" unique_id=63119530]
+offset_right = 8.0
+offset_bottom = 8.0
+theme_override_styles/normal = SubResource("StyleBoxEmpty_tnipg")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_niee7")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_50dd6")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_ds76r")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_3vv11")
+flat = true
+script = ExtResource("1_2omo7")
+
+[node name="IconMargin" type="MarginContainer" parent="." unique_id=1959832733]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 7
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_right = 7
+theme_override_constants/margin_bottom = 7
+
+[node name="SkillIcon" type="TextureRect" parent="IconMargin" unique_id=1787689492]
+layout_mode = 2
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="CharacterClassDefinition" format=3 uid="uid://b4ew5vy1st7h8"]
+
+[ext_resource type="Script" uid="uid://clpae8arfd3er" path="res://data/characters/character_class_definition.gd" id="1_8pl0c"]
+
+[resource]
+script = ExtResource("1_8pl0c")
+class_id = "warrior"
+display_name = "Guerrero"
+description = "Especialista en combate cuerpo a cuerpo. Posee buena resistencia y destaca por su daño físico."
+metadata/_custom_type_script = "uid://clpae8arfd3er"
