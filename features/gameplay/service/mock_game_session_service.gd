@@ -56,6 +56,11 @@ func start_session(
 	)
 
 
+	_setup_mock_inventory(
+		active_player_state
+	)
+
+
 	_setup_mock_skills(
 		active_player_state
 	)
@@ -97,6 +102,105 @@ func _setup_mock_vitals(
 
 	state.vitals.set_mp(
 		MOCK_MAX_MP
+	)
+
+
+# =========================================================
+# INVENTARIO MOCK TEMPORAL
+# =========================================================
+
+func _setup_mock_inventory(
+	state: PlayerRuntimeState
+) -> void:
+	if state == null:
+		return
+
+
+	if state.inventory == null:
+		return
+
+
+	var sword_definition := load(
+		"res://features/items/definitions/catalog/bronze_sword.tres"
+	) as ItemDefinition
+
+	var potion_definition := load(
+		"res://features/items/definitions/catalog/health_potion.tres"
+	) as ItemDefinition
+
+
+	# -----------------------------------------------------
+	# VALIDACIÓN
+	# -----------------------------------------------------
+
+	if sword_definition == null:
+		print(
+			"ERROR: no se pudo cargar bronze_sword.tres"
+		)
+
+
+	if potion_definition == null:
+		print(
+			"ERROR: no se pudo cargar health_potion.tres"
+		)
+
+
+	if (
+		sword_definition == null
+		or
+		potion_definition == null
+	):
+		return
+
+
+	# -----------------------------------------------------
+	# ITEMS MOCK
+	#
+	# Conservamos exactamente la distribución que tenía
+	# InventoryGrid como datos temporales.
+	# -----------------------------------------------------
+
+	state.inventory.create_item(
+		potion_definition,
+		40,
+		Vector2i(
+			6,
+			3
+		),
+		"debug_potion_b"
+	)
+
+
+	state.inventory.create_item(
+		sword_definition,
+		1,
+		Vector2i(
+			2,
+			1
+		),
+		"debug_sword_a"
+	)
+
+
+	state.inventory.create_item(
+		sword_definition,
+		1,
+		Vector2i(
+			4,
+			2
+		),
+		"debug_sword_b"
+	)
+
+
+	state.inventory.create_item(
+		potion_definition,
+		25,
+		Vector2i(
+			6,
+			1
+		),
+		"debug_potion_a"
 	)
 
 
