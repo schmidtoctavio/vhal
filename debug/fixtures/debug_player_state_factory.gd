@@ -14,6 +14,9 @@ const DEFAULT_EXPERIENCE_REQUIRED: int = 100000
 
 const DEFAULT_ZEN: int = 125000
 
+const DEFAULT_MAP_ID: String = "test_town"
+const DEFAULT_WORLD_POSITION: Vector3 = Vector3.ZERO
+const DEFAULT_WORLD_ROTATION_Y: float = 0.0
 
 # =========================================================
 # DEFINICIONES DE ITEMS
@@ -52,6 +55,9 @@ const HEAL := preload(
 static func create_default() -> PlayerRuntimeState:
 	var state := PlayerRuntimeState.new()
 
+	_setup_world(
+		state
+	)
 
 	_setup_vitals(
 		state
@@ -76,6 +82,26 @@ static func create_default() -> PlayerRuntimeState:
 
 	return state
 
+# =========================================================
+# MUNDO
+# =========================================================
+
+static func _setup_world(
+	state: PlayerRuntimeState
+) -> void:
+	if state == null:
+		return
+
+
+	if state.world == null:
+		return
+
+
+	state.world.setup(
+		DEFAULT_MAP_ID,
+		DEFAULT_WORLD_POSITION,
+		DEFAULT_WORLD_ROTATION_Y
+	)
 
 # =========================================================
 # VITALES

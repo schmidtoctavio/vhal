@@ -8,6 +8,11 @@ extends RefCounted
 
 var character_summary: CharacterSummary = null
 
+# =========================================================
+# MUNDO
+# =========================================================
+
+var world: PlayerWorldState = null
 
 # =========================================================
 # VITALES
@@ -59,6 +64,9 @@ func _init(
 	summary: CharacterSummary = null
 ) -> void:
 	character_summary = summary
+
+
+	world = PlayerWorldState.new()
 
 
 	vitals = VitalsState.new()

@@ -613,6 +613,20 @@ func _on_game_session_started(
 
 		return
 
+	if player_state.world == null:
+		pending_game_character = null
+
+		game_session_service.end_session()
+
+		return
+
+
+	if player_state.world.map_id.strip_edges().is_empty():
+		pending_game_character = null
+
+		game_session_service.end_session()
+
+		return
 
 	if (
 		pending_game_character.character_id
