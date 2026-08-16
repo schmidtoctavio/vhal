@@ -18,7 +18,7 @@ const CHARACTER_CREATE_SCREEN_SCENE := preload(
 )
 
 const GAMEPLAY_SCREEN_SCENE := preload(
-    "res://features/gameplay/ui/gameplay_screen.tscn"
+	"res://features/gameplay/ui/gameplay_screen.tscn"
 )
 
 
@@ -42,9 +42,17 @@ const CHARACTER_SLOT_COUNT: int = 5
 )
 
 
+# =========================================================
+# SERVICIOS
+# =========================================================
+
+var auth_service: AuthService = (
+	MockAuthService.new()
+)
+
 
 # =========================================================
-# DATOS TEMPORALES DE CUENTA
+# DATOS TEMPORALES
 # =========================================================
 
 var pending_create_slot: int = -1
@@ -62,10 +70,34 @@ func _ready() -> void:
 	)
 
 
+	_bind_services()
+
+
 	ClientSession.clear_session()
 
 
 	_show_login()
+
+
+# =========================================================
+# SERVICIOS
+# =========================================================
+
+func _bind_services() -> void:
+	if not auth_service.login_succeeded.is_connected(
+		_on_auth_login_succeeded
+	):
+		auth_service.login_succeeded.connect(
+			_on_auth_login_succeeded
+		)
+
+
+	if not auth_service.login_failed.is_connected(
+		_on_auth_login_failed
+	):
+		auth_service.login_failed.connect(
+			_on_auth_login_failed
+		)
 
 
 # =========================================================
@@ -112,7 +144,6 @@ func _setup_debug_account() -> void:
 	)
 
 
-
 # =========================================================
 # LOGIN
 # =========================================================
@@ -141,11 +172,37 @@ func _show_login() -> void:
 
 func _on_login_requested(
 	account: String,
-	_password: String
+	password: String
+) -> void:
+	var login_screen := (
+		screen_router.current_screen
+		as LoginScreen
+	)
+
+
+	if login_screen != null:
+		login_screen.set_loading(
+			true
+		)
+
+
+	auth_service.login(
+		account,
+		password
+	)
+
+
+# =========================================================
+# RESULTADO DE AUTENTICACIÓN
+# =========================================================
+
+func _on_auth_login_succeeded(
+	account_id: int,
+	account_name: String
 ) -> void:
 	ClientSession.authenticate(
-		1,
-		account
+		account_id,
+		account_name
 	)
 
 
@@ -160,6 +217,29 @@ func _on_login_requested(
 
 	_show_character_select(
 		0
+	)
+
+
+func _on_auth_login_failed(
+	message: String
+) -> void:
+	var login_screen := (
+		screen_router.current_screen
+		as LoginScreen
+	)
+
+
+	if login_screen == null:
+		return
+
+
+	login_screen.set_loading(
+		false
+	)
+
+
+	login_screen.show_error(
+		message
 	)
 
 
@@ -214,6 +294,7 @@ func _show_character_select(
 	select_screen.back_requested.connect(
 		_on_character_select_back_requested
 	)
+
 
 # =========================================================
 # PEDIR CREACIÓN
@@ -293,6 +374,7 @@ func _on_delete_character_requested(
 		slot_index
 	)
 
+
 # =========================================================
 # ENTRAR AL MUNDO - TODAVÍA TEMPORAL
 # =========================================================
@@ -340,6 +422,7 @@ func _show_gameplay(
 	gameplay_screen.setup(
 		character
 	)
+
 
 # =========================================================
 # VOLVER AL LOGIN
