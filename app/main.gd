@@ -540,9 +540,20 @@ func _on_enter_world_requested(
 # =========================================================
 
 func _on_game_session_started(
-	character_id: int
+	character_id: int,
+	player_state: PlayerRuntimeState
 ) -> void:
 	if pending_game_character == null:
+		return
+
+
+	if player_state == null:
+		pending_game_character = null
+
+
+		game_session_service.end_session()
+
+
 		return
 
 
@@ -560,7 +571,37 @@ func _on_game_session_started(
 		return
 
 
-	var character := pending_game_character
+	# -----------------------------------------------------
+	# El Mock todavía no conoce el CharacterSummary
+	# completo.
+	#
+	# Main ya posee el summary previamente obtenido por
+	# CharacterService, así que lo adjuntamos al runtime.
+	# -----------------------------------------------------
+
+	if player_state.character_summary == null:
+		player_state.character_summary = (
+			pending_game_character
+		)
+
+
+	if (
+		player_state.character_summary.character_id
+		!=
+		character_id
+	):
+		pending_game_character = null
+
+
+		game_session_service.end_session()
+
+
+		return
+
+
+	var character := (
+		player_state.character_summary
+	)
 
 
 	pending_game_character = null
@@ -572,7 +613,7 @@ func _on_game_session_started(
 
 
 	_show_gameplay(
-		character
+		player_state
 	)
 
 
@@ -611,9 +652,9 @@ func _on_game_session_ended() -> void:
 # =========================================================
 
 func _show_gameplay(
-	character: CharacterSummary
+	player_state: PlayerRuntimeState
 ) -> void:
-	if character == null:
+	if player_state == null:
 		return
 
 
@@ -630,7 +671,7 @@ func _show_gameplay(
 
 
 	gameplay_screen.setup(
-		character
+		player_state
 	)
 
 

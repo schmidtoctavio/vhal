@@ -8,7 +8,8 @@ extends RefCounted
 
 @warning_ignore("unused_signal")
 signal session_started(
-	character_id: int
+	character_id: int,
+	player_state: PlayerRuntimeState
 )
 
 @warning_ignore("unused_signal")

@@ -8,6 +8,8 @@ extends GameSessionService
 
 var active_character_id: int = -1
 
+var active_player_state: PlayerRuntimeState = null
+
 
 # =========================================================
 # ENTRAR AL MUNDO
@@ -36,8 +38,14 @@ func start_session(
 	active_character_id = character_id
 
 
+	active_player_state = (
+		PlayerRuntimeState.new()
+	)
+
+
 	session_started.emit(
-		active_character_id
+		active_character_id,
+		active_player_state
 	)
 
 
@@ -47,6 +55,8 @@ func start_session(
 
 func end_session() -> void:
 	active_character_id = -1
+
+	active_player_state = null
 
 
 	session_ended.emit()

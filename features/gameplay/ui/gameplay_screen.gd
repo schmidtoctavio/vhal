@@ -2,12 +2,11 @@ class_name GameplayScreen
 extends Control
 
 
-
 # =========================================================
-# PERSONAJE ACTUAL
+# ESTADO DEL JUGADOR
 # =========================================================
 
-var character: CharacterSummary = null
+var player_state: PlayerRuntimeState = null
 
 
 # =========================================================
@@ -15,9 +14,9 @@ var character: CharacterSummary = null
 # =========================================================
 
 func setup(
-	selected_character: CharacterSummary
+	state: PlayerRuntimeState
 ) -> void:
-	character = selected_character
+	player_state = state
 
 
 	if is_node_ready():
@@ -37,8 +36,17 @@ func _ready() -> void:
 # =========================================================
 
 func _refresh_character_debug() -> void:
-	if character == null:
+	if player_state == null:
 		return
+
+
+	if player_state.character_summary == null:
+		return
+
+
+	var character := (
+		player_state.character_summary
+	)
 
 
 	print(
