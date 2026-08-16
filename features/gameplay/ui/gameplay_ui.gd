@@ -108,6 +108,8 @@ func _activate_player_state() -> void:
 
 	_activate_skill_state()
 
+	_activate_inventory_state()
+
 
 # =========================================================
 # VITALS STATE
@@ -211,6 +213,19 @@ func _activate_skill_state() -> void:
 		mp_bar.current_value
 	)
 
+# =========================================================
+# INVENTORY / EQUIPMENT STATE
+# =========================================================
+
+func _activate_inventory_state() -> void:
+	if player_state == null:
+		return
+
+
+	inventory_window.bind_models(
+		player_state.inventory,
+		player_state.equipment
+	)
 
 # =========================================================
 # DESCONECTAR PLAYER STATE
@@ -274,6 +289,15 @@ func _disconnect_player_state() -> void:
 			null
 		)
 
+	# -----------------------------------------------------
+	# INVENTORY / EQUIPMENT
+	# -----------------------------------------------------
+
+	if is_node_ready():
+		inventory_window.bind_models(
+			null,
+			null
+		)
 
 	skill_hotbar_data = null
 

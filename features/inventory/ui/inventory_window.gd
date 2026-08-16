@@ -22,14 +22,28 @@ extends BaseWindow
 
 
 # =========================================================
+# MODELOS
+# =========================================================
+
+var inventory_data: InventoryData = null
+
+var equipment_data: EquipmentData = null
+
+
+# =========================================================
 # CICLO DE VIDA
 # =========================================================
 
 func _ready() -> void:
 	super._ready()
-	
+
+
 	if Engine.is_editor_hint():
 		return
+
+
+	_apply_models()
+
 
 	# =====================================================
 	# INVENTARIO - DOBLE CLIC
@@ -76,6 +90,34 @@ func _ready() -> void:
 
 
 # =========================================================
+# BIND
+# =========================================================
+
+func bind_models(
+	new_inventory_data: InventoryData,
+	new_equipment_data: EquipmentData
+) -> void:
+	inventory_data = new_inventory_data
+
+	equipment_data = new_equipment_data
+
+
+	if is_node_ready():
+		_apply_models()
+
+
+func _apply_models() -> void:
+	inventory_grid.bind_inventory_data(
+		inventory_data
+	)
+
+
+	equipment_panel.bind_equipment_data(
+		equipment_data
+	)
+
+
+# =========================================================
 # DOBLE CLIC INVENTARIO -> EQUIPAMIENTO
 # =========================================================
 
@@ -86,25 +128,21 @@ func _on_inventory_item_activated(
 		return
 
 
-	if inventory_grid.inventory_data == null:
+	if inventory_data == null:
 		return
 
 
-	if equipment_panel.equipment_data == null:
+	if equipment_data == null:
 		return
 
 
 	var slot := (
-		equipment_panel.equipment_data
+		equipment_data
 		.find_first_compatible_empty_slot(
 			item
 		)
 	)
 
-
-	# -----------------------------------------------------
-	# No existe ningún slot válido/libre.
-	# -----------------------------------------------------
 
 	if slot < 0:
 		print(
@@ -116,9 +154,9 @@ func _on_inventory_item_activated(
 
 
 	var success := (
-		equipment_panel.equipment_data
+		equipment_data
 		.equip_from_inventory(
-			inventory_grid.inventory_data,
+			inventory_data,
 			item,
 			slot
 		)
@@ -144,21 +182,16 @@ func _on_equipment_item_activated(
 		return
 
 
-	if inventory_grid.inventory_data == null:
+	if inventory_data == null:
 		return
 
 
-	if equipment_panel.equipment_data == null:
+	if equipment_data == null:
 		return
 
-
-	# -----------------------------------------------------
-	# Buscamos automáticamente un hueco donde ENTRE
-	# el item completo.
-	# -----------------------------------------------------
 
 	var free_position := (
-		inventory_grid.inventory_data
+		inventory_data
 		.find_first_free_position(
 			item
 		)
@@ -175,9 +208,9 @@ func _on_equipment_item_activated(
 
 
 	var success := (
-		equipment_panel.equipment_data
+		equipment_data
 		.unequip_to_inventory(
-			inventory_grid.inventory_data,
+			inventory_data,
 			slot,
 			free_position
 		)
@@ -190,18 +223,18 @@ func _on_equipment_item_activated(
 			item.definition.display_name
 		)
 
+
 # =========================================================
 # ORDENAR INVENTARIO
 # =========================================================
 
 func _on_sort_button_pressed() -> void:
-	if inventory_grid.inventory_data == null:
+	if inventory_data == null:
 		return
 
 
 	var success := (
-		inventory_grid.inventory_data
-		.sort_items()
+		inventory_data.sort_items()
 	)
 
 

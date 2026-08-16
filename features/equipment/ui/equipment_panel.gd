@@ -40,10 +40,6 @@ var equipment_data: EquipmentData = null
 # =========================================================
 
 func _ready() -> void:
-	if equipment_data == null:
-		equipment_data = EquipmentData.new()
-
-
 	_bind_slots()
 
 

@@ -54,11 +54,6 @@ var cell_gap: int = 8
 )
 
 
-@export_group("Debug")
-
-@export var create_debug_items: bool = true
-
-
 # =========================================================
 # REFERENCIAS VISUALES
 # =========================================================
@@ -98,47 +93,33 @@ var _views_by_instance_id: Dictionary = {}
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
-	cells_layer.mouse_filter = \
-		Control.MOUSE_FILTER_IGNORE
 
-	drop_preview.mouse_filter = \
+	cells_layer.mouse_filter = (
 		Control.MOUSE_FILTER_IGNORE
+	)
 
-	items_layer.mouse_filter = \
+	drop_preview.mouse_filter = (
 		Control.MOUSE_FILTER_IGNORE
+	)
+
+	items_layer.mouse_filter = (
+		Control.MOUSE_FILTER_IGNORE
+	)
 
 
 	_hide_drop_preview()
 
 
 	# -----------------------------------------------------
-	# Si nadie nos entregó un InventoryData,
-	# creamos uno temporal.
+	# InventoryGrid ya NO crea InventoryData.
 	#
-	# Más adelante lo entregará PlayerInventory /
-	# GameState / servidor.
+	# El modelo debe ser entregado externamente.
 	# -----------------------------------------------------
 
-	if inventory_data == null:
-		inventory_data = InventoryData.new(
-			columns,
-			rows
-		)
-
-
-	_activate_inventory_data()
-
-
-	# -----------------------------------------------------
-	# DATOS TEMPORALES DE PRUEBA
-	# -----------------------------------------------------
-
-	if (
-		create_debug_items
-		and
-		inventory_data.items.is_empty()
-	):
-		_create_debug_items()
+	if inventory_data != null:
+		_activate_inventory_data()
+	else:
+		_build_cells()
 
 
 func _notification(
@@ -666,56 +647,6 @@ func _on_view_item_activated(
 	item_activated.emit(
 		item
 	)
-
-# =========================================================
-# DEBUG TEMPORAL
-# =========================================================
-
-func _create_debug_items() -> void:
-	if inventory_data == null:
-		return
-
-
-	var sword_definition := load(
-		"res://features/items/definitions/catalog/bronze_sword.tres"
-	) as ItemDefinition
-
-
-	var potion_definition := load(
-		"res://features/items/definitions/catalog/health_potion.tres"
-	) as ItemDefinition
-
-	inventory_data.create_item(
-		potion_definition,
-		40,
-		Vector2i(6, 3),
-		"debug_potion_b"
-	)
-
-	if sword_definition != null:
-		inventory_data.create_item(
-			sword_definition,
-			1,
-			Vector2i(2, 1),
-			"debug_sword_a"
-		)
-
-
-		inventory_data.create_item(
-			sword_definition,
-			1,
-			Vector2i(4, 2),
-			"debug_sword_b"
-		)
-
-
-	if potion_definition != null:
-		inventory_data.create_item(
-			potion_definition,
-			25,
-			Vector2i(6, 1),
-			"debug_potion_a"
-		)
 
 
 # =========================================================
