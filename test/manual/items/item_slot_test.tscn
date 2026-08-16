@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bnm2k0rnl6dp7"]
 
-[ext_resource type="PackedScene" uid="uid://s7leud2k6pax" path="res://scenes/ui/components/item_slot.tscn" id="1_6eitq"]
+[ext_resource type="PackedScene" uid="uid://s7leud2k6pax" path="res://features/items/ui/item_slot.tscn" id="1_6eitq"]
 [ext_resource type="Theme" uid="uid://cpskxhwof0dbj" path="res://assets/ui/kenney_adventure/kenney_adventure_theme.tres" id="1_bsps7"]
 
 [node name="ItemSlotTest" type="Control" unique_id=1232140787]
