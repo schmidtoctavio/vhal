@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://bv2w0uch2333n"]
 
-[ext_resource type="Script" uid="uid://c31w5jeq0nbd0" path="res://scenes/screens/gameplay/gameplay_screen.gd" id="1_cmpyh"]
-[ext_resource type="PackedScene" uid="uid://ca00xmfs71qab" path="res://scenes/ui/gameplay_ui.tscn" id="2_3tldw"]
+[ext_resource type="Script" uid="uid://c31w5jeq0nbd0" path="res://features/gameplay/ui/gameplay_screen.gd" id="1_cmpyh"]
+[ext_resource type="PackedScene" uid="uid://ca00xmfs71qab" path="res://features/gameplay/ui/gameplay_ui.tscn" id="2_3tldw"]
 
 [node name="GameplayScreen" type="Control" unique_id=368898034]
 layout_mode = 3

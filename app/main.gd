@@ -18,7 +18,7 @@ const CHARACTER_CREATE_SCREEN_SCENE := preload(
 )
 
 const GAMEPLAY_SCREEN_SCENE := preload(
-	"res://scenes/screens/gameplay/gameplay_screen.tscn"
+    "res://features/gameplay/ui/gameplay_screen.tscn"
 )
 
 
