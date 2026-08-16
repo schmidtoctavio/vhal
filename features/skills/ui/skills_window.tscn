@@ -1,13 +1,13 @@
 [gd_scene format=3 uid="uid://c4tom142cqmlj"]
 
-[ext_resource type="PackedScene" uid="uid://ck6ftdrkiei54" path="res://scenes/ui/components/base_window.tscn" id="1_l0l8y"]
-[ext_resource type="Script" uid="uid://b76yeblxw7g5b" path="res://scenes/ui/windows/skills_window.gd" id="2_hdelq"]
+[ext_resource type="PackedScene" uid="uid://ck6ftdrkiei54" path="res://scenes/ui/components/base_window.tscn" id="1_n0bqq"]
+[ext_resource type="Script" uid="uid://b76yeblxw7g5b" path="res://features/skills/ui/skills_window.gd" id="2_stejw"]
 
-[node name="SkillsWindow" unique_id=1417963305 instance=ExtResource("1_l0l8y")]
+[node name="SkillsWindow" unique_id=1417963305 instance=ExtResource("1_n0bqq")]
 custom_minimum_size = Vector2(360, 300)
 offset_right = 360.0
 offset_bottom = 300.0
-script = ExtResource("2_hdelq")
+script = ExtResource("2_stejw")
 
 [node name="TitleLabel" parent="ContentMargin/Content/Header" parent_id_path=PackedInt32Array(1938107997) index="0" unique_id=1114458321]
 text = "HABILIDADES"
