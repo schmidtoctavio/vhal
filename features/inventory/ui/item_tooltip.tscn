@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dxl80eojyr500"]
 
 [ext_resource type="Texture2D" uid="uid://c44dvek1tqhn6" path="res://assets/ui/kenney_adventure/pannels/panel_brown_dark.png" id="1_ouemw"]
-[ext_resource type="Script" uid="uid://b7as3icl778ky" path="res://scenes/ui/components/item_tooltip.gd" id="2_nnuu7"]
+[ext_resource type="Script" uid="uid://b7as3icl778ky" path="res://features/inventory/ui/item_tooltip.gd" id="2_nnuu7"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_nnuu7"]
 texture = ExtResource("1_ouemw")

@@ -10,11 +10,11 @@ signal item_activated(
 # =========================================================
 
 const CELL_SCENE := preload(
-	"res://scenes/ui/components/inventory_cell.tscn"
+	"res://features/inventory/ui/inventory_cell.tscn"
 )
 
 const ITEM_VIEW_SCENE := preload(
-	"res://scenes/ui/components/inventory_item_view.tscn"
+	"res://features/inventory/ui/inventory_item_view.tscn"
 )
 
 

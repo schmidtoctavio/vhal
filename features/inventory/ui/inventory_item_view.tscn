@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://nl1mgdmiang"]
 
-[ext_resource type="Script" uid="uid://dfx7t0vpuc8px" path="res://scenes/ui/components/inventory_item_view.gd" id="1_3fkrs"]
+[ext_resource type="Script" uid="uid://dfx7t0vpuc8px" path="res://features/inventory/ui/inventory_item_view.gd" id="1_3fkrs"]
 
 [node name="InventoryItemView" type="Control" unique_id=1095567961]
 visible = false
