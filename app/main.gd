@@ -671,7 +671,8 @@ func _show_gameplay(
 
 
 	gameplay_screen.setup(
-		player_state
+		player_state,
+		ClientSession.account_state
 	)
 
 

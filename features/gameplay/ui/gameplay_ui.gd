@@ -24,6 +24,7 @@ extends Control
 
 var player_state: PlayerRuntimeState = null
 
+var account_state: AccountState = null
 
 # =========================================================
 # SKILLS / HOTBAR
@@ -64,7 +65,7 @@ var skill_book_data: SkillBookData = null
 	$BottomHUD/HudActionsArea/ButtonsRow/VaultButton
 )
 
-@onready var vault_window: BaseWindow = (
+@onready var vault_window: VaultWindow = (
 	$WindowsLayer/VaultWindow
 )
 
@@ -101,6 +102,32 @@ func bind_player_state(
 	if is_node_ready():
 		_activate_player_state()
 
+# =========================================================
+# ACCOUNT STATE
+# =========================================================
+
+func bind_account_state(
+	state: AccountState
+) -> void:
+	account_state = state
+
+
+	if is_node_ready():
+		_activate_account_state()
+
+
+func _activate_account_state() -> void:
+	if account_state == null:
+		vault_window.bind_vault_data(
+			null
+		)
+
+		return
+
+
+	vault_window.bind_vault_data(
+		account_state.vault
+	)
 
 func _activate_player_state() -> void:
 	if player_state == null:
@@ -524,6 +551,10 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	_disconnect_player_state()
+
+	vault_window.bind_vault_data(
+		null
+	)
 
 
 # =========================================================

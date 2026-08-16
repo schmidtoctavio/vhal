@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cp3bh3xmtvcsl"]
 
 [ext_resource type="PackedScene" uid="uid://ck6ftdrkiei54" path="res://shared/ui/base_window.tscn" id="1_d5itu"]
+[ext_resource type="Script" uid="uid://px5kdol6l75k" path="res://features/vault/ui/vault_window.gd" id="2_05nd2"]
 [ext_resource type="Texture2D" uid="uid://bmkg1abftmrnr" path="res://assets/ui/kenney_adventure/pannels/panel_border_brown.png" id="2_ndp56"]
 [ext_resource type="PackedScene" uid="uid://ce5vhd2a5hewq" path="res://features/inventory/ui/inventory_grid.tscn" id="3_05nd2"]
 
@@ -15,6 +16,7 @@ texture_margin_bottom = 16.0
 custom_minimum_size = Vector2(316, 350)
 offset_right = 341.0
 offset_bottom = 350.0
+script = ExtResource("2_05nd2")
 window_title = "BAÚL"
 
 [node name="TitleLabel" parent="ContentMargin/Content/Header" parent_id_path=PackedInt32Array(1938107997) index="0" unique_id=1114458321]
@@ -41,4 +43,3 @@ layout_mode = 2
 rows = 16
 cell_size = 30
 cell_gap = 2
-create_debug_items = false
