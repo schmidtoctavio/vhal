@@ -42,6 +42,10 @@ var _create_http_request: HTTPRequest = null
 
 var _create_in_flight: bool = false
 
+var _delete_http_request: HTTPRequest = null
+
+var _delete_in_flight: bool = false
+
 # =========================================================
 # SETUP
 # =========================================================
@@ -93,6 +97,25 @@ func setup(
 	):
 		_create_http_request.request_completed.connect(
 			_on_create_request_completed
+		)
+	
+		_delete_http_request = HTTPRequest.new()
+
+	_delete_http_request.name = (
+		"CharacterDeleteHttpRequest"
+	)
+
+
+	request_owner.add_child(
+		_delete_http_request
+	)
+
+
+	if not _delete_http_request.request_completed.is_connected(
+		_on_delete_request_completed
+	):
+		_delete_http_request.request_completed.connect(
+			_on_delete_request_completed
 		)
 
 
@@ -774,10 +797,235 @@ func _extract_error_message(
 
 	return message
 
+# =========================================================
+# ELIMINAR PERSONAJE
+# =========================================================
+
 func delete_character(
 	_account_id: int,
-	_character_id: int
+	character_id: int
 ) -> void:
-	request_failed.emit(
-		"La eliminación de personajes todavía no está conectada al servidor."
+	if _delete_in_flight:
+		return
+
+
+	if _delete_http_request == null:
+		request_failed.emit(
+			"El servicio de eliminación de personajes no está disponible."
+		)
+
+		return
+
+
+	if not ClientSession.authenticated:
+		request_failed.emit(
+			"No hay una sesión autenticada."
+		)
+
+		return
+
+
+	if character_id <= 0:
+		request_failed.emit(
+			"El personaje seleccionado no es válido."
+		)
+
+		return
+
+
+	var access_token := (
+		ClientSession.access_token.strip_edges()
+	)
+
+
+	if access_token.is_empty():
+		request_failed.emit(
+			"La sesión no posee un token válido."
+		)
+
+		return
+
+
+	var headers := PackedStringArray([
+		"Accept: application/json",
+		"Authorization: Bearer %s" % access_token,
+	])
+
+
+	_delete_in_flight = true
+
+
+	var request_error := (
+		_delete_http_request.request(
+			API_BASE_URL
+			+ "/api/characters/%d"
+			% character_id,
+			headers,
+			HTTPClient.METHOD_DELETE
+		)
+	)
+
+
+	if request_error != OK:
+		_delete_in_flight = false
+
+
+		request_failed.emit(
+			"No se pudo iniciar la eliminación del personaje."
+		)
+
+# =========================================================
+# RESPUESTA DE ELIMINACIÓN
+# =========================================================
+
+func _on_delete_request_completed(
+	result: int,
+	response_code: int,
+	_headers: PackedStringArray,
+	body: PackedByteArray
+) -> void:
+	_delete_in_flight = false
+
+
+	if result != HTTPRequest.RESULT_SUCCESS:
+		request_failed.emit(
+			"No se pudo conectar con el servidor."
+		)
+
+		return
+
+
+	var body_text := (
+		body.get_string_from_utf8()
+	)
+
+
+	var parsed: Variant = (
+		JSON.parse_string(
+			body_text
+		)
+	)
+
+
+	if typeof(parsed) != TYPE_DICTIONARY:
+		request_failed.emit(
+			"El servidor devolvió una respuesta inválida."
+		)
+
+		return
+
+
+	var response: Dictionary = parsed
+
+
+	if (
+		response_code < 200
+		or
+		response_code >= 300
+	):
+		if response_code == 401:
+			request_failed.emit(
+				"La sesión expiró o ya no es válida."
+			)
+
+			return
+
+
+		request_failed.emit(
+			_extract_error_message(
+				response,
+				"No se pudo eliminar el personaje."
+			)
+		)
+
+		return
+
+
+	var data: Dictionary = response.get(
+		"data",
+		{}
+	)
+
+
+	var character_data: Dictionary = data.get(
+		"character",
+		{}
+	)
+
+
+	var character_id := int(
+		character_data.get(
+			"id",
+			-1
+		)
+	)
+
+
+	var slot_index := int(
+		character_data.get(
+			"slot_index",
+			-1
+		)
+	)
+
+
+	if (
+		character_id <= 0
+		or
+		slot_index < 0
+		or
+		slot_index >= CHARACTER_SLOT_COUNT
+	):
+		request_failed.emit(
+			"El servidor devolvió datos inválidos del personaje eliminado."
+		)
+
+		return
+
+
+	var characters: Array[CharacterSummary] = []
+
+	characters.assign(
+		ClientSession.character_summaries
+	)
+
+
+	if characters.size() != CHARACTER_SLOT_COUNT:
+		characters.resize(
+			CHARACTER_SLOT_COUNT
+		)
+
+
+	var current_character := (
+		characters[
+			slot_index
+		]
+	)
+
+
+	if (
+		current_character != null
+		and
+		current_character.character_id != character_id
+	):
+		request_failed.emit(
+			"El estado local de personajes no coincide con el servidor."
+		)
+
+		return
+
+
+	characters[
+		slot_index
+	] = null
+
+
+	characters_loaded.emit(
+		characters
+	)
+
+
+	character_deleted.emit(
+		character_id,
+		slot_index
 	)
