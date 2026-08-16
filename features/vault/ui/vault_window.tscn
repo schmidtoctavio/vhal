@@ -15,6 +15,10 @@ texture_margin_bottom = 16.0
 custom_minimum_size = Vector2(316, 350)
 offset_right = 341.0
 offset_bottom = 350.0
+window_title = "BAÚL"
+
+[node name="TitleLabel" parent="ContentMargin/Content/Header" parent_id_path=PackedInt32Array(1938107997) index="0" unique_id=1114458321]
+text = "BAÚL"
 
 [node name="BagPanel" type="PanelContainer" parent="ContentMargin/Content/Body" parent_id_path=PackedInt32Array(521580399) index="0" unique_id=328993188]
 custom_minimum_size = Vector2(285, 0)
