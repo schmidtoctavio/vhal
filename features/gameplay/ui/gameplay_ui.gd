@@ -1,3 +1,4 @@
+class_name GameplayUI
 extends Control
 
 
@@ -12,6 +13,12 @@ extends Control
 @onready var mp_bar: StatBar = (
 	$BottomHUD/MPBar
 )
+
+# =========================================================
+# ESTADO DEL JUGADOR
+# =========================================================
+
+var player_state: PlayerRuntimeState = null
 
 
 # =========================================================
@@ -66,6 +73,132 @@ var skill_book_data: SkillBookData = null
 	$WindowsLayer/SkillsWindow
 )
 
+# =========================================================
+# PLAYER STATE
+# =========================================================
+
+func bind_player_state(
+	state: PlayerRuntimeState
+) -> void:
+	if player_state == state:
+		if is_node_ready():
+			_refresh_vitals_from_state(
+				false
+			)
+
+		return
+
+
+	_disconnect_player_state()
+
+
+	player_state = state
+
+
+	if is_node_ready():
+		_activate_player_state()
+
+
+func _activate_player_state() -> void:
+	if player_state == null:
+		return
+
+
+	if player_state.vitals == null:
+		return
+
+
+	if not player_state.vitals.hp_changed.is_connected(
+		_on_vitals_hp_changed
+	):
+		player_state.vitals.hp_changed.connect(
+			_on_vitals_hp_changed
+		)
+
+
+	if not player_state.vitals.mp_changed.is_connected(
+		_on_vitals_mp_changed
+	):
+		player_state.vitals.mp_changed.connect(
+			_on_vitals_mp_changed
+		)
+
+
+	_refresh_vitals_from_state(
+		false
+	)
+
+
+func _disconnect_player_state() -> void:
+	if player_state == null:
+		return
+
+
+	if player_state.vitals == null:
+		return
+
+
+	if player_state.vitals.hp_changed.is_connected(
+		_on_vitals_hp_changed
+	):
+		player_state.vitals.hp_changed.disconnect(
+			_on_vitals_hp_changed
+		)
+
+
+	if player_state.vitals.mp_changed.is_connected(
+		_on_vitals_mp_changed
+	):
+		player_state.vitals.mp_changed.disconnect(
+			_on_vitals_mp_changed
+		)
+
+
+func _refresh_vitals_from_state(
+	animated: bool = false
+) -> void:
+	if player_state == null:
+		return
+
+
+	if player_state.vitals == null:
+		return
+
+
+	hp_bar.set_values(
+		float(player_state.vitals.hp),
+		float(player_state.vitals.max_hp),
+		animated
+	)
+
+
+	mp_bar.set_values(
+		float(player_state.vitals.mp),
+		float(player_state.vitals.max_mp),
+		animated
+	)
+
+
+func _on_vitals_hp_changed(
+	current: int,
+	maximum: int
+) -> void:
+	hp_bar.set_values(
+		float(current),
+		float(maximum),
+		true
+	)
+
+
+func _on_vitals_mp_changed(
+	current: int,
+	maximum: int
+) -> void:
+	mp_bar.set_values(
+		float(current),
+		float(maximum),
+		true
+	)
 
 # =========================================================
 # READY
@@ -163,7 +296,12 @@ func _ready() -> void:
 	_refresh_skill_mana_states(
 		mp_bar.current_value
 	)
+	
+	if player_state != null:
+		_activate_player_state()
 
+func _exit_tree() -> void:
+	_disconnect_player_state()
 
 # =========================================================
 # SISTEMA DE SKILLS - SETUP
@@ -727,11 +865,16 @@ func _unhandled_input(
 		if event.is_action_pressed(
 			&"debug_damage"
 		):
-			hp_bar.set_current_value(
-				hp_bar.current_value
-				-
-				350.0
-			)
+			if (
+				player_state != null
+				and
+				player_state.vitals != null
+			):
+				player_state.vitals.set_hp(
+					player_state.vitals.hp
+					-
+					350
+				)
 
 
 	# =====================================================
@@ -744,11 +887,16 @@ func _unhandled_input(
 		if event.is_action_pressed(
 			&"debug_heal"
 		):
-			hp_bar.set_current_value(
-				hp_bar.current_value
-				+
-				350.0
-			)
+			if (
+				player_state != null
+				and
+				player_state.vitals != null
+			):
+				player_state.vitals.set_hp(
+					player_state.vitals.hp
+					+
+					350
+				)
 
 
 	# =====================================================
@@ -761,9 +909,14 @@ func _unhandled_input(
 		if event.is_action_pressed(
 			&"debug_restore_mana"
 		):
-			mp_bar.set_current_value(
-				mp_bar.max_value
-			)
+			if (
+				player_state != null
+				and
+				player_state.vitals != null
+			):
+				player_state.vitals.set_mp(
+					player_state.vitals.max_mp
+				)
 
 
 # =========================================================

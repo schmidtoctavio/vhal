@@ -3,6 +3,15 @@ extends Control
 
 
 # =========================================================
+# REFERENCIAS
+# =========================================================
+
+@onready var gameplay_ui: GameplayUI = (
+	$GameplayUI
+)
+
+
+# =========================================================
 # ESTADO DEL JUGADOR
 # =========================================================
 
@@ -20,6 +29,8 @@ func setup(
 
 
 	if is_node_ready():
+		_apply_player_state()
+
 		_refresh_character_debug()
 
 
@@ -28,7 +39,23 @@ func setup(
 # =========================================================
 
 func _ready() -> void:
+	_apply_player_state()
+
 	_refresh_character_debug()
+
+
+# =========================================================
+# APLICAR ESTADO
+# =========================================================
+
+func _apply_player_state() -> void:
+	if player_state == null:
+		return
+
+
+	gameplay_ui.bind_player_state(
+		player_state
+	)
 
 
 # =========================================================

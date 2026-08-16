@@ -3,6 +3,14 @@ extends GameSessionService
 
 
 # =========================================================
+# VALORES MOCK TEMPORALES
+# =========================================================
+
+const MOCK_MAX_HP: int = 100000
+const MOCK_MAX_MP: int = 350
+
+
+# =========================================================
 # ESTADO MOCK
 # =========================================================
 
@@ -40,6 +48,29 @@ func start_session(
 
 	active_player_state = (
 		PlayerRuntimeState.new()
+	)
+
+
+	# -----------------------------------------------------
+	# VITALES MOCK TEMPORALES
+	#
+	# En F05 esto se moverá a DebugPlayerStateFactory.
+	# -----------------------------------------------------
+
+	active_player_state.vitals.set_max_hp(
+		MOCK_MAX_HP
+	)
+
+	active_player_state.vitals.set_hp(
+		MOCK_MAX_HP
+	)
+
+	active_player_state.vitals.set_max_mp(
+		MOCK_MAX_MP
+	)
+
+	active_player_state.vitals.set_mp(
+		MOCK_MAX_MP
 	)
 
 
