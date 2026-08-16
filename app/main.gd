@@ -21,6 +21,10 @@ const GAMEPLAY_SCREEN_SCENE := preload(
 	"res://features/gameplay/ui/gameplay_screen.tscn"
 )
 
+const LOADING_SCREEN_SCENE := preload(
+	"res://features/gameplay/ui/loading_screen.tscn"
+)
+
 
 # =========================================================
 # CONSTANTES
@@ -577,6 +581,11 @@ func _on_enter_world_requested(
 	pending_game_character = character
 
 
+	_show_loading(
+		character
+	)
+
+
 	game_session_service.start_session(
 		ClientSession.account_id,
 		character.character_id
@@ -668,12 +677,26 @@ func _on_game_session_started(
 func _on_game_session_failed(
 	message: String
 ) -> void:
+	var return_slot: int = 0
+
+
+	if pending_game_character != null:
+		return_slot = (
+			pending_game_character.slot_index
+		)
+
+
 	pending_game_character = null
 
 
 	print(
 		"GameSessionService | Error: ",
 		message
+	)
+
+
+	_show_character_select(
+		return_slot
 	)
 
 
@@ -694,6 +717,32 @@ func _on_game_session_ended() -> void:
 		return_slot
 	)
 
+# =========================================================
+# LOADING
+# =========================================================
+
+func _show_loading(
+	character: CharacterSummary
+) -> void:
+	if character == null:
+		return
+
+
+	var loading_screen := (
+		screen_router.change_screen(
+			LOADING_SCREEN_SCENE
+		)
+		as LoadingScreen
+	)
+
+
+	if loading_screen == null:
+		return
+
+
+	loading_screen.setup(
+		character.display_name
+	)
 
 # =========================================================
 # GAMEPLAY

@@ -10,6 +10,8 @@ var active_character_id: int = -1
 
 var active_player_state: PlayerRuntimeState = null
 
+const MOCK_CONNECTION_DELAY_SECONDS: float = 0.75
+
 
 # =========================================================
 # ENTRAR AL MUNDO
@@ -34,6 +36,13 @@ func start_session(
 
 		return
 
+	await (
+		Engine
+		.get_main_loop()
+		as SceneTree
+	).create_timer(
+		MOCK_CONNECTION_DELAY_SECONDS
+	).timeout
 
 	active_character_id = character_id
 

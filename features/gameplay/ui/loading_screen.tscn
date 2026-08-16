@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://cjjiveg520cqs"]
+
+[ext_resource type="Script" uid="uid://ctg1f8ja7j74" path="res://features/gameplay/ui/loading_screen.gd" id="1_towrp"]
+
+[node name="LoadingScreen" type="Control" unique_id=1440122485]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_towrp")
+
+[node name="Background" type="ColorRect" parent="." unique_id=481163588]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="Background" unique_id=1607461530]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Content" type="VBoxContainer" parent="Background/CenterContainer" unique_id=1615982306]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Background/CenterContainer/Content" unique_id=138732148]
+layout_mode = 2
+text = "INGRESANDO AL MUNDO..."
+
+[node name="CharacterLabel" type="Label" parent="Background/CenterContainer/Content" unique_id=1329628296]
+layout_mode = 2
+text = "Preparando personaje..."
