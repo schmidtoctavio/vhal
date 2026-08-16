@@ -54,6 +54,10 @@ var character_service: CharacterService = (
 	MockCharacterService.new()
 )
 
+var game_session_service: GameSessionService = (
+	MockGameSessionService.new()
+)
+
 
 # =========================================================
 # ESTADO TEMPORAL DEL FLUJO
@@ -62,6 +66,8 @@ var character_service: CharacterService = (
 var pending_create_slot: int = -1
 
 var waiting_for_characters_after_login: bool = false
+
+var pending_game_character: CharacterSummary = null
 
 
 # =========================================================
@@ -141,6 +147,34 @@ func _bind_services() -> void:
 	):
 		character_service.request_failed.connect(
 			_on_character_request_failed
+		)
+
+
+	# -----------------------------------------------------
+	# GAME SESSION
+	# -----------------------------------------------------
+
+	if not game_session_service.session_started.is_connected(
+		_on_game_session_started
+	):
+		game_session_service.session_started.connect(
+			_on_game_session_started
+		)
+
+
+	if not game_session_service.session_ended.is_connected(
+		_on_game_session_ended
+	):
+		game_session_service.session_ended.connect(
+			_on_game_session_ended
+		)
+
+
+	if not game_session_service.session_failed.is_connected(
+		_on_game_session_failed
+	):
+		game_session_service.session_failed.connect(
+			_on_game_session_failed
 		)
 
 
@@ -478,7 +512,7 @@ func _on_delete_character_requested(
 
 
 # =========================================================
-# ENTRAR AL MUNDO
+# PEDIR ENTRADA AL MUNDO
 # =========================================================
 
 func _on_enter_world_requested(
@@ -488,6 +522,50 @@ func _on_enter_world_requested(
 		return
 
 
+	if not ClientSession.authenticated:
+		return
+
+
+	pending_game_character = character
+
+
+	game_session_service.start_session(
+		ClientSession.account_id,
+		character.character_id
+	)
+
+
+# =========================================================
+# RESULTADOS DE SESIÓN DE JUEGO
+# =========================================================
+
+func _on_game_session_started(
+	character_id: int
+) -> void:
+	if pending_game_character == null:
+		return
+
+
+	if (
+		pending_game_character.character_id
+		!=
+		character_id
+	):
+		pending_game_character = null
+
+
+		game_session_service.end_session()
+
+
+		return
+
+
+	var character := pending_game_character
+
+
+	pending_game_character = null
+
+
 	ClientSession.select_character(
 		character
 	)
@@ -495,6 +573,36 @@ func _on_enter_world_requested(
 
 	_show_gameplay(
 		character
+	)
+
+
+func _on_game_session_failed(
+	message: String
+) -> void:
+	pending_game_character = null
+
+
+	print(
+		"GameSessionService | Error: ",
+		message
+	)
+
+
+func _on_game_session_ended() -> void:
+	var return_slot := maxi(
+		ClientSession.selected_character_slot,
+		0
+	)
+
+
+	pending_game_character = null
+
+
+	ClientSession.clear_character_selection()
+
+
+	_show_character_select(
+		return_slot
 	)
 
 
@@ -537,6 +645,8 @@ func _on_character_select_back_requested() -> void:
 	pending_create_slot = -1
 
 	waiting_for_characters_after_login = false
+
+	pending_game_character = null
 
 
 	_show_login()
