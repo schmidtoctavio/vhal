@@ -11,6 +11,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 script = ExtResource("1_cmpyh")
 
 [node name="Background" type="ColorRect" parent="." unique_id=403828465]
@@ -26,6 +27,7 @@ color = Color(0.03529412, 0.043137256, 0.0627451, 1)
 
 [node name="GameplayUI" parent="." unique_id=79183495 instance=ExtResource("2_3tldw")]
 layout_mode = 1
+mouse_filter = 0
 
 [node name="WorldRoot" type="Node3D" parent="." unique_id=1637394235]
 

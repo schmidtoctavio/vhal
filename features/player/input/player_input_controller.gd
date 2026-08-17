@@ -17,6 +17,8 @@ var player_actor: PlayerActor = null
 
 var world_camera: Camera3D = null
 
+var gameplay_ui: Control = null
+
 
 # =========================================================
 # ESTADO
@@ -31,7 +33,8 @@ var input_enabled: bool = false
 
 func setup(
 	actor: PlayerActor,
-	camera: Camera3D
+	camera: Camera3D,
+	ui_root: Control
 ) -> bool:
 	if actor == null:
 		return false
@@ -41,9 +44,15 @@ func setup(
 		return false
 
 
+	if ui_root == null:
+		return false
+
+
 	player_actor = actor
 
 	world_camera = camera
+
+	gameplay_ui = ui_root
 
 	input_enabled = true
 
@@ -62,12 +71,14 @@ func clear() -> void:
 
 	world_camera = null
 
+	gameplay_ui = null
+
 
 # =========================================================
 # INPUT
 # =========================================================
 
-func _unhandled_input(
+func _input(
 	event: InputEvent
 ) -> void:
 	if not input_enabled:
@@ -79,6 +90,10 @@ func _unhandled_input(
 
 
 	if world_camera == null:
+		return
+
+
+	if gameplay_ui == null:
 		return
 
 
@@ -103,15 +118,81 @@ func _unhandled_input(
 		return
 
 
-	# Reservamos Ctrl + click izquierdo para
-	# las futuras acciones de combate.
+	# -----------------------------------------------------
+	# Ctrl + click queda reservado para combate.
+	# -----------------------------------------------------
+
 	if mouse_event.ctrl_pressed:
+		return
+
+
+	# -----------------------------------------------------
+	# Si el mouse está sobre una parte interactiva del HUD,
+	# el click no pertenece al mundo.
+	# -----------------------------------------------------
+
+	if _is_pointer_over_blocking_ui():
 		return
 
 
 	_request_move_to_screen_position(
 		mouse_event.position
 	)
+
+
+# =========================================================
+# UI BLOQUEANTE
+# =========================================================
+
+func _is_pointer_over_blocking_ui() -> bool:
+	var hovered_control := (
+		get_viewport().gui_get_hovered_control()
+	)
+
+
+	if hovered_control == null:
+		return false
+
+
+	# -----------------------------------------------------
+	# GameplayUI ocupa toda la pantalla.
+	#
+	# Si el control detectado es exactamente GameplayUI,
+	# significa que estamos sobre el mundo vacío.
+	# -----------------------------------------------------
+
+	if hovered_control == gameplay_ui:
+		return false
+
+
+	# -----------------------------------------------------
+	# GameplayScreen también puede aparecer como root
+	# full-screen según el orden de propagación.
+	# -----------------------------------------------------
+
+	var gameplay_screen := (
+		gameplay_ui.get_parent()
+		as Control
+	)
+
+
+	if hovered_control == gameplay_screen:
+		return false
+
+
+	# -----------------------------------------------------
+	# Cualquier hijo real de GameplayUI:
+	# HUD, botones, slots, ventanas, etc.
+	# bloquea el click-to-move.
+	# -----------------------------------------------------
+
+	if gameplay_ui.is_ancestor_of(
+		hovered_control
+	):
+		return true
+
+
+	return false
 
 
 # =========================================================
@@ -198,4 +279,6 @@ func _request_move_to_screen_position(
 	)
 
 
+	# El click ya fue convertido en movimiento.
+	# No debe seguir propagándose a la GUI.
 	get_viewport().set_input_as_handled()

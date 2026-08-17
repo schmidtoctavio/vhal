@@ -10,6 +10,7 @@ size = Vector3(0.8, 1.8, 0.8)
 script = ExtResource("1_ef3e4")
 
 [node name="ModelRoot" type="Node3D" parent="." unique_id=715436970]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
 
 [node name="PlaceholderMesh" type="MeshInstance3D" parent="ModelRoot" unique_id=822779182]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)

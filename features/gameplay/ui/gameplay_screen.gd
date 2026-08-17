@@ -375,7 +375,8 @@ func _spawn_player_from_state() -> bool:
 
 	if not player_input_controller.setup(
 		player_actor,
-		debug_camera
+		debug_camera,
+		gameplay_ui
 	):
 		player_actor.queue_free()
 
