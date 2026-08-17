@@ -3,16 +3,52 @@ extends Node3D
 
 
 # =========================================================
-# CONFIGURACIÓN
+# PERFIL DE CÁMARA MU-LIKE
 # =========================================================
 
-const CAMERA_OFFSET: Vector3 = Vector3(
-	0.0,
-	10.0,
-	14.0
-)
+@export_group("MU-like Camera")
 
-const FOLLOW_SPEED: float = 8.0
+@export_range(
+	-180.0,
+	180.0,
+	0.1
+)
+var yaw_degrees: float = -45.0
+
+@export_range(
+	20.0,
+	70.0,
+	0.1
+)
+var pitch_degrees: float = 48.5
+
+@export_range(
+	10.0,
+	40.0,
+	0.1
+)
+var camera_distance: float = 22.0
+
+@export_range(
+	20.0,
+	80.0,
+	0.1
+)
+var camera_fov: float = 35.0
+
+
+# =========================================================
+# SEGUIMIENTO
+# =========================================================
+
+@export_group("Follow")
+
+@export_range(
+	1.0,
+	30.0,
+	0.1
+)
+var follow_sharpness: float = 14.0
 
 
 # =========================================================
@@ -52,8 +88,7 @@ func setup(
 
 
 	# -----------------------------------------------------
-	# Empezamos inmediatamente sobre el jugador para que
-	# la cámara no viaje desde el origen del mundo.
+	# El controller comienza directamente sobre el target.
 	# -----------------------------------------------------
 
 	global_position = (
@@ -61,9 +96,7 @@ func setup(
 	)
 
 
-	camera.position = (
-		CAMERA_OFFSET
-	)
+	_apply_camera_profile()
 
 
 	camera.make_current()
@@ -72,10 +105,95 @@ func setup(
 	follow_enabled = true
 
 
-	_update_camera_look()
-
-
 	return true
+
+
+# =========================================================
+# PERFIL DE CÁMARA
+# =========================================================
+
+func _apply_camera_profile() -> void:
+	if camera == null:
+		return
+
+
+	camera.fov = camera_fov
+
+
+	camera.position = (
+		_calculate_camera_offset()
+	)
+
+
+	# -----------------------------------------------------
+	# Calculamos la orientación una sola vez.
+	#
+	# El ángulo de cámara debe permanecer fijo mientras
+	# seguimos al personaje, como en una cámara isométrica.
+	# -----------------------------------------------------
+
+	camera.look_at(
+		global_position,
+		Vector3.UP
+	)
+
+
+# =========================================================
+# OFFSET ISOMÉTRICO
+# =========================================================
+
+func _calculate_camera_offset() -> Vector3:
+	var pitch_radians := deg_to_rad(
+		pitch_degrees
+	)
+
+
+	var yaw_radians := deg_to_rad(
+		yaw_degrees
+	)
+
+
+	var horizontal_distance := (
+		camera_distance
+		*
+		cos(
+			pitch_radians
+		)
+	)
+
+
+	var vertical_distance := (
+		camera_distance
+		*
+		sin(
+			pitch_radians
+		)
+	)
+
+
+	var offset_x := (
+		sin(
+			yaw_radians
+		)
+		*
+		horizontal_distance
+	)
+
+
+	var offset_z := (
+		cos(
+			yaw_radians
+		)
+		*
+		horizontal_distance
+	)
+
+
+	return Vector3(
+		offset_x,
+		vertical_distance,
+		offset_z
+	)
 
 
 # =========================================================
@@ -119,12 +237,14 @@ func _process(
 		return
 
 
-	var follow_weight := clampf(
-		FOLLOW_SPEED
-		*
-		delta,
-		0.0,
+	var follow_weight := (
 		1.0
+		-
+		exp(
+			-follow_sharpness
+			*
+			delta
+		)
 	)
 
 
@@ -133,37 +253,4 @@ func _process(
 			target.global_position,
 			follow_weight
 		)
-	)
-
-
-	_update_camera_look()
-
-
-# =========================================================
-# MIRAR AL PLAYER
-# =========================================================
-
-func _update_camera_look() -> void:
-	if camera == null:
-		return
-
-
-	if target == null:
-		return
-
-
-	var look_target := (
-		target.global_position
-	)
-
-
-	if camera.global_position.is_equal_approx(
-		look_target
-	):
-		return
-
-
-	camera.look_at(
-		look_target,
-		Vector3.UP
 	)
