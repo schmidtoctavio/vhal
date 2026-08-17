@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c31w5jeq0nbd0" path="res://features/gameplay/ui/gameplay_screen.gd" id="1_cmpyh"]
 [ext_resource type="PackedScene" uid="uid://ca00xmfs71qab" path="res://features/gameplay/ui/gameplay_ui.tscn" id="2_3tldw"]
+[ext_resource type="Script" uid="uid://d1r74avhqanhn" path="res://features/player/input/player_input_controller.gd" id="3_5wu12"]
 
 [node name="GameplayScreen" type="Control" unique_id=368898034]
 layout_mode = 3
@@ -35,3 +36,6 @@ layout_mode = 1
 [node name="DebugCamera3D" type="Camera3D" parent="WorldRoot" unique_id=1201140865]
 transform = Transform3D(1, 0, 0, 0, 0.81915206, 0.57357645, 0, -0.57357645, 0.81915206, 0, 10, 14)
 current = true
+
+[node name="PlayerInputController" type="Node" parent="." unique_id=1375599803]
+script = ExtResource("3_5wu12")
