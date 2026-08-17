@@ -27,3 +27,5 @@ mesh = SubResource("BoxMesh_ef3e4")
 [node name="WingsRoot" type="Node3D" parent="EquipmentVisuals" unique_id=1944908099]
 
 [node name="AnimationRoot" type="Node3D" parent="." unique_id=1719502437]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="AnimationRoot" unique_id=2116239565]
