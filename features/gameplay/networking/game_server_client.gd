@@ -16,6 +16,9 @@ signal game_server_connection_failed(
 
 signal game_server_disconnected
 
+signal world_snapshot_received(
+	snapshot: Dictionary
+)
 
 # =========================================================
 # CONFIGURACIÓN
@@ -29,6 +32,11 @@ const SERVER_PEER_ID: int = 1
 
 const AUTH_TIMEOUT_SECONDS: float = 10.0
 
+const NETWORK_PROTOCOL_VERSION: int = 1
+
+const MESSAGE_WORLD_SNAPSHOT: String = (
+	"world_snapshot"
+)
 
 # =========================================================
 # ESTADO
@@ -44,6 +52,7 @@ var pending_ticket: String = ""
 
 var _failure_emitted: bool = false
 
+var latest_world_snapshot: Dictionary = {}
 
 # =========================================================
 # CICLO DE VIDA
@@ -87,6 +96,12 @@ func _connect_multiplayer_signals() -> void:
 		as SceneMultiplayer
 	)
 
+	if not scene_multiplayer.peer_packet.is_connected(
+		_on_peer_packet
+	):
+		scene_multiplayer.peer_packet.connect(
+			_on_peer_packet
+		)
 
 	if scene_multiplayer == null:
 		return
@@ -354,6 +369,313 @@ func _on_connection_failed() -> void:
 		"No se pudo conectar al Game Server."
 	)
 
+# =========================================================
+# PAQUETES DEL GAME SERVER
+# =========================================================
+
+func _on_peer_packet(
+	peer_id: int,
+	packet: PackedByteArray
+) -> void:
+	if peer_id != SERVER_PEER_ID:
+		_fail_connection(
+			"Se recibió información desde un peer inválido."
+		)
+
+		return
+
+
+	if not connected:
+		return
+
+
+	var parsed: Variant = (
+		JSON.parse_string(
+			packet.get_string_from_utf8()
+		)
+	)
+
+
+	if typeof(parsed) != TYPE_DICTIONARY:
+		_fail_connection(
+			"El Game Server envió un paquete inválido."
+		)
+
+		return
+
+
+	var message: Dictionary = (
+		parsed
+	)
+
+
+	var version := int(
+		message.get(
+			"version",
+			0
+		)
+	)
+
+
+	if version != NETWORK_PROTOCOL_VERSION:
+		_fail_connection(
+			"Versión de protocolo incompatible."
+		)
+
+		return
+
+
+	var message_type := String(
+		message.get(
+			"type",
+			""
+		)
+	)
+
+
+	if message_type != MESSAGE_WORLD_SNAPSHOT:
+		return
+
+
+	var data_value: Variant = (
+		message.get(
+			"data",
+			null
+		)
+	)
+
+
+	if typeof(data_value) != TYPE_DICTIONARY:
+		_fail_connection(
+			"El snapshot de mundo es inválido."
+		)
+
+		return
+
+
+	var snapshot: Dictionary = (
+		data_value
+	)
+
+
+	_process_world_snapshot(
+		snapshot
+	)
+
+
+# =========================================================
+# SNAPSHOT DE MUNDO
+# =========================================================
+
+func _process_world_snapshot(
+	snapshot: Dictionary
+) -> void:
+	var snapshot_peer_id := int(
+		snapshot.get(
+			"peer_id",
+			-1
+		)
+	)
+
+
+	var local_peer_id := (
+		multiplayer.get_unique_id()
+	)
+
+
+	if snapshot_peer_id != local_peer_id:
+		_fail_connection(
+			"El snapshot pertenece a otro peer."
+		)
+
+		return
+
+
+	var account_id := int(
+		snapshot.get(
+			"account_id",
+			-1
+		)
+	)
+
+
+	if account_id <= 0:
+		_fail_connection(
+			"El snapshot no posee una cuenta válida."
+		)
+
+		return
+
+
+	var character_value: Variant = (
+		snapshot.get(
+			"character",
+			null
+		)
+	)
+
+
+	if typeof(character_value) != TYPE_DICTIONARY:
+		_fail_connection(
+			"El snapshot no posee un personaje válido."
+		)
+
+		return
+
+
+	var character_data: Dictionary = (
+		character_value
+	)
+
+
+	var character_id := int(
+		character_data.get(
+			"id",
+			-1
+		)
+	)
+
+
+	if character_id <= 0:
+		_fail_connection(
+			"El snapshot posee un Character ID inválido."
+		)
+
+		return
+
+
+	var world_value: Variant = (
+		snapshot.get(
+			"world",
+			null
+		)
+	)
+
+
+	if typeof(world_value) != TYPE_DICTIONARY:
+		_fail_connection(
+			"El snapshot no posee datos de mundo."
+		)
+
+		return
+
+
+	var world_data: Dictionary = (
+		world_value
+	)
+
+
+	var map_id := String(
+		world_data.get(
+			"map_id",
+			""
+		)
+	).strip_edges()
+
+
+	if map_id.is_empty():
+		_fail_connection(
+			"El snapshot no posee un mapa válido."
+		)
+
+		return
+
+
+	var position_value: Variant = (
+		world_data.get(
+			"position",
+			null
+		)
+	)
+
+
+	if typeof(position_value) != TYPE_DICTIONARY:
+		_fail_connection(
+			"El snapshot no posee una posición válida."
+		)
+
+		return
+
+
+	var position_data: Dictionary = (
+		position_value
+	)
+
+
+	if (
+		not position_data.has("x")
+		or
+		not position_data.has("y")
+		or
+		not position_data.has("z")
+	):
+		_fail_connection(
+			"La posición del snapshot está incompleta."
+		)
+
+		return
+
+
+	var position := Vector3(
+		float(
+			position_data["x"]
+		),
+		float(
+			position_data["y"]
+		),
+		float(
+			position_data["z"]
+		)
+	)
+
+
+	var rotation_y := float(
+		world_data.get(
+			"rotation_y",
+			0.0
+		)
+	)
+
+
+	latest_world_snapshot = {
+		"peer_id": snapshot_peer_id,
+
+		"account_id": account_id,
+
+		"character": character_data.duplicate(
+			true
+		),
+
+		"world": {
+			"map_id": map_id,
+
+			"position": {
+				"x": position.x,
+				"y": position.y,
+				"z": position.z,
+			},
+
+			"rotation_y": rotation_y,
+		},
+	}
+
+
+	print(
+		"GameServerClient | Snapshot autoritativo recibido",
+		" | Character ID: ",
+		character_id,
+		" | Mapa: ",
+		map_id,
+		" | Posición: ",
+		position
+	)
+
+
+	world_snapshot_received.emit(
+		latest_world_snapshot.duplicate(
+			true
+		)
+	)
 
 # =========================================================
 # SERVIDOR DESCONECTADO
