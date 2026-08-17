@@ -61,6 +61,7 @@ var game_session_service: GameSessionService = (
 	MockGameSessionService.new()
 )
 
+var game_session_ticket_service: GameSessionTicketService = null
 
 # =========================================================
 # ESTADO TEMPORAL DEL FLUJO
@@ -124,6 +125,20 @@ func _setup_services() -> void:
 
 	character_service = (
 		http_character_service
+	)
+
+	var http_game_session_ticket_service := (
+		HttpGameSessionTicketService.new()
+	)
+
+
+	http_game_session_ticket_service.setup(
+		self
+	)
+
+
+	game_session_ticket_service = (
+		http_game_session_ticket_service
 	)
 
 
@@ -201,6 +216,25 @@ func _bind_services() -> void:
 	):
 		character_service.request_failed.connect(
 			_on_character_request_failed
+		)
+
+	# -----------------------------------------------------
+	# GAME SESSION TICKET
+	# -----------------------------------------------------
+
+	if not game_session_ticket_service.ticket_issued.is_connected(
+		_on_game_session_ticket_issued
+	):
+		game_session_ticket_service.ticket_issued.connect(
+			_on_game_session_ticket_issued
+		)
+
+
+	if not game_session_ticket_service.ticket_failed.is_connected(
+		_on_game_session_ticket_failed
+	):
+		game_session_ticket_service.ticket_failed.connect(
+			_on_game_session_ticket_failed
 		)
 
 	# -----------------------------------------------------
@@ -618,8 +652,47 @@ func _on_enter_world_requested(
 	)
 
 
+	if game_session_ticket_service == null:
+		_on_game_session_ticket_failed(
+			"El servicio de sesión no está disponible."
+		)
+
+		return
+
+
+	game_session_ticket_service.issue_ticket(
+		character.character_id
+	)
+
+# =========================================================
+# GAME SESSION TICKET
+# =========================================================
+
+func _on_game_session_ticket_issued(
+	ticket: String,
+	character_id: int,
+	_expires_at: String
+) -> void:
+	if pending_game_character == null:
+		return
+
+
+	if (
+		pending_game_character.character_id
+		!=
+		character_id
+	):
+		_on_game_server_connection_failed(
+			"El ticket recibido no corresponde al personaje seleccionado."
+		)
+
+		return
+
+
 	var connection_result := (
-		game_server_client.connect_to_game_server()
+		game_server_client.connect_to_game_server(
+			ticket
+		)
 	)
 
 
@@ -627,6 +700,14 @@ func _on_enter_world_requested(
 		_on_game_server_connection_failed(
 			"No se pudo iniciar la conexión al Game Server."
 		)
+
+
+func _on_game_session_ticket_failed(
+	message: String
+) -> void:
+	_on_game_server_connection_failed(
+		message
+	)
 
 # =========================================================
 # GAME SERVER
