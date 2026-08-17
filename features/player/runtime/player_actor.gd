@@ -8,9 +8,9 @@ extends CharacterBody3D
 
 const MOVE_SPEED: float = 4.0
 
-const TARGET_REACHED_DISTANCE: float = 0.2
-
 const ROTATION_SPEED: float = 10.0
+
+const MIN_DIRECTION_LENGTH_SQUARED: float = 0.0001
 
 
 # =========================================================
@@ -31,6 +31,10 @@ const ROTATION_SPEED: float = 10.0
 
 @onready var nameplate_anchor: Marker3D = (
 	$NameplateAnchor
+)
+
+@onready var navigation_agent: NavigationAgent3D = (
+	$NavigationAgent3D
 )
 
 
@@ -66,6 +70,10 @@ func setup(
 
 
 	if state.character_summary == null:
+		return false
+
+
+	if navigation_agent == null:
 		return false
 
 
@@ -111,7 +119,7 @@ func _physics_process(
 	)
 
 
-	_process_movement(
+	_process_navigation(
 		delta
 	)
 
@@ -150,16 +158,25 @@ func _apply_gravity(
 func set_move_target(
 	target: Vector3
 ) -> void:
+	if navigation_agent == null:
+		return
+
+
 	move_target = target
 
 	has_move_target = true
 
 
+	navigation_agent.target_position = (
+		target
+	)
+
+
 # =========================================================
-# PROCESAR MOVIMIENTO
+# PROCESAR NAVEGACIÓN
 # =========================================================
 
-func _process_movement(
+func _process_navigation(
 	delta: float
 ) -> void:
 	if not has_move_target:
@@ -173,29 +190,75 @@ func _process_movement(
 		return
 
 
-	var offset := (
-		move_target
-		-
-		global_position
-	)
-
-
-	offset.y = 0.0
-
-
-	if (
-		offset.length()
-		<=
-		TARGET_REACHED_DISTANCE
-	):
+	if navigation_agent == null:
 		stop_movement()
 
 		return
 
 
-	var direction := (
-		offset.normalized()
+	# -----------------------------------------------------
+	# NavigationServer necesita haber sincronizado al menos
+	# una vez el mapa antes de consultar una ruta.
+	# -----------------------------------------------------
+
+	if (
+		NavigationServer3D.map_get_iteration_id(
+			navigation_agent.get_navigation_map()
+		)
+		==
+		0
+	):
+		_stop_horizontal_velocity()
+
+		return
+
+
+	# -----------------------------------------------------
+	# Ruta terminada.
+	# -----------------------------------------------------
+
+	if navigation_agent.is_navigation_finished():
+		stop_movement()
+
+		return
+
+
+	# -----------------------------------------------------
+	# El agente actualiza internamente su path al consultar
+	# get_next_path_position().
+	# -----------------------------------------------------
+
+	var next_path_position := (
+		navigation_agent.get_next_path_position()
 	)
+
+
+	var direction := (
+		next_path_position
+		-
+		global_position
+	)
+
+
+	# -----------------------------------------------------
+	# El movimiento de VHAL todavía ocurre sobre X/Z.
+	# La gravedad sigue siendo responsabilidad del actor.
+	# -----------------------------------------------------
+
+	direction.y = 0.0
+
+
+	if (
+		direction.length_squared()
+		<=
+		MIN_DIRECTION_LENGTH_SQUARED
+	):
+		_stop_horizontal_velocity()
+
+		return
+
+
+	direction = direction.normalized()
 
 
 	velocity.x = (

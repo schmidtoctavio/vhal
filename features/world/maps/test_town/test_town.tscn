@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://4f5qx1e0udbr"]
 
+[ext_resource type="NavigationMesh" uid="uid://bx7heuxko88xl" path="res://features/world/maps/test_town/navigation/test_town_navigation.tres" id="1_cv8rl"]
+
 [sub_resource type="Environment" id="Environment_4ny0v"]
 background_mode = 1
 ambient_light_color = Color(0.12591085, 0.12591085, 0.12591082, 1)
@@ -13,27 +15,39 @@ size = Vector3(30, 0.2, 30)
 [sub_resource type="BoxMesh" id="BoxMesh_tnipg"]
 size = Vector3(2, 2, 2)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_niee7"]
+size = Vector3(2, 2, 2)
+
 [node name="TestTown" type="Node3D" unique_id=1025751366]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1776765362]
 environment = SubResource("Environment_4ny0v")
 
-[node name="Geometry" type="Node3D" parent="." unique_id=362607783]
+[node name="Geometry" type="Node3D" parent="." unique_id=362607783 groups=["navigation_source"]]
 
 [node name="Ground" type="StaticBody3D" parent="Geometry" unique_id=1261335292]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
 
 [node name="GroundMesh" type="MeshInstance3D" parent="Geometry/Ground" unique_id=1668041452]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.02768898, -0.011968851, 0.0026564598)
 mesh = SubResource("BoxMesh_4ny0v")
 
 [node name="GroundCollision" type="CollisionShape3D" parent="Geometry/Ground" unique_id=1767300007]
 shape = SubResource("BoxShape3D_tnipg")
 
-[node name="DebugLandmark" type="MeshInstance3D" parent="Geometry" unique_id=1818149232]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1, 0)
+[node name="DebugObstacle" type="StaticBody3D" parent="Geometry" unique_id=410527187]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 0)
+
+[node name="DebugLandmark" type="MeshInstance3D" parent="Geometry/DebugObstacle" unique_id=1818149232]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 mesh = SubResource("BoxMesh_tnipg")
 
+[node name="ObstacleCollision" type="CollisionShape3D" parent="Geometry/DebugObstacle" unique_id=358802703]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("BoxShape3D_niee7")
+
 [node name="NavigationRegion3D" type="NavigationRegion3D" parent="." unique_id=1577774751]
+navigation_mesh = ExtResource("1_cv8rl")
 
 [node name="PlayerSpawns" type="Node3D" parent="." unique_id=362164950]
 

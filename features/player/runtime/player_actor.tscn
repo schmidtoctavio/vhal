@@ -30,3 +30,12 @@ shape = SubResource("SphereShape3D_iuu3g")
 
 [node name="NameplateAnchor" type="Marker3D" parent="." unique_id=1359163387]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0)
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="." unique_id=1295812698]
+path_desired_distance = 0.4
+target_desired_distance = 0.25
+path_max_distance = 1.01
+height = 1.8
+radius = 0.4
+max_speed = 4.0
+debug_enabled = true
