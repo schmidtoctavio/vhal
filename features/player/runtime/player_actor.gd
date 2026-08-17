@@ -10,6 +10,8 @@ const MOVE_SPEED: float = 4.0
 
 const ROTATION_SPEED: float = 10.0
 
+const TARGET_REACHED_DISTANCE: float = 0.3
+
 const MIN_DIRECTION_LENGTH_SQUARED: float = 0.0001
 
 
@@ -162,13 +164,67 @@ func set_move_target(
 		return
 
 
-	move_target = target
+	var navigation_map := (
+		navigation_agent.get_navigation_map()
+	)
+
+
+	# -----------------------------------------------------
+	# El NavigationServer debe haber sincronizado
+	# el mapa antes de resolver destinos.
+	# -----------------------------------------------------
+
+	if (
+		NavigationServer3D.map_get_iteration_id(
+			navigation_map
+		)
+		==
+		0
+	):
+		return
+
+
+	# -----------------------------------------------------
+	# Resolvemos una ruta desde la posición actual hacia
+	# el punto solicitado.
+	#
+	# El último punto de la ruta siempre queda sobre una
+	# superficie navegable y alcanzable desde este actor.
+	# -----------------------------------------------------
+
+	var resolved_path := (
+		NavigationServer3D.map_get_path(
+			navigation_map,
+			global_position,
+			target,
+			true,
+			navigation_agent.navigation_layers
+		)
+	)
+
+
+	if resolved_path.is_empty():
+		stop_movement()
+
+		return
+
+
+	var resolved_target := (
+		resolved_path[
+			resolved_path.size()
+			-
+			1
+		]
+	)
+
+
+	move_target = resolved_target
 
 	has_move_target = true
 
 
 	navigation_agent.target_position = (
-		target
+		resolved_target
 	)
 
 
@@ -195,6 +251,10 @@ func _process_navigation(
 
 		return
 
+	if _has_reached_move_target():
+		stop_movement()
+
+		return
 
 	# -----------------------------------------------------
 	# NavigationServer necesita haber sincronizado al menos
@@ -253,7 +313,11 @@ func _process_navigation(
 		<=
 		MIN_DIRECTION_LENGTH_SQUARED
 	):
-		_stop_horizontal_velocity()
+		if _has_reached_move_target():
+			stop_movement()
+		else:
+			_stop_horizontal_velocity()
+
 
 		return
 
@@ -283,6 +347,30 @@ func _process_navigation(
 	if character_visual != null:
 		character_visual.play_run()
 
+# =========================================================
+# DESTINO ALCANZADO
+# =========================================================
+
+func _has_reached_move_target() -> bool:
+	var current_position_2d := Vector2(
+		global_position.x,
+		global_position.z
+	)
+
+
+	var target_position_2d := Vector2(
+		move_target.x,
+		move_target.z
+	)
+
+
+	return (
+		current_position_2d.distance_to(
+			target_position_2d
+		)
+		<=
+		TARGET_REACHED_DISTANCE
+	)
 
 # =========================================================
 # ROTACIÓN
