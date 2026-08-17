@@ -38,6 +38,41 @@ var camera_fov: float = 35.0
 
 
 # =========================================================
+# ZOOM
+# =========================================================
+
+@export_group("Zoom")
+
+@export_range(
+	5.0,
+	30.0,
+	0.1
+)
+var min_distance: float = 16.0
+
+@export_range(
+	20.0,
+	50.0,
+	0.1
+)
+var max_distance: float = 30.0
+
+@export_range(
+	0.5,
+	5.0,
+	0.1
+)
+var zoom_step: float = 2.0
+
+@export_range(
+	1.0,
+	30.0,
+	0.1
+)
+var zoom_sharpness: float = 12.0
+
+
+# =========================================================
 # SEGUIMIENTO
 # =========================================================
 
@@ -68,6 +103,10 @@ var target: Node3D = null
 
 var follow_enabled: bool = false
 
+var current_distance: float = 22.0
+
+var target_distance: float = 22.0
+
 
 # =========================================================
 # CONFIGURAR
@@ -87,13 +126,21 @@ func setup(
 	target = new_target
 
 
-	# -----------------------------------------------------
-	# El controller comienza directamente sobre el target.
-	# -----------------------------------------------------
-
 	global_position = (
 		target.global_position
 	)
+
+
+	var initial_distance := clampf(
+		camera_distance,
+		min_distance,
+		max_distance
+	)
+
+
+	current_distance = initial_distance
+
+	target_distance = initial_distance
 
 
 	_apply_camera_profile()
@@ -121,16 +168,11 @@ func _apply_camera_profile() -> void:
 
 
 	camera.position = (
-		_calculate_camera_offset()
+		_calculate_camera_offset(
+			current_distance
+		)
 	)
 
-
-	# -----------------------------------------------------
-	# Calculamos la orientación una sola vez.
-	#
-	# El ángulo de cámara debe permanecer fijo mientras
-	# seguimos al personaje, como en una cámara isométrica.
-	# -----------------------------------------------------
 
 	camera.look_at(
 		global_position,
@@ -142,7 +184,9 @@ func _apply_camera_profile() -> void:
 # OFFSET ISOMÉTRICO
 # =========================================================
 
-func _calculate_camera_offset() -> Vector3:
+func _calculate_camera_offset(
+	distance: float
+) -> Vector3:
 	var pitch_radians := deg_to_rad(
 		pitch_degrees
 	)
@@ -154,7 +198,7 @@ func _calculate_camera_offset() -> Vector3:
 
 
 	var horizontal_distance := (
-		camera_distance
+		distance
 		*
 		cos(
 			pitch_radians
@@ -163,7 +207,7 @@ func _calculate_camera_offset() -> Vector3:
 
 
 	var vertical_distance := (
-		camera_distance
+		distance
 		*
 		sin(
 			pitch_radians
@@ -193,6 +237,81 @@ func _calculate_camera_offset() -> Vector3:
 		offset_x,
 		vertical_distance,
 		offset_z
+	)
+
+
+# =========================================================
+# ZOOM
+# =========================================================
+
+func zoom_in() -> void:
+	target_distance = maxf(
+		min_distance,
+		target_distance
+		-
+		zoom_step
+	)
+
+
+func zoom_out() -> void:
+	target_distance = minf(
+		max_distance,
+		target_distance
+		+
+		zoom_step
+	)
+
+
+func _process_zoom(
+	delta: float
+) -> void:
+	if camera == null:
+		return
+
+
+	if is_equal_approx(
+		current_distance,
+		target_distance
+	):
+		current_distance = target_distance
+
+		return
+
+
+	var zoom_weight := (
+		1.0
+		-
+		exp(
+			-zoom_sharpness
+			*
+			delta
+		)
+	)
+
+
+	current_distance = lerpf(
+		current_distance,
+		target_distance,
+		zoom_weight
+	)
+
+
+	if (
+		absf(
+			current_distance
+			-
+			target_distance
+		)
+		<
+		0.01
+	):
+		current_distance = target_distance
+
+
+	camera.position = (
+		_calculate_camera_offset(
+			current_distance
+		)
 	)
 
 
@@ -253,4 +372,9 @@ func _process(
 			target.global_position,
 			follow_weight
 		)
+	)
+
+
+	_process_zoom(
+		delta
 	)

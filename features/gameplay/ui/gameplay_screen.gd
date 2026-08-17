@@ -394,6 +394,20 @@ func _spawn_player_from_state() -> bool:
 
 		return false
 
+	if not player_input_controller.zoom_in_requested.is_connected(
+		camera_controller.zoom_in
+	):
+		player_input_controller.zoom_in_requested.connect(
+			camera_controller.zoom_in
+		)
+
+
+	if not player_input_controller.zoom_out_requested.is_connected(
+		camera_controller.zoom_out
+	):
+		player_input_controller.zoom_out_requested.connect(
+			camera_controller.zoom_out
+		)
 
 	if not player_input_controller.setup(
 		player_actor,

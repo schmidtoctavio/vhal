@@ -2,6 +2,10 @@ class_name PlayerInputController
 extends Node
 
 
+signal zoom_in_requested
+
+signal zoom_out_requested
+
 # =========================================================
 # CONSTANTES
 # =========================================================
@@ -106,6 +110,54 @@ func _input(
 		return
 
 
+	if not mouse_event.pressed:
+		return
+
+
+	# -----------------------------------------------------
+	# RUEDA DEL MOUSE
+	# -----------------------------------------------------
+
+	if (
+		mouse_event.button_index
+		==
+		MOUSE_BUTTON_WHEEL_UP
+	):
+		if _is_pointer_over_blocking_ui():
+			return
+
+
+		zoom_in_requested.emit()
+
+
+		get_viewport().set_input_as_handled()
+
+
+		return
+
+
+	if (
+		mouse_event.button_index
+		==
+		MOUSE_BUTTON_WHEEL_DOWN
+	):
+		if _is_pointer_over_blocking_ui():
+			return
+
+
+		zoom_out_requested.emit()
+
+
+		get_viewport().set_input_as_handled()
+
+
+		return
+
+
+	# -----------------------------------------------------
+	# CLICK IZQUIERDO
+	# -----------------------------------------------------
+
 	if (
 		mouse_event.button_index
 		!=
@@ -114,22 +166,10 @@ func _input(
 		return
 
 
-	if not mouse_event.pressed:
-		return
-
-
-	# -----------------------------------------------------
 	# Ctrl + click queda reservado para combate.
-	# -----------------------------------------------------
-
 	if mouse_event.ctrl_pressed:
 		return
 
-
-	# -----------------------------------------------------
-	# Si el mouse está sobre una parte interactiva del HUD,
-	# el click no pertenece al mundo.
-	# -----------------------------------------------------
 
 	if _is_pointer_over_blocking_ui():
 		return
@@ -138,7 +178,6 @@ func _input(
 	_request_move_to_screen_position(
 		mouse_event.position
 	)
-
 
 # =========================================================
 # UI BLOQUEANTE
