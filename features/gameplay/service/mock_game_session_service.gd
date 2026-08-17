@@ -62,6 +62,7 @@ func start_session(
 
 		return
 
+
 	if active_player_state.world == null:
 		active_character_id = -1
 
@@ -69,43 +70,11 @@ func start_session(
 
 
 		session_failed.emit(
-			"El estado del mundo no es válido."
+			"No se pudo crear el estado del mundo."
 		)
 
 		return
 
-
-	var map_definition := (
-		MapCatalog.get_definition(
-			active_player_state.world.map_id
-		)
-	)
-
-
-	if map_definition == null:
-		active_character_id = -1
-
-		active_player_state = null
-
-
-		session_failed.emit(
-			"El mapa solicitado no existe."
-		)
-
-		return
-
-
-	if map_definition.scene == null:
-		active_character_id = -1
-
-		active_player_state = null
-
-
-		session_failed.emit(
-			"El mapa solicitado no posee una escena válida."
-		)
-
-		return
 
 	session_started.emit(
 		active_character_id,

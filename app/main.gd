@@ -73,6 +73,8 @@ var waiting_for_characters_after_login: bool = false
 
 var pending_game_character: CharacterSummary = null
 
+var pending_world_snapshot: Dictionary = {}
+
 
 # =========================================================
 # CICLO DE VIDA
@@ -262,6 +264,13 @@ func _bind_services() -> void:
 	):
 		game_server_client.game_server_disconnected.connect(
 			_on_game_server_disconnected
+		)
+
+	if not game_server_client.world_snapshot_received.is_connected(
+		_on_world_snapshot_received
+	):
+		game_server_client.world_snapshot_received.connect(
+			_on_world_snapshot_received
 		)
 
 	# -----------------------------------------------------
@@ -643,6 +652,7 @@ func _on_enter_world_requested(
 	if not ClientSession.authenticated:
 		return
 
+	pending_world_snapshot = {}
 
 	pending_game_character = character
 
@@ -728,11 +738,111 @@ func _on_game_server_connected(
 		return
 
 
-	game_session_service.start_session(
-		ClientSession.account_id,
-		pending_game_character.character_id
+	print(
+		"Game Server conectado | Esperando snapshot autoritativo..."
 	)
 
+func _on_world_snapshot_received(
+	snapshot: Dictionary
+) -> void:
+	if pending_game_character == null:
+		return
+
+
+	if not pending_world_snapshot.is_empty():
+		return
+
+
+	var account_id := int(
+		snapshot.get(
+			"account_id",
+			-1
+		)
+	)
+
+
+	if account_id != ClientSession.account_id:
+		_on_game_server_connection_failed(
+			"El snapshot pertenece a otra cuenta."
+		)
+
+		return
+
+
+	var character_value: Variant = (
+		snapshot.get(
+			"character",
+			null
+		)
+	)
+
+
+	if typeof(character_value) != TYPE_DICTIONARY:
+		_on_game_server_connection_failed(
+			"El snapshot no posee un personaje válido."
+		)
+
+		return
+
+
+	var character_data: Dictionary = (
+		character_value
+	)
+
+
+	var character_id := int(
+		character_data.get(
+			"id",
+			-1
+		)
+	)
+
+
+	if (
+		character_id
+		!=
+		pending_game_character.character_id
+	):
+		_on_game_server_connection_failed(
+			"El snapshot pertenece a otro personaje."
+		)
+
+		return
+
+
+	var world_value: Variant = (
+		snapshot.get(
+			"world",
+			null
+		)
+	)
+
+
+	if typeof(world_value) != TYPE_DICTIONARY:
+		_on_game_server_connection_failed(
+			"El snapshot no posee estado de mundo."
+		)
+
+		return
+
+
+	pending_world_snapshot = (
+		snapshot.duplicate(
+			true
+		)
+	)
+
+
+	print(
+		"Main | Snapshot autoritativo aceptado | Character ID: ",
+		character_id
+	)
+
+
+	game_session_service.start_session(
+		ClientSession.account_id,
+		character_id
+	)
 
 func _on_game_server_connection_failed(
 	message: String
@@ -747,7 +857,7 @@ func _on_game_server_connection_failed(
 
 
 	pending_game_character = null
-
+	pending_world_snapshot = {}
 
 	print(
 		"GameServerClient | Error: ",
@@ -786,6 +896,118 @@ func _on_game_server_disconnected() -> void:
 	if gameplay_screen != null:
 		game_session_service.end_session()
 
+func _apply_authoritative_world_snapshot(
+	player_state: PlayerRuntimeState
+) -> bool:
+	if player_state == null:
+		return false
+
+
+	if player_state.world == null:
+		return false
+
+
+	if pending_world_snapshot.is_empty():
+		return false
+
+
+	var world_value: Variant = (
+		pending_world_snapshot.get(
+			"world",
+			null
+		)
+	)
+
+
+	if typeof(world_value) != TYPE_DICTIONARY:
+		return false
+
+
+	var world_data: Dictionary = (
+		world_value
+	)
+
+
+	var map_id := String(
+		world_data.get(
+			"map_id",
+			""
+		)
+	).strip_edges()
+
+
+	if map_id.is_empty():
+		return false
+
+
+	var position_value: Variant = (
+		world_data.get(
+			"position",
+			null
+		)
+	)
+
+
+	if typeof(position_value) != TYPE_DICTIONARY:
+		return false
+
+
+	var position_data: Dictionary = (
+		position_value
+	)
+
+
+	if (
+		not position_data.has("x")
+		or
+		not position_data.has("y")
+		or
+		not position_data.has("z")
+	):
+		return false
+
+
+	var position := Vector3(
+		float(
+			position_data["x"]
+		),
+		float(
+			position_data["y"]
+		),
+		float(
+			position_data["z"]
+		)
+	)
+
+
+	var rotation_y := float(
+		world_data.get(
+			"rotation_y",
+			0.0
+		)
+	)
+
+
+	player_state.world.setup(
+		map_id,
+		position,
+		rotation_y
+	)
+
+
+	print(
+		"Main | Mundo autoritativo aplicado",
+		" | Mapa: ",
+		map_id,
+		" | Posición: ",
+		position,
+		" | Rotación Y: ",
+		rotation_y
+	)
+
+
+	return true
+
 # =========================================================
 # RESULTADOS DE SESIÓN DE JUEGO
 # =========================================================
@@ -817,6 +1039,18 @@ func _on_game_session_started(
 
 		return
 
+	if not _apply_authoritative_world_snapshot(
+		player_state
+	):
+		pending_game_character = null
+
+		pending_world_snapshot = {}
+
+
+		game_session_service.end_session()
+
+
+		return
 
 	if player_state.world.map_id.strip_edges().is_empty():
 		pending_game_character = null
@@ -903,7 +1137,7 @@ func _on_game_session_failed(
 
 
 	pending_game_character = null
-
+	pending_world_snapshot = {}
 
 	print(
 		"GameSessionService | Error: ",
@@ -917,6 +1151,7 @@ func _on_game_session_failed(
 
 
 func _on_game_session_ended() -> void:
+	pending_world_snapshot = {}
 	game_server_client.disconnect_from_game_server()
 	var return_slot := maxi(
 		ClientSession.selected_character_slot,
