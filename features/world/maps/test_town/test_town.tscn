@@ -29,7 +29,6 @@ environment = SubResource("Environment_4ny0v")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
 
 [node name="GroundMesh" type="MeshInstance3D" parent="Geometry/Ground" unique_id=1668041452]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.02768898, -0.011968851, 0.0026564598)
 mesh = SubResource("BoxMesh_4ny0v")
 
 [node name="GroundCollision" type="CollisionShape3D" parent="Geometry/Ground" unique_id=1767300007]

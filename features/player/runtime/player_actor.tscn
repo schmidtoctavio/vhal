@@ -38,4 +38,3 @@ path_max_distance = 1.01
 height = 1.8
 radius = 0.4
 max_speed = 4.0
-debug_enabled = true
