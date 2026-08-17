@@ -44,8 +44,8 @@ signal player_spawn_failed(
 	$GameplayUI
 )
 
-@onready var debug_camera: Camera3D = (
-	$WorldRoot/DebugCamera3D
+@onready var camera_controller: PlayerCameraController = (
+	$WorldRoot/PlayerCameraController
 )
 
 @onready var player_input_controller: PlayerInputController = (
@@ -362,6 +362,28 @@ func _spawn_player_from_state() -> bool:
 
 		return false
 
+	if camera_controller == null:
+		player_actor.queue_free()
+
+
+		player_spawn_failed.emit(
+			"No existe el controlador de cámara."
+		)
+
+		return false
+
+	if not camera_controller.setup(
+		player_actor.camera_target
+	):
+		player_actor.queue_free()
+
+
+		player_spawn_failed.emit(
+			"No se pudo configurar la cámara del jugador."
+		)
+
+		return false
+
 	if player_input_controller == null:
 		player_actor.queue_free()
 
@@ -375,9 +397,11 @@ func _spawn_player_from_state() -> bool:
 
 	if not player_input_controller.setup(
 		player_actor,
-		debug_camera,
+		camera_controller.get_camera(),
 		gameplay_ui
 	):
+		camera_controller.clear_target()
+
 		player_actor.queue_free()
 
 
@@ -401,6 +425,8 @@ func _clear_active_player() -> void:
 	if player_input_controller != null:
 		player_input_controller.clear()
 
+	if camera_controller != null:
+		camera_controller.clear_target()
 
 	if (
 		active_player_actor != null
