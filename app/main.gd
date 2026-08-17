@@ -45,6 +45,9 @@ const CHARACTER_SLOT_COUNT: int = 5
 	$ScreenRouter
 )
 
+@onready var game_server_client: GameServerClient = (
+	$GameServerClient
+)
 
 # =========================================================
 # SERVICIOS
@@ -200,6 +203,32 @@ func _bind_services() -> void:
 			_on_character_request_failed
 		)
 
+	# -----------------------------------------------------
+	# GAME SERVER
+	# -----------------------------------------------------
+
+	if not game_server_client.game_server_connected.is_connected(
+		_on_game_server_connected
+	):
+		game_server_client.game_server_connected.connect(
+			_on_game_server_connected
+		)
+
+
+	if not game_server_client.game_server_connection_failed.is_connected(
+		_on_game_server_connection_failed
+	):
+		game_server_client.game_server_connection_failed.connect(
+			_on_game_server_connection_failed
+		)
+
+
+	if not game_server_client.game_server_disconnected.is_connected(
+		_on_game_server_disconnected
+	):
+		game_server_client.game_server_disconnected.connect(
+			_on_game_server_disconnected
+		)
 
 	# -----------------------------------------------------
 	# GAME SESSION
@@ -589,11 +618,92 @@ func _on_enter_world_requested(
 	)
 
 
-	game_session_service.start_session(
-		ClientSession.account_id,
-		character.character_id
+	var connection_result := (
+		game_server_client.connect_to_game_server()
 	)
 
+
+	if connection_result != OK:
+		_on_game_server_connection_failed(
+			"No se pudo iniciar la conexión al Game Server."
+		)
+
+# =========================================================
+# GAME SERVER
+# =========================================================
+
+func _on_game_server_connected(
+	peer_id: int
+) -> void:
+	print(
+		"Game Server conectado | Peer ID: ",
+		peer_id
+	)
+
+
+	if pending_game_character == null:
+		game_server_client.disconnect_from_game_server()
+
+		return
+
+
+	game_session_service.start_session(
+		ClientSession.account_id,
+		pending_game_character.character_id
+	)
+
+
+func _on_game_server_connection_failed(
+	message: String
+) -> void:
+	var return_slot: int = 0
+
+
+	if pending_game_character != null:
+		return_slot = (
+			pending_game_character.slot_index
+		)
+
+
+	pending_game_character = null
+
+
+	print(
+		"GameServerClient | Error: ",
+		message
+	)
+
+
+	game_server_client.disconnect_from_game_server()
+
+
+	_show_character_select(
+		return_slot
+	)
+
+
+func _on_game_server_disconnected() -> void:
+	print(
+		"GameServerClient | Se perdió la conexión con el servidor."
+	)
+
+
+	if pending_game_character != null:
+		_on_game_server_connection_failed(
+			"Se perdió la conexión con el Game Server."
+		)
+
+		return
+
+
+	var gameplay_screen := (
+		screen_router.current_screen
+		as GameplayScreen
+	)
+
+
+	if gameplay_screen != null:
+		game_session_service.end_session()
 
 # =========================================================
 # RESULTADOS DE SESIÓN DE JUEGO
@@ -700,6 +810,8 @@ func _on_game_session_started(
 func _on_game_session_failed(
 	message: String
 ) -> void:
+	game_server_client.disconnect_from_game_server()
+	
 	var return_slot: int = 0
 
 
@@ -724,6 +836,7 @@ func _on_game_session_failed(
 
 
 func _on_game_session_ended() -> void:
+	game_server_client.disconnect_from_game_server()
 	var return_slot := maxi(
 		ClientSession.selected_character_slot,
 		0

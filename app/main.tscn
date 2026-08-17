@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c8ooupvxypfb4" path="res://app/main.gd" id="1_yblnd"]
 [ext_resource type="Script" uid="uid://bglardw4iy7db" path="res://app/navigation/screen_router.gd" id="2_s58fy"]
+[ext_resource type="Script" uid="uid://ceewcykggpi3j" path="res://features/gameplay/networking/game_server_client.gd" id="3_ysqge"]
 
 [node name="Main" type="Node" unique_id=240590346]
 script = ExtResource("1_yblnd")
@@ -16,3 +17,6 @@ grow_vertical = 2
 
 [node name="ScreenRouter" type="Node" parent="." unique_id=266365152]
 script = ExtResource("2_s58fy")
+
+[node name="GameServerClient" type="Node" parent="." unique_id=1453626339]
+script = ExtResource("3_ysqge")
