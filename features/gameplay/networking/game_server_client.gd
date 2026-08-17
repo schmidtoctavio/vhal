@@ -38,6 +38,10 @@ const MESSAGE_WORLD_SNAPSHOT: String = (
 	"world_snapshot"
 )
 
+const MESSAGE_MOVE_REQUEST: String = (
+	"move_request"
+)
+
 # =========================================================
 # ESTADO
 # =========================================================
@@ -781,3 +785,65 @@ func _reset_connection_state() -> void:
 	multiplayer.multiplayer_peer = (
 		OfflineMultiplayerPeer.new()
 	)
+# =========================================================
+# INTENCIÓN DE MOVIMIENTO
+# =========================================================
+
+func send_move_request(
+	target: Vector3
+) -> Error:
+	if not connected:
+		return ERR_UNAVAILABLE
+
+
+	var scene_multiplayer := (
+		multiplayer
+		as SceneMultiplayer
+	)
+
+
+	if scene_multiplayer == null:
+		return ERR_UNAVAILABLE
+
+
+	var message := {
+		"version": NETWORK_PROTOCOL_VERSION,
+
+		"type": MESSAGE_MOVE_REQUEST,
+
+		"data": {
+			"target": {
+				"x": target.x,
+				"y": target.y,
+				"z": target.z,
+			},
+		},
+	}
+
+
+	var packet := (
+		JSON.stringify(
+			message
+		).to_utf8_buffer()
+	)
+
+
+	var result := (
+		scene_multiplayer.send_bytes(
+			packet,
+			SERVER_PEER_ID,
+			MultiplayerPeer.TRANSFER_MODE_RELIABLE,
+			0
+		)
+	)
+
+
+	if result == OK:
+		print(
+			"GameServerClient | Intención de movimiento enviada",
+			" | Destino: ",
+			target
+		)
+
+
+	return result

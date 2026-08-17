@@ -1236,12 +1236,44 @@ func _show_gameplay(
 			_on_gameplay_load_failed
 		)
 
+	if not gameplay_screen.movement_intent_requested.is_connected(
+		_on_gameplay_movement_intent_requested
+	):
+		gameplay_screen.movement_intent_requested.connect(
+			_on_gameplay_movement_intent_requested
+		)
 
 	gameplay_screen.setup(
 		player_state,
 		ClientSession.account_state
 	)
 
+# =========================================================
+# MOVIMIENTO → GAME SERVER
+# =========================================================
+
+func _on_gameplay_movement_intent_requested(
+	target: Vector3
+) -> void:
+	var result := (
+		game_server_client.send_move_request(
+			target
+		)
+	)
+
+
+	if result == OK:
+		return
+
+
+	print(
+		"Main | No se pudo enviar la intención de movimiento.",
+		" Error: ",
+		result
+	)
+
+
+	game_session_service.end_session()
 
 # =========================================================
 # ERROR AL PREPARAR GAMEPLAY

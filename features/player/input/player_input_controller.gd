@@ -3,8 +3,11 @@ extends Node
 
 
 signal zoom_in_requested
-
 signal zoom_out_requested
+
+signal move_target_requested(
+	target: Vector3
+)
 
 # =========================================================
 # CONSTANTES
@@ -312,6 +315,21 @@ func _request_move_to_screen_position(
 		result["position"]
 	)
 
+
+	move_target_requested.emit(
+		hit_position
+	)
+
+
+	# -----------------------------------------------------
+	# PREDICCIÓN LOCAL TEMPORAL
+	# -----------------------------------------------------
+	#
+	# El cliente sigue moviendo visualmente al actor
+	# durante F13-B2A.
+	#
+	# El Game Server todavía no posee navegación propia.
+	# -----------------------------------------------------
 
 	player_actor.set_move_target(
 		hit_position

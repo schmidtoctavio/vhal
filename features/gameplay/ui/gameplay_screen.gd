@@ -23,6 +23,9 @@ signal player_spawn_failed(
 	message: String
 )
 
+signal movement_intent_requested(
+	target: Vector3
+)
 
 # =========================================================
 # REFERENCIAS
@@ -425,6 +428,13 @@ func _spawn_player_from_state() -> bool:
 
 		return false
 
+	if not player_input_controller.move_target_requested.is_connected(
+		_on_move_target_requested
+	):
+		player_input_controller.move_target_requested.connect(
+			_on_move_target_requested
+		)
+
 	active_player_actor = player_actor
 
 
@@ -496,4 +506,15 @@ func _refresh_character_debug() -> void:
 		character.character_class,
 		" | Nivel: ",
 		character.level
+	)
+
+# =========================================================
+# INTENCIÓN DE MOVIMIENTO
+# =========================================================
+
+func _on_move_target_requested(
+	target: Vector3
+) -> void:
+	movement_intent_requested.emit(
+		target
 	)
