@@ -994,3 +994,58 @@ func _on_npc_interaction_requested(
 		npc_id,
 		service_id
 	)
+
+# =========================================================
+# SERVICIO NPC AUTORIZADO
+# =========================================================
+
+func apply_authorized_npc_service(
+	npc_id: String,
+	service_id: String
+) -> bool:
+	var normalized_npc_id := (
+		npc_id.strip_edges()
+	)
+
+
+	var normalized_service_id := (
+		service_id.strip_edges()
+	)
+
+
+	if normalized_npc_id.is_empty():
+		return false
+
+
+	if normalized_service_id.is_empty():
+		return false
+
+
+	match normalized_service_id:
+		"warehouse":
+			if not gameplay_ui.open_authorized_vault():
+				return false
+
+
+			print(
+				"GameplayScreen | Servicio NPC autorizado aplicado",
+				" | NPC: ",
+				normalized_npc_id,
+				" | Servicio: ",
+				normalized_service_id
+			)
+
+
+			return true
+
+		_:
+			print(
+				"GameplayScreen | Servicio NPC autorizado no soportado",
+				" | NPC: ",
+				normalized_npc_id,
+				" | Servicio: ",
+				normalized_service_id
+			)
+
+
+			return false

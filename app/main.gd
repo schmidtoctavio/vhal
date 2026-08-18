@@ -1650,3 +1650,41 @@ func _on_npc_interaction_decision_received(
 		" | Motivo: ",
 		reason
 	)
+
+
+	# -----------------------------------------------------
+	# EL GAME SERVER RECHAZÓ LA INTERACCIÓN
+	# -----------------------------------------------------
+
+	if not accepted:
+		return
+
+
+	# -----------------------------------------------------
+	# APLICAR SOLAMENTE EN GAMEPLAY ACTIVO
+	# -----------------------------------------------------
+
+	var gameplay_screen := (
+		screen_router.current_screen
+		as GameplayScreen
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	if gameplay_screen.apply_authorized_npc_service(
+		npc_id,
+		service_id
+	):
+		return
+
+
+	print(
+		"Main | No se pudo aplicar el servicio NPC autorizado",
+		" | NPC: ",
+		npc_id,
+		" | Servicio: ",
+		service_id
+	)

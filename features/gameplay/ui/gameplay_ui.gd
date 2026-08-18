@@ -500,13 +500,14 @@ func _ready() -> void:
 	# =====================================================
 	# VAULT
 	# =====================================================
+	#
+	# La bóveda ya no puede abrirse directamente desde HUD.
+	# Sólo se abre mediante una autorización del Game Server.
+	# =====================================================
 
-	if not vault_button.pressed.is_connected(
-		_on_vault_button_pressed
-	):
-		vault_button.pressed.connect(
-			_on_vault_button_pressed
-		)
+	vault_button.visible = false
+
+	vault_window.visible = false
 
 
 	if not vault_window.close_requested.is_connected(
@@ -515,7 +516,6 @@ func _ready() -> void:
 		vault_window.close_requested.connect(
 			_on_vault_close_requested
 		)
-
 
 	# =====================================================
 	# SELECTED SKILL SLOT
@@ -926,16 +926,6 @@ func _unhandled_input(
 
 
 	# =====================================================
-	# VAULT
-	# =====================================================
-
-	if event.is_action_pressed(
-		&"toggle_vault"
-	):
-		_toggle_vault()
-
-
-	# =====================================================
 	# SKILLS
 	# =====================================================
 
@@ -965,28 +955,36 @@ func _toggle_inventory() -> void:
 func _close_inventory() -> void:
 	inventory_window.visible = false
 
-
 # =========================================================
 # VAULT
 # =========================================================
 
-func _on_vault_button_pressed() -> void:
-	_toggle_vault()
+func open_authorized_vault() -> bool:
+	if account_state == null:
+		return false
+
+
+	if account_state.vault == null:
+		return false
+
+
+	vault_window.visible = true
+
+
+	print(
+		"GameplayUI | Vault abierta por servicio autorizado."
+	)
+
+
+	return true
 
 
 func _on_vault_close_requested() -> void:
 	_close_vault()
 
 
-func _toggle_vault() -> void:
-	vault_window.visible = (
-		not vault_window.visible
-	)
-
-
 func _close_vault() -> void:
 	vault_window.visible = false
-
 
 # =========================================================
 # SKILLS WINDOW
