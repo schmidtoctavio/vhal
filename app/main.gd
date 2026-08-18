@@ -280,6 +280,13 @@ func _bind_services() -> void:
 			_on_authoritative_movement_state_received
 		)
 
+	if not game_server_client.npc_interaction_decision_received.is_connected(
+		_on_npc_interaction_decision_received
+	):
+		game_server_client.npc_interaction_decision_received.connect(
+			_on_npc_interaction_decision_received
+		)
+
 	# -----------------------------------------------------
 	# GAME SESSION
 	# -----------------------------------------------------
@@ -1306,6 +1313,13 @@ func _show_gameplay(
 			_on_gameplay_movement_intent_requested
 		)
 
+	if not gameplay_screen.npc_interaction_requested.is_connected(
+		_on_gameplay_npc_interaction_requested
+	):
+		gameplay_screen.npc_interaction_requested.connect(
+			_on_gameplay_npc_interaction_requested
+		)
+
 	gameplay_screen.setup(
 		player_state,
 		ClientSession.account_state
@@ -1335,6 +1349,34 @@ func _on_gameplay_movement_intent_requested(
 
 	print(
 		"Main | No se pudo enviar la intención de movimiento.",
+		" Error: ",
+		result
+	)
+
+
+	game_session_service.end_session()
+
+# =========================================================
+# INTERACCIÓN NPC → GAME SERVER
+# =========================================================
+
+func _on_gameplay_npc_interaction_requested(
+	npc_id: String,
+	_service_id: String
+) -> void:
+	var result := (
+		game_server_client.send_npc_interaction_request(
+			npc_id
+		)
+	)
+
+
+	if result == OK:
+		return
+
+
+	print(
+		"Main | No se pudo enviar la interacción NPC.",
 		" Error: ",
 		result
 	)
@@ -1582,4 +1624,29 @@ func _on_remote_player_movement_state_received(
 		authoritative_rotation_y,
 		moving,
 		sequence
+	)
+
+# =========================================================
+# DECISIÓN AUTORITATIVA DE INTERACCIÓN NPC
+# =========================================================
+
+func _on_npc_interaction_decision_received(
+	request_id: int,
+	accepted: bool,
+	npc_id: String,
+	service_id: String,
+	reason: String
+) -> void:
+	print(
+		"Main | Decisión autoritativa NPC",
+		" | Request: ",
+		request_id,
+		" | Accepted: ",
+		accepted,
+		" | NPC: ",
+		npc_id,
+		" | Servicio: ",
+		service_id,
+		" | Motivo: ",
+		reason
 	)

@@ -35,6 +35,14 @@ signal remote_player_movement_state_received(
 	sequence: int
 )
 
+signal npc_interaction_decision_received(
+	request_id: int,
+	accepted: bool,
+	npc_id: String,
+	service_id: String,
+	reason: String
+)
+
 signal movement_decision_received(
 	request_id: int,
 	accepted: bool,
@@ -78,6 +86,10 @@ const MESSAGE_MOVE_REQUEST: String = (
 	"move_request"
 )
 
+const MESSAGE_NPC_INTERACTION_REQUEST: String = (
+	"npc_interaction_request"
+)
+
 const MESSAGE_MOVEMENT_STATE: String = (
 	"movement_state"
 )
@@ -96,6 +108,10 @@ const MESSAGE_PLAYER_PRESENCE_JOINED: String = (
 
 const MESSAGE_PLAYER_PRESENCE_LEFT: String = (
 	"player_presence_left"
+)
+
+const MESSAGE_NPC_INTERACTION_DECISION: String = (
+	"npc_interaction_decision"
 )
 
 # =========================================================
@@ -127,6 +143,10 @@ var latest_authoritative_moving: bool = false
 var next_move_request_id: int = 1
 
 var latest_move_request_id: int = 0
+
+var next_npc_interaction_request_id: int = 1
+
+var latest_npc_interaction_request_id: int = 0
 
 var remote_players: Dictionary = {}
 
@@ -639,6 +659,26 @@ func _on_peer_packet(
 
 		_process_player_presence_left(
 			left_value
+		)
+
+
+		return
+
+	if message_type == MESSAGE_NPC_INTERACTION_DECISION:
+		var decision_value: Variant = (
+			message.get(
+				"data",
+				null
+			)
+		)
+
+
+		if typeof(decision_value) != TYPE_DICTIONARY:
+			return
+
+
+		_process_npc_interaction_decision(
+			decision_value
 		)
 
 
@@ -1177,6 +1217,10 @@ func _reset_connection_state() -> void:
 
 	latest_move_request_id = 0
 
+	next_npc_interaction_request_id = 1
+
+	latest_npc_interaction_request_id = 0
+
 	remote_players.clear()
 
 	remote_movement_sequences.clear()
@@ -1286,6 +1330,98 @@ func send_move_request(
 		request_id,
 		" | Destino: ",
 		target
+	)
+
+
+	return OK
+
+# =========================================================
+# INTERACCIÓN NPC
+# =========================================================
+
+func send_npc_interaction_request(
+	npc_id: String
+) -> Error:
+	if not connected:
+		return ERR_UNAVAILABLE
+
+
+	var normalized_npc_id := (
+		npc_id.strip_edges()
+	)
+
+
+	if normalized_npc_id.is_empty():
+		return ERR_INVALID_PARAMETER
+
+
+	if normalized_npc_id.length() > 64:
+		return ERR_INVALID_PARAMETER
+
+
+	var scene_multiplayer := (
+		multiplayer
+		as SceneMultiplayer
+	)
+
+
+	if scene_multiplayer == null:
+		return ERR_UNAVAILABLE
+
+
+	var request_id := (
+		next_npc_interaction_request_id
+	)
+
+
+	var message := {
+		"version": NETWORK_PROTOCOL_VERSION,
+
+		"type": MESSAGE_NPC_INTERACTION_REQUEST,
+
+		"data": {
+			"request_id": request_id,
+
+			"npc_id": normalized_npc_id,
+		},
+	}
+
+
+	var packet := (
+		JSON.stringify(
+			message
+		).to_utf8_buffer()
+	)
+
+
+	var result := (
+		scene_multiplayer.send_bytes(
+			packet,
+			SERVER_PEER_ID,
+			MultiplayerPeer.TRANSFER_MODE_RELIABLE,
+			0
+		)
+	)
+
+
+	if result != OK:
+		return result
+
+
+	latest_npc_interaction_request_id = (
+		request_id
+	)
+
+
+	next_npc_interaction_request_id += 1
+
+
+	print(
+		"GameServerClient | Solicitud de interacción NPC enviada",
+		" | Request: ",
+		request_id,
+		" | NPC: ",
+		normalized_npc_id
 	)
 
 
@@ -1798,4 +1934,118 @@ func _process_player_presence_left(
 
 	remote_player_left.emit(
 		peer_id
+	)
+
+# =========================================================
+# DECISIÓN AUTORITATIVA DE INTERACCIÓN NPC
+# =========================================================
+
+func _process_npc_interaction_decision(
+	data: Dictionary
+) -> void:
+	var decision_peer_id := int(
+		data.get(
+			"peer_id",
+			-1
+		)
+	)
+
+
+	if (
+		decision_peer_id
+		!=
+		multiplayer.get_unique_id()
+	):
+		return
+
+
+	var request_id := int(
+		data.get(
+			"request_id",
+			0
+		)
+	)
+
+
+	if request_id <= 0:
+		return
+
+
+	# -----------------------------------------------------
+	# IGNORAR RESPUESTAS VIEJAS
+	# -----------------------------------------------------
+
+	if (
+		request_id
+		!=
+		latest_npc_interaction_request_id
+	):
+		return
+
+
+	var accepted := bool(
+		data.get(
+			"accepted",
+			false
+		)
+	)
+
+
+	var npc_id := String(
+		data.get(
+			"npc_id",
+			""
+		)
+	).strip_edges()
+
+
+	if npc_id.is_empty():
+		return
+
+
+	var service_id := String(
+		data.get(
+			"service_id",
+			""
+		)
+	).strip_edges()
+
+
+	var reason := String(
+		data.get(
+			"reason",
+			""
+		)
+	).strip_edges()
+
+
+	if (
+		accepted
+		and
+		service_id.is_empty()
+	):
+		return
+
+
+	print(
+		"GameServerClient | Decisión de interacción NPC",
+		" | Request: ",
+		request_id,
+		" | Accepted: ",
+		accepted,
+		" | NPC: ",
+		npc_id,
+		" | Servicio: ",
+		service_id,
+		" | Motivo: ",
+		reason
+	)
+
+
+	npc_interaction_decision_received.emit(
+		request_id,
+		accepted,
+		npc_id,
+		service_id,
+		reason
 	)
