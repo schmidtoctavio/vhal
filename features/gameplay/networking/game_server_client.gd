@@ -20,6 +20,13 @@ signal world_snapshot_received(
 	snapshot: Dictionary
 )
 
+signal authoritative_movement_state_received(
+	position: Vector3,
+	rotation_y: float,
+	moving: bool,
+	sequence: int
+)
+
 # =========================================================
 # CONFIGURACIÓN
 # =========================================================
@@ -42,6 +49,10 @@ const MESSAGE_MOVE_REQUEST: String = (
 	"move_request"
 )
 
+const MESSAGE_MOVEMENT_STATE: String = (
+	"movement_state"
+)
+
 # =========================================================
 # ESTADO
 # =========================================================
@@ -57,6 +68,16 @@ var pending_ticket: String = ""
 var _failure_emitted: bool = false
 
 var latest_world_snapshot: Dictionary = {}
+
+var latest_movement_sequence: int = 0
+
+var latest_authoritative_position: Vector3 = (
+	Vector3.ZERO
+)
+
+var latest_authoritative_rotation_y: float = 0.0
+
+var latest_authoritative_moving: bool = false
 
 # =========================================================
 # CICLO DE VIDA
@@ -437,34 +458,55 @@ func _on_peer_packet(
 	)
 
 
-	if message_type != MESSAGE_WORLD_SNAPSHOT:
+	if message_type == MESSAGE_WORLD_SNAPSHOT:
+		var data_value: Variant = (
+			message.get(
+				"data",
+				null
+			)
+		)
+
+
+		if typeof(data_value) != TYPE_DICTIONARY:
+			_fail_connection(
+				"El snapshot de mundo es inválido."
+			)
+
+			return
+
+
+		var snapshot: Dictionary = (
+			data_value
+		)
+
+
+		_process_world_snapshot(
+			snapshot
+		)
+
+
 		return
 
 
-	var data_value: Variant = (
-		message.get(
-			"data",
-			null
+	if message_type == MESSAGE_MOVEMENT_STATE:
+		var movement_value: Variant = (
+			message.get(
+				"data",
+				null
+			)
 		)
-	)
 
 
-	if typeof(data_value) != TYPE_DICTIONARY:
-		_fail_connection(
-			"El snapshot de mundo es inválido."
+		if typeof(movement_value) != TYPE_DICTIONARY:
+			return
+
+
+		_process_movement_state(
+			movement_value
 		)
+
 
 		return
-
-
-	var snapshot: Dictionary = (
-		data_value
-	)
-
-
-	_process_world_snapshot(
-		snapshot
-	)
 
 
 # =========================================================
@@ -682,6 +724,125 @@ func _process_world_snapshot(
 	)
 
 # =========================================================
+# ESTADO AUTORITATIVO DE MOVIMIENTO
+# =========================================================
+
+func _process_movement_state(
+	data: Dictionary
+) -> void:
+	var state_peer_id := int(
+		data.get(
+			"peer_id",
+			-1
+		)
+	)
+
+
+	var local_peer_id := (
+		multiplayer.get_unique_id()
+	)
+
+
+	if state_peer_id != local_peer_id:
+		return
+
+
+	var sequence := int(
+		data.get(
+			"sequence",
+			0
+		)
+	)
+
+
+	if sequence <= latest_movement_sequence:
+		return
+
+
+	var position_value: Variant = (
+		data.get(
+			"position",
+			null
+		)
+	)
+
+
+	if typeof(position_value) != TYPE_DICTIONARY:
+		return
+
+
+	var position_data: Dictionary = (
+		position_value
+	)
+
+
+	if (
+		not position_data.has("x")
+		or
+		not position_data.has("y")
+		or
+		not position_data.has("z")
+	):
+		return
+
+
+	var position := Vector3(
+		float(
+			position_data["x"]
+		),
+		float(
+			position_data["y"]
+		),
+		float(
+			position_data["z"]
+		)
+	)
+
+
+	var rotation_y := float(
+		data.get(
+			"rotation_y",
+			0.0
+		)
+	)
+
+
+	var moving := bool(
+		data.get(
+			"moving",
+			false
+		)
+	)
+
+
+	latest_movement_sequence = sequence
+
+	latest_authoritative_position = position
+
+	latest_authoritative_rotation_y = rotation_y
+
+	latest_authoritative_moving = moving
+
+
+	print(
+		"GameServerClient | Movimiento autoritativo recibido",
+		" | Seq: ",
+		sequence,
+		" | Posición: ",
+		position,
+		" | Moving: ",
+		moving
+	)
+
+
+	authoritative_movement_state_received.emit(
+		position,
+		rotation_y,
+		moving,
+		sequence
+	)
+
+# =========================================================
 # SERVIDOR DESCONECTADO
 # =========================================================
 
@@ -762,6 +923,13 @@ func _reset_connection_state() -> void:
 
 	pending_ticket = ""
 
+	latest_movement_sequence = 0
+
+	latest_authoritative_position = Vector3.ZERO
+
+	latest_authoritative_rotation_y = 0.0
+
+	latest_authoritative_moving = false
 
 	var scene_multiplayer := (
 		multiplayer
