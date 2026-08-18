@@ -808,3 +808,76 @@ func _apply_authoritative_reconciliation(
 		has_pending_authoritative_rotation = (
 			false
 		)
+
+# =========================================================
+# DECISIÓN DE MOVIMIENTO DEL SERVIDOR
+# =========================================================
+
+func apply_movement_decision(
+	request_id: int,
+	accepted: bool,
+	authoritative_position: Vector3,
+	authoritative_rotation_y: float,
+	authorized_target: Vector3,
+	reason: String
+) -> void:
+	if accepted:
+		set_move_target(
+			authorized_target
+		)
+
+
+		print(
+			"PlayerActor | Movimiento confirmado",
+			" | Request: ",
+			request_id,
+			" | Target: ",
+			authorized_target
+		)
+
+
+		return
+
+
+	# -----------------------------------------------------
+	# RECHAZADO
+	# -----------------------------------------------------
+	#
+	# La predicción no tiene permiso para continuar.
+	# -----------------------------------------------------
+
+	global_position = Vector3(
+		authoritative_position.x,
+		global_position.y,
+		authoritative_position.z
+	)
+
+
+	rotation.y = (
+		authoritative_rotation_y
+	)
+
+
+	pending_reconciliation_offset = (
+		Vector2.ZERO
+	)
+
+
+	has_pending_authoritative_rotation = false
+
+
+	stop_movement()
+
+
+	_sync_world_state()
+
+
+	print(
+		"PlayerActor | Movimiento rechazado por servidor",
+		" | Request: ",
+		request_id,
+		" | Motivo: ",
+		reason,
+		" | Posición restaurada: ",
+		global_position
+	)

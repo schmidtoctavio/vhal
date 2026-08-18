@@ -307,6 +307,12 @@ func _bind_services() -> void:
 			_on_game_session_failed
 		)
 
+	if not game_server_client.movement_decision_received.is_connected(
+		_on_movement_decision_received
+	):
+		game_server_client.movement_decision_received.connect(
+			_on_movement_decision_received
+		)
 
 # =========================================================
 # LOGIN
@@ -1454,4 +1460,31 @@ func _on_character_creation_cancelled() -> void:
 
 	_show_character_select(
 		return_slot
+	)
+
+func _on_movement_decision_received(
+	request_id: int,
+	accepted: bool,
+	authoritative_position: Vector3,
+	authoritative_rotation_y: float,
+	authorized_target: Vector3,
+	reason: String
+) -> void:
+	var gameplay_screen := (
+		screen_router.current_screen
+		as GameplayScreen
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	gameplay_screen.apply_movement_decision(
+		request_id,
+		accepted,
+		authoritative_position,
+		authoritative_rotation_y,
+		authorized_target,
+		reason
 	)

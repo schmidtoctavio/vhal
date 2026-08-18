@@ -545,3 +545,30 @@ func apply_authoritative_movement_state(
 		moving,
 		sequence
 	)
+
+func apply_movement_decision(
+	request_id: int,
+	accepted: bool,
+	authoritative_position: Vector3,
+	authoritative_rotation_y: float,
+	authorized_target: Vector3,
+	reason: String
+) -> void:
+	if active_player_actor == null:
+		return
+
+
+	if not is_instance_valid(
+		active_player_actor
+	):
+		return
+
+
+	active_player_actor.apply_movement_decision(
+		request_id,
+		accepted,
+		authoritative_position,
+		authoritative_rotation_y,
+		authorized_target,
+		reason
+	)

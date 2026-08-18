@@ -27,6 +27,15 @@ signal authoritative_movement_state_received(
 	sequence: int
 )
 
+signal movement_decision_received(
+	request_id: int,
+	accepted: bool,
+	authoritative_position: Vector3,
+	authoritative_rotation_y: float,
+	authorized_target: Vector3,
+	reason: String
+)
+
 # =========================================================
 # CONFIGURACIÓN
 # =========================================================
@@ -51,6 +60,10 @@ const MESSAGE_MOVE_REQUEST: String = (
 
 const MESSAGE_MOVEMENT_STATE: String = (
 	"movement_state"
+)
+
+const MESSAGE_MOVEMENT_DECISION: String = (
+	"movement_decision"
 )
 
 # =========================================================
@@ -78,6 +91,10 @@ var latest_authoritative_position: Vector3 = (
 var latest_authoritative_rotation_y: float = 0.0
 
 var latest_authoritative_moving: bool = false
+
+var next_move_request_id: int = 1
+
+var latest_move_request_id: int = 0
 
 # =========================================================
 # CICLO DE VIDA
@@ -509,6 +526,27 @@ func _on_peer_packet(
 		return
 
 
+	if message_type == MESSAGE_MOVEMENT_DECISION:
+		var decision_value: Variant = (
+			message.get(
+				"data",
+				null
+			)
+		)
+
+
+		if typeof(decision_value) != TYPE_DICTIONARY:
+			return
+
+
+		_process_movement_decision(
+			decision_value
+		)
+
+
+		return
+
+
 # =========================================================
 # SNAPSHOT DE MUNDO
 # =========================================================
@@ -930,6 +968,10 @@ func _reset_connection_state() -> void:
 	latest_authoritative_rotation_y = 0.0
 
 	latest_authoritative_moving = false
+	
+	next_move_request_id = 1
+
+	latest_move_request_id = 0
 
 	var scene_multiplayer := (
 		multiplayer
@@ -953,6 +995,7 @@ func _reset_connection_state() -> void:
 	multiplayer.multiplayer_peer = (
 		OfflineMultiplayerPeer.new()
 	)
+
 # =========================================================
 # INTENCIÓN DE MOVIMIENTO
 # =========================================================
@@ -974,12 +1017,19 @@ func send_move_request(
 		return ERR_UNAVAILABLE
 
 
+	var request_id := (
+		next_move_request_id
+	)
+
+
 	var message := {
 		"version": NETWORK_PROTOCOL_VERSION,
 
 		"type": MESSAGE_MOVE_REQUEST,
 
 		"data": {
+			"request_id": request_id,
+
 			"target": {
 				"x": target.x,
 				"y": target.y,
@@ -1006,12 +1056,186 @@ func send_move_request(
 	)
 
 
-	if result == OK:
-		print(
-			"GameServerClient | Intención de movimiento enviada",
-			" | Destino: ",
-			target
+	if result != OK:
+		return result
+
+
+	# -----------------------------------------------------
+	# EL REQUEST YA FUE ACEPTADO POR LA CAPA DE TRANSPORTE
+	# -----------------------------------------------------
+
+	latest_move_request_id = (
+		request_id
+	)
+
+
+	next_move_request_id += 1
+
+
+	print(
+		"GameServerClient | Intención de movimiento enviada",
+		" | Request: ",
+		request_id,
+		" | Destino: ",
+		target
+	)
+
+
+	return OK
+
+# =========================================================
+# DECISIÓN AUTORITATIVA DE MOVIMIENTO
+# =========================================================
+
+func _process_movement_decision(
+	data: Dictionary
+) -> void:
+	var decision_peer_id := int(
+		data.get(
+			"peer_id",
+			-1
+		)
+	)
+
+
+	if (
+		decision_peer_id
+		!=
+		multiplayer.get_unique_id()
+	):
+		return
+
+
+	var request_id := int(
+		data.get(
+			"request_id",
+			0
+		)
+	)
+
+
+	# -----------------------------------------------------
+	# Sólo nos importa la decisión del click más reciente.
+	# Una decisión anterior no debe detener una predicción
+	# más nueva.
+	# -----------------------------------------------------
+
+	if request_id != latest_move_request_id:
+		return
+
+
+	var accepted := bool(
+		data.get(
+			"accepted",
+			false
+		)
+	)
+
+
+	var position_value: Variant = (
+		data.get(
+			"authoritative_position",
+			null
+		)
+	)
+
+
+	if typeof(position_value) != TYPE_DICTIONARY:
+		return
+
+
+	var position_data: Dictionary = (
+		position_value
+	)
+
+
+	if (
+		not position_data.has("x")
+		or
+		not position_data.has("y")
+		or
+		not position_data.has("z")
+	):
+		return
+
+
+	var authoritative_position := Vector3(
+		float(position_data["x"]),
+		float(position_data["y"]),
+		float(position_data["z"])
+	)
+
+
+	var authoritative_rotation_y := float(
+		data.get(
+			"authoritative_rotation_y",
+			0.0
+		)
+	)
+
+
+	var authorized_target := Vector3.ZERO
+
+
+	if accepted:
+		var target_value: Variant = (
+			data.get(
+				"authorized_target",
+				null
+			)
 		)
 
 
-	return result
+		if typeof(target_value) != TYPE_DICTIONARY:
+			return
+
+
+		var target_data: Dictionary = (
+			target_value
+		)
+
+
+		if (
+			not target_data.has("x")
+			or
+			not target_data.has("y")
+			or
+			not target_data.has("z")
+		):
+			return
+
+
+		authorized_target = Vector3(
+			float(target_data["x"]),
+			float(target_data["y"]),
+			float(target_data["z"])
+		)
+
+
+	var reason := String(
+		data.get(
+			"reason",
+			""
+		)
+	)
+
+
+	print(
+		"GameServerClient | Decisión de movimiento",
+		" | Request: ",
+		request_id,
+		" | Accepted: ",
+		accepted,
+		" | Target autorizado: ",
+		authorized_target
+	)
+
+
+	movement_decision_received.emit(
+		request_id,
+		accepted,
+		authoritative_position,
+		authoritative_rotation_y,
+		authorized_target,
+		reason
+	)
