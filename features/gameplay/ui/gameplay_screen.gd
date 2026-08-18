@@ -476,6 +476,23 @@ func _spawn_player_from_state() -> bool:
 			_on_move_target_requested
 		)
 
+
+	if not player_input_controller.npc_clicked.is_connected(
+		_on_npc_clicked
+	):
+		player_input_controller.npc_clicked.connect(
+			_on_npc_clicked
+		)
+
+
+	if not npc_interaction_controller.interaction_requested.is_connected(
+		_on_npc_interaction_requested
+	):
+		npc_interaction_controller.interaction_requested.connect(
+			_on_npc_interaction_requested
+		)
+
+
 	active_player_actor = player_actor
 
 
