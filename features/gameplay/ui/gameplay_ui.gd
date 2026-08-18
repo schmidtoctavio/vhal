@@ -3,6 +3,12 @@ extends Control
 
 
 # =========================================================
+# SEÑALES
+# =========================================================
+
+signal authorized_vault_closed
+
+# =========================================================
 # BARRAS
 # =========================================================
 
@@ -981,6 +987,9 @@ func open_authorized_vault() -> bool:
 
 func _on_vault_close_requested() -> void:
 	_close_vault()
+
+
+	authorized_vault_closed.emit()
 
 
 func _close_vault() -> void:

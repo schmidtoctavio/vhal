@@ -1320,6 +1320,13 @@ func _show_gameplay(
 			_on_gameplay_npc_interaction_requested
 		)
 
+	if not gameplay_screen.npc_service_end_requested.is_connected(
+		_on_gameplay_npc_service_end_requested
+	):
+		gameplay_screen.npc_service_end_requested.connect(
+			_on_gameplay_npc_service_end_requested
+		)
+
 	gameplay_screen.setup(
 		player_state,
 		ClientSession.account_state
@@ -1688,3 +1695,26 @@ func _on_npc_interaction_decision_received(
 		" | Servicio: ",
 		service_id
 	)
+
+# =========================================================
+# FINALIZAR SERVICIO NPC → GAME SERVER
+# =========================================================
+
+func _on_gameplay_npc_service_end_requested() -> void:
+	var result := (
+		game_server_client.send_npc_service_end_request()
+	)
+
+
+	if result == OK:
+		return
+
+
+	print(
+		"Main | No se pudo finalizar el servicio NPC.",
+		" Error: ",
+		result
+	)
+
+
+	game_session_service.end_session()

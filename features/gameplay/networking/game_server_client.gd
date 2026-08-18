@@ -114,6 +114,10 @@ const MESSAGE_NPC_INTERACTION_DECISION: String = (
 	"npc_interaction_decision"
 )
 
+const MESSAGE_NPC_SERVICE_END_REQUEST: String = (
+	"npc_service_end_request"
+)
+
 # =========================================================
 # ESTADO
 # =========================================================
@@ -2049,3 +2053,59 @@ func _process_npc_interaction_decision(
 		service_id,
 		reason
 	)
+
+# =========================================================
+# FINALIZAR SERVICIO NPC
+# =========================================================
+
+func send_npc_service_end_request() -> Error:
+	if not connected:
+		return ERR_UNAVAILABLE
+
+
+	var scene_multiplayer := (
+		multiplayer
+		as SceneMultiplayer
+	)
+
+
+	if scene_multiplayer == null:
+		return ERR_UNAVAILABLE
+
+
+	var message := {
+		"version": NETWORK_PROTOCOL_VERSION,
+
+		"type": MESSAGE_NPC_SERVICE_END_REQUEST,
+
+		"data": {},
+	}
+
+
+	var packet := (
+		JSON.stringify(
+			message
+		).to_utf8_buffer()
+	)
+
+
+	var result := (
+		scene_multiplayer.send_bytes(
+			packet,
+			SERVER_PEER_ID,
+			MultiplayerPeer.TRANSFER_MODE_RELIABLE,
+			0
+		)
+	)
+
+
+	if result != OK:
+		return result
+
+
+	print(
+		"GameServerClient | Solicitud de cierre de servicio NPC enviada."
+	)
+
+
+	return OK

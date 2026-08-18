@@ -35,6 +35,8 @@ signal npc_interaction_requested(
 	service_id: String
 )
 
+signal npc_service_end_requested
+
 # =========================================================
 # REFERENCIAS
 # =========================================================
@@ -133,6 +135,14 @@ func setup(
 # =========================================================
 
 func _ready() -> void:
+
+	if not gameplay_ui.authorized_vault_closed.is_connected(
+		_on_authorized_vault_closed
+	):
+		gameplay_ui.authorized_vault_closed.connect(
+			_on_authorized_vault_closed
+		)
+
 	if player_state != null:
 		if not _prepare_gameplay():
 			return
@@ -1049,3 +1059,10 @@ func apply_authorized_npc_service(
 
 
 			return false
+
+# =========================================================
+# FINALIZAR SERVICIO NPC
+# =========================================================
+
+func _on_authorized_vault_closed() -> void:
+	npc_service_end_requested.emit()
