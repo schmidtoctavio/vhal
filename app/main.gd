@@ -329,6 +329,13 @@ func _bind_services() -> void:
 			_on_remote_player_left
 		)
 
+	if not game_server_client.remote_player_movement_state_received.is_connected(
+		_on_remote_player_movement_state_received
+	):
+		game_server_client.remote_player_movement_state_received.connect(
+			_on_remote_player_movement_state_received
+		)
+
 
 # =========================================================
 # LOGIN
@@ -1546,4 +1553,33 @@ func _on_remote_player_left(
 
 	gameplay_screen.apply_remote_player_left(
 		peer_id
+	)
+
+# =========================================================
+# MOVIMIENTO REMOTO → GAMEPLAY
+# =========================================================
+
+func _on_remote_player_movement_state_received(
+	peer_id: int,
+	authoritative_position: Vector3,
+	authoritative_rotation_y: float,
+	moving: bool,
+	sequence: int
+) -> void:
+	var gameplay_screen := (
+		screen_router.current_screen
+		as GameplayScreen
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	gameplay_screen.apply_remote_player_movement_state(
+		peer_id,
+		authoritative_position,
+		authoritative_rotation_y,
+		moving,
+		sequence
 	)

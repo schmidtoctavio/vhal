@@ -1,6 +1,13 @@
 class_name RemotePlayerActor
 extends Node3D
 
+# =========================================================
+# INTERPOLACIÓN REMOTA
+# =========================================================
+
+const POSITION_INTERPOLATION_SPEED: float = 12.0
+
+const ROTATION_INTERPOLATION_SPEED: float = 12.0
 
 # =========================================================
 # REFERENCIAS
@@ -31,6 +38,17 @@ var level: int = 1
 
 var map_id: String = ""
 
+# =========================================================
+# ESTADO DE MOVIMIENTO REMOTO
+# =========================================================
+
+var last_movement_sequence: int = 0
+
+var target_position: Vector3 = Vector3.ZERO
+
+var target_rotation_y: float = 0.0
+
+var is_moving_remotely: bool = false
 
 # =========================================================
 # CONFIGURACIÓN
@@ -201,6 +219,20 @@ func setup(
 		remote_rotation_y
 	)
 
+	target_position = (
+		remote_position
+	)
+
+
+	target_rotation_y = (
+		remote_rotation_y
+	)
+
+
+	is_moving_remotely = false
+
+
+	last_movement_sequence = 0
 
 	# -----------------------------------------------------
 	# VISUAL
@@ -242,3 +274,118 @@ func setup(
 
 
 	return true
+
+# =========================================================
+# ESTADO AUTORITATIVO REMOTO
+# =========================================================
+
+func apply_authoritative_movement_state(
+	authoritative_position: Vector3,
+	authoritative_rotation_y: float,
+	moving: bool,
+	sequence: int
+) -> void:
+	if sequence <= last_movement_sequence:
+		return
+
+
+	last_movement_sequence = sequence
+
+
+	target_position = (
+		authoritative_position
+	)
+
+
+	target_rotation_y = (
+		authoritative_rotation_y
+	)
+
+
+	is_moving_remotely = moving
+
+
+	# -----------------------------------------------------
+	# ESTADO FINAL
+	# -----------------------------------------------------
+	#
+	# moving=false es una afirmación exacta del servidor.
+	# No dejamos error residual de interpolación.
+	# -----------------------------------------------------
+
+	if not moving:
+		global_position = (
+			authoritative_position
+		)
+
+
+		rotation.y = (
+			authoritative_rotation_y
+		)
+
+
+		if character_visual != null:
+			character_visual.play_idle()
+
+
+		print(
+			"RemotePlayerActor | Final autoritativo",
+			" | Peer: ",
+			peer_id,
+			" | Seq: ",
+			sequence,
+			" | Posición: ",
+			global_position
+		)
+
+
+		return
+
+
+	if character_visual != null:
+		character_visual.play_run()
+
+# =========================================================
+# INTERPOLACIÓN VISUAL
+# =========================================================
+
+func _process(
+	delta: float
+) -> void:
+	if not is_moving_remotely:
+		return
+
+
+	if delta <= 0.0:
+		return
+
+
+	var position_weight := clampf(
+		POSITION_INTERPOLATION_SPEED
+		*
+		delta,
+		0.0,
+		1.0
+	)
+
+
+	var rotation_weight := clampf(
+		ROTATION_INTERPOLATION_SPEED
+		*
+		delta,
+		0.0,
+		1.0
+	)
+
+
+	global_position = global_position.lerp(
+		target_position,
+		position_weight
+	)
+
+
+	rotation.y = lerp_angle(
+		rotation.y,
+		target_rotation_y,
+		rotation_weight
+	)

@@ -27,6 +27,14 @@ signal authoritative_movement_state_received(
 	sequence: int
 )
 
+signal remote_player_movement_state_received(
+	peer_id: int,
+	position: Vector3,
+	rotation_y: float,
+	moving: bool,
+	sequence: int
+)
+
 signal movement_decision_received(
 	request_id: int,
 	accepted: bool,
@@ -121,6 +129,8 @@ var next_move_request_id: int = 1
 var latest_move_request_id: int = 0
 
 var remote_players: Dictionary = {}
+
+var remote_movement_sequences: Dictionary = {}
 
 # =========================================================
 # CICLO DE VIDA
@@ -863,12 +873,7 @@ func _process_movement_state(
 	)
 
 
-	var local_peer_id := (
-		multiplayer.get_unique_id()
-	)
-
-
-	if state_peer_id != local_peer_id:
+	if state_peer_id <= 1:
 		return
 
 
@@ -880,7 +885,7 @@ func _process_movement_state(
 	)
 
 
-	if sequence <= latest_movement_sequence:
+	if sequence <= 0:
 		return
 
 
@@ -911,7 +916,7 @@ func _process_movement_state(
 		return
 
 
-	var position := Vector3(
+	var authoritative_position := Vector3(
 		float(
 			position_data["x"]
 		),
@@ -924,7 +929,7 @@ func _process_movement_state(
 	)
 
 
-	var rotation_y := float(
+	var authoritative_rotation_y := float(
 		data.get(
 			"rotation_y",
 			0.0
@@ -940,29 +945,141 @@ func _process_movement_state(
 	)
 
 
-	latest_movement_sequence = sequence
-
-	latest_authoritative_position = position
-
-	latest_authoritative_rotation_y = rotation_y
-
-	latest_authoritative_moving = moving
-
-
-	print(
-		"GameServerClient | Movimiento autoritativo recibido",
-		" | Seq: ",
-		sequence,
-		" | Posición: ",
-		position,
-		" | Moving: ",
-		moving
+	var local_peer_id := (
+		multiplayer.get_unique_id()
 	)
 
 
-	authoritative_movement_state_received.emit(
-		position,
-		rotation_y,
+	# -----------------------------------------------------
+	# PLAYER LOCAL
+	# -----------------------------------------------------
+
+	if state_peer_id == local_peer_id:
+		if sequence <= latest_movement_sequence:
+			return
+
+
+		latest_movement_sequence = sequence
+
+		latest_authoritative_position = (
+			authoritative_position
+		)
+
+		latest_authoritative_rotation_y = (
+			authoritative_rotation_y
+		)
+
+		latest_authoritative_moving = moving
+
+
+		print(
+			"GameServerClient | Movimiento autoritativo recibido",
+			" | Seq: ",
+			sequence,
+			" | Posición: ",
+			authoritative_position,
+			" | Moving: ",
+			moving
+		)
+
+
+		authoritative_movement_state_received.emit(
+			authoritative_position,
+			authoritative_rotation_y,
+			moving,
+			sequence
+		)
+
+
+		return
+
+
+	# -----------------------------------------------------
+	# PLAYER REMOTO
+	# -----------------------------------------------------
+
+	if not remote_players.has(
+		state_peer_id
+	):
+		return
+
+
+	var previous_sequence := int(
+		remote_movement_sequences.get(
+			state_peer_id,
+			0
+		)
+	)
+
+
+	if sequence <= previous_sequence:
+		return
+
+
+	remote_movement_sequences[
+		state_peer_id
+	] = sequence
+
+
+	# -----------------------------------------------------
+	# ACTUALIZAR TAMBIÉN EL CACHE DE PRESENCIA
+	# -----------------------------------------------------
+	#
+	# Si GameplayScreen se recrea, remote_players conserva
+	# la posición remota más reciente conocida.
+	# -----------------------------------------------------
+
+	var remote_player_value: Variant = (
+		remote_players[
+			state_peer_id
+		]
+	)
+
+
+	if typeof(remote_player_value) == TYPE_DICTIONARY:
+		var remote_player: Dictionary = (
+			remote_player_value
+		)
+
+
+		var world_value: Variant = (
+			remote_player.get(
+				"world",
+				null
+			)
+		)
+
+
+		if typeof(world_value) == TYPE_DICTIONARY:
+			var world: Dictionary = (
+				world_value
+			)
+
+
+			world[
+				"position"
+			] = authoritative_position
+
+
+			world[
+				"rotation_y"
+			] = authoritative_rotation_y
+
+
+			remote_player[
+				"world"
+			] = world
+
+
+			remote_players[
+				state_peer_id
+			] = remote_player
+
+
+	remote_player_movement_state_received.emit(
+		state_peer_id,
+		authoritative_position,
+		authoritative_rotation_y,
 		moving,
 		sequence
 	)
@@ -1061,6 +1178,8 @@ func _reset_connection_state() -> void:
 	latest_move_request_id = 0
 
 	remote_players.clear()
+
+	remote_movement_sequences.clear()
 
 	var scene_multiplayer := (
 		multiplayer
@@ -1666,6 +1785,9 @@ func _process_player_presence_left(
 		peer_id
 	)
 
+	remote_movement_sequences.erase(
+		peer_id
+	)
 
 	print(
 		"GameServerClient | Player remoto salió",

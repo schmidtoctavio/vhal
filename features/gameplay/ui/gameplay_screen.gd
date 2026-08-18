@@ -856,3 +856,50 @@ func _clear_remote_players() -> void:
 
 
 	remote_player_actors.clear()
+
+# =========================================================
+# MOVIMIENTO DE PLAYER REMOTO
+# =========================================================
+
+func apply_remote_player_movement_state(
+	peer_id: int,
+	authoritative_position: Vector3,
+	authoritative_rotation_y: float,
+	moving: bool,
+	sequence: int
+) -> void:
+	if not remote_player_actors.has(
+		peer_id
+	):
+		return
+
+
+	var actor_value: Variant = (
+		remote_player_actors[
+			peer_id
+		]
+	)
+
+
+	var remote_actor := (
+		actor_value
+		as RemotePlayerActor
+	)
+
+
+	if (
+		remote_actor == null
+		or
+		not is_instance_valid(
+			remote_actor
+		)
+	):
+		return
+
+
+	remote_actor.apply_authoritative_movement_state(
+		authoritative_position,
+		authoritative_rotation_y,
+		moving,
+		sequence
+	)
