@@ -14,6 +14,23 @@ const TARGET_REACHED_DISTANCE: float = 0.3
 
 const MIN_DIRECTION_LENGTH_SQUARED: float = 0.0001
 
+# =========================================================
+# RECONCILIACIÓN AUTORITATIVA
+# =========================================================
+
+const RECONCILIATION_DEAD_ZONE: float = 0.5
+
+const RECONCILIATION_HARD_SNAP_DISTANCE: float = 2.0
+
+const RECONCILIATION_SOFT_RATIO: float = 0.35
+
+const RECONCILIATION_CORRECTION_SPEED: float = 2.5
+
+const RECONCILIATION_ROTATION_SPEED: float = 8.0
+
+const RECONCILIATION_OFFSET_EPSILON: float = 0.001
+
+const RECONCILIATION_ROTATION_EPSILON: float = 0.01
 
 # =========================================================
 # REFERENCIAS
@@ -55,6 +72,19 @@ var move_target: Vector3 = Vector3.ZERO
 
 var has_move_target: bool = false
 
+# =========================================================
+# ESTADO DE RECONCILIACIÓN
+# =========================================================
+
+var last_authoritative_sequence: int = 0
+
+var pending_reconciliation_offset: Vector2 = (
+	Vector2.ZERO
+)
+
+var pending_authoritative_rotation_y: float = 0.0
+
+var has_pending_authoritative_rotation: bool = false
 
 # =========================================================
 # CONFIGURACIÓN
@@ -104,6 +134,125 @@ func setup(
 
 	return true
 
+# =========================================================
+# RECIBIR ESTADO AUTORITATIVO
+# =========================================================
+
+func apply_authoritative_movement_state(
+	authoritative_position: Vector3,
+	authoritative_rotation_y: float,
+	moving: bool,
+	sequence: int
+) -> void:
+	if sequence <= last_authoritative_sequence:
+		return
+
+
+	last_authoritative_sequence = sequence
+
+
+	var local_position_2d := Vector2(
+		global_position.x,
+		global_position.z
+	)
+
+
+	var authoritative_position_2d := Vector2(
+		authoritative_position.x,
+		authoritative_position.z
+	)
+
+
+	var error_vector := (
+		authoritative_position_2d
+		-
+		local_position_2d
+	)
+
+
+	var error_distance := (
+		error_vector.length()
+	)
+
+
+	# -----------------------------------------------------
+	# MOVIMIENTO FINALIZADO
+	# -----------------------------------------------------
+	#
+	# moving=false es una afirmación fuerte del servidor:
+	# esa es la posición final real.
+	# -----------------------------------------------------
+
+	if not moving:
+		_apply_authoritative_final_state(
+			authoritative_position,
+			authoritative_rotation_y,
+			sequence,
+			error_distance
+		)
+
+		return
+
+
+	# -----------------------------------------------------
+	# ERROR GRANDE
+	# -----------------------------------------------------
+
+	if (
+		error_distance
+		>=
+		RECONCILIATION_HARD_SNAP_DISTANCE
+	):
+		_apply_authoritative_hard_correction(
+			authoritative_position,
+			authoritative_rotation_y,
+			sequence,
+			error_distance
+		)
+
+		return
+
+
+	# -----------------------------------------------------
+	# ERROR MEDIO
+	# -----------------------------------------------------
+	#
+	# No perseguimos continuamente la posición vieja del
+	# servidor. Calculamos una corrección FINITA basada en
+	# este snapshot y luego la consumimos suavemente.
+	# -----------------------------------------------------
+
+	if (
+		error_distance
+		>
+		RECONCILIATION_DEAD_ZONE
+	):
+		pending_reconciliation_offset = (
+			error_vector
+			*
+			RECONCILIATION_SOFT_RATIO
+		)
+
+
+		print(
+			"PlayerActor | Reconciliación suave",
+			" | Seq: ",
+			sequence,
+			" | Error XZ: ",
+			error_distance
+		)
+	else:
+		pending_reconciliation_offset = (
+			Vector2.ZERO
+		)
+
+
+	pending_authoritative_rotation_y = (
+		authoritative_rotation_y
+	)
+
+
+	has_pending_authoritative_rotation = true
 
 # =========================================================
 # PHYSICS
@@ -127,6 +276,11 @@ func _physics_process(
 
 
 	move_and_slide()
+
+
+	_apply_authoritative_reconciliation(
+		delta
+	)
 
 
 	_sync_world_state()
@@ -441,3 +595,216 @@ func _sync_world_state() -> void:
 	player_state.world.rotation_y = (
 		rotation.y
 	)
+
+# =========================================================
+# CORRECCIÓN AUTORITATIVA FUERTE
+# =========================================================
+
+func _apply_authoritative_hard_correction(
+	authoritative_position: Vector3,
+	authoritative_rotation_y: float,
+	sequence: int,
+	error_distance: float
+) -> void:
+	var previous_move_target := (
+		move_target
+	)
+
+
+	var should_resume_prediction := (
+		has_move_target
+	)
+
+
+	global_position = Vector3(
+		authoritative_position.x,
+		global_position.y,
+		authoritative_position.z
+	)
+
+
+	rotation.y = (
+		authoritative_rotation_y
+	)
+
+
+	pending_reconciliation_offset = (
+		Vector2.ZERO
+	)
+
+
+	has_pending_authoritative_rotation = false
+
+
+	# -----------------------------------------------------
+	# Si todavía estábamos caminando localmente, el
+	# NavigationAgent debe continuar desde la nueva
+	# posición corregida.
+	# -----------------------------------------------------
+
+	if should_resume_prediction:
+		set_move_target(
+			previous_move_target
+		)
+
+
+	_sync_world_state()
+
+
+	print(
+		"PlayerActor | Corrección autoritativa fuerte",
+		" | Seq: ",
+		sequence,
+		" | Error XZ: ",
+		error_distance,
+		" | Nueva posición: ",
+		global_position
+	)
+
+# =========================================================
+# POSICIÓN FINAL AUTORITATIVA
+# =========================================================
+
+func _apply_authoritative_final_state(
+	authoritative_position: Vector3,
+	authoritative_rotation_y: float,
+	sequence: int,
+	error_distance: float
+) -> void:
+	global_position = Vector3(
+		authoritative_position.x,
+		global_position.y,
+		authoritative_position.z
+	)
+
+
+	rotation.y = (
+		authoritative_rotation_y
+	)
+
+
+	pending_reconciliation_offset = (
+		Vector2.ZERO
+	)
+
+
+	has_pending_authoritative_rotation = false
+
+
+	stop_movement()
+
+
+	_sync_world_state()
+
+
+	print(
+		"PlayerActor | Final autoritativo aplicado",
+		" | Seq: ",
+		sequence,
+		" | Error previo XZ: ",
+		error_distance,
+		" | Posición: ",
+		global_position
+	)
+
+# =========================================================
+# CONSUMIR RECONCILIACIÓN
+# =========================================================
+
+func _apply_authoritative_reconciliation(
+	delta: float
+) -> void:
+	if delta <= 0.0:
+		return
+
+
+	# -----------------------------------------------------
+	# POSICIÓN
+	# -----------------------------------------------------
+
+	var offset_length := (
+		pending_reconciliation_offset.length()
+	)
+
+
+	if (
+		offset_length
+		>
+		RECONCILIATION_OFFSET_EPSILON
+	):
+		var correction_distance := minf(
+			RECONCILIATION_CORRECTION_SPEED
+			*
+			delta,
+			offset_length
+		)
+
+
+		var correction := (
+			pending_reconciliation_offset.normalized()
+			*
+			correction_distance
+		)
+
+
+		global_position.x += (
+			correction.x
+		)
+
+
+		global_position.z += (
+			correction.y
+		)
+
+
+		pending_reconciliation_offset -= (
+			correction
+		)
+	else:
+		pending_reconciliation_offset = (
+			Vector2.ZERO
+		)
+
+
+	# -----------------------------------------------------
+	# ROTACIÓN
+	# -----------------------------------------------------
+
+	if not has_pending_authoritative_rotation:
+		return
+
+
+	rotation.y = lerp_angle(
+		rotation.y,
+		pending_authoritative_rotation_y,
+		clampf(
+			RECONCILIATION_ROTATION_SPEED
+			*
+			delta,
+			0.0,
+			1.0
+		)
+	)
+
+
+	var remaining_rotation := absf(
+		angle_difference(
+			rotation.y,
+			pending_authoritative_rotation_y
+		)
+	)
+
+
+	if (
+		remaining_rotation
+		<=
+		RECONCILIATION_ROTATION_EPSILON
+	):
+		rotation.y = (
+			pending_authoritative_rotation_y
+		)
+
+
+		has_pending_authoritative_rotation = (
+			false
+		)

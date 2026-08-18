@@ -518,3 +518,30 @@ func _on_move_target_requested(
 	movement_intent_requested.emit(
 		target
 	)
+
+# =========================================================
+# ESTADO AUTORITATIVO DEL PLAYER
+# =========================================================
+
+func apply_authoritative_movement_state(
+	authoritative_position: Vector3,
+	rotation_y: float,
+	moving: bool,
+	sequence: int
+) -> void:
+	if active_player_actor == null:
+		return
+
+
+	if not is_instance_valid(
+		active_player_actor
+	):
+		return
+
+
+	active_player_actor.apply_authoritative_movement_state(
+		authoritative_position,
+		rotation_y,
+		moving,
+		sequence
+	)

@@ -273,6 +273,13 @@ func _bind_services() -> void:
 			_on_world_snapshot_received
 		)
 
+	if not game_server_client.authoritative_movement_state_received.is_connected(
+		_on_authoritative_movement_state_received
+	):
+		game_server_client.authoritative_movement_state_received.connect(
+			_on_authoritative_movement_state_received
+		)
+
 	# -----------------------------------------------------
 	# GAME SESSION
 	# -----------------------------------------------------
@@ -1007,6 +1014,33 @@ func _apply_authoritative_world_snapshot(
 
 
 	return true
+
+# =========================================================
+# MOVIMIENTO AUTORITATIVO → GAMEPLAY
+# =========================================================
+
+func _on_authoritative_movement_state_received(
+	position: Vector3,
+	rotation_y: float,
+	moving: bool,
+	sequence: int
+) -> void:
+	var gameplay_screen := (
+		screen_router.current_screen
+		as GameplayScreen
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	gameplay_screen.apply_authoritative_movement_state(
+		position,
+		rotation_y,
+		moving,
+		sequence
+	)
 
 # =========================================================
 # RESULTADOS DE SESIÓN DE JUEGO
