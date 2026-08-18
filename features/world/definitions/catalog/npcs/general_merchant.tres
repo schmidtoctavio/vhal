@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="NpcDefinition" format=3 uid="uid://jfch2oyyn1ga"]
+
+[ext_resource type="Script" uid="uid://b7rknie3pw8xr" path="res://features/world/definitions/npc_definition.gd" id="1_si1qp"]
+
+[resource]
+script = ExtResource("1_si1qp")
+npc_id = "general_merchant"
+display_name = "Merchant"
+service_id = "merchant"
+metadata/_custom_type_script = "uid://b7rknie3pw8xr"

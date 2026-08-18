@@ -9,6 +9,10 @@ signal move_target_requested(
 	target: Vector3
 )
 
+signal npc_clicked(
+	npc_actor: NpcActor
+)
+
 # =========================================================
 # CONSTANTES
 # =========================================================
@@ -275,24 +279,6 @@ func _request_move_to_screen_position(
 	)
 
 
-	var query := (
-		PhysicsRayQueryParameters3D.create(
-			ray_origin,
-			ray_end
-		)
-	)
-
-
-	query.collide_with_bodies = true
-
-	query.collide_with_areas = false
-
-
-	query.exclude = [
-		player_actor.get_rid()
-	]
-
-
 	var space_state := (
 		player_actor
 		.get_world_3d()
@@ -300,19 +286,111 @@ func _request_move_to_screen_position(
 	)
 
 
-	var result := (
-		space_state.intersect_ray(
-			query
+	# =====================================================
+	# EXCLUSIONES
+	# =====================================================
+
+	var excluded_rids: Array[RID] = [
+		player_actor.get_rid()
+	]
+
+
+	if player_actor.interaction_area != null:
+		excluded_rids.append(
+			player_actor.interaction_area.get_rid()
+		)
+
+
+	# =====================================================
+	# 1. INTERACCIÓN CON NPC
+	# =====================================================
+	#
+	# Primero consultamos ÚNICAMENTE Area3D.
+	# El suelo no puede "ganarle" al NPC en esta consulta.
+	# =====================================================
+
+	var interaction_query := (
+		PhysicsRayQueryParameters3D.create(
+			ray_origin,
+			ray_end
 		)
 	)
 
 
-	if result.is_empty():
+	interaction_query.collide_with_bodies = false
+	interaction_query.collide_with_areas = true
+
+	interaction_query.exclude = excluded_rids
+
+
+	var interaction_result := (
+		space_state.intersect_ray(
+			interaction_query
+		)
+	)
+
+
+	if not interaction_result.is_empty():
+		var collider_value: Variant = (
+			interaction_result.get(
+				"collider",
+				null
+			)
+		)
+
+
+		var npc_actor := (
+			_find_npc_actor_from_collider(
+				collider_value
+			)
+		)
+
+
+		if npc_actor != null:
+			npc_clicked.emit(
+				npc_actor
+			)
+
+
+			get_viewport().set_input_as_handled()
+
+
+			return
+
+
+	# =====================================================
+	# 2. MOVIMIENTO SOBRE EL MUNDO
+	# =====================================================
+
+	var movement_query := (
+		PhysicsRayQueryParameters3D.create(
+			ray_origin,
+			ray_end
+		)
+	)
+
+
+	movement_query.collide_with_bodies = true
+	movement_query.collide_with_areas = false
+
+	movement_query.exclude = excluded_rids
+
+
+	var movement_result := (
+		space_state.intersect_ray(
+			movement_query
+		)
+	)
+
+
+	if movement_result.is_empty():
 		return
 
 
 	var hit_position: Vector3 = (
-		result["position"]
+		movement_result[
+			"position"
+		]
 	)
 
 
@@ -322,13 +400,7 @@ func _request_move_to_screen_position(
 
 
 	# -----------------------------------------------------
-	# PREDICCIÓN LOCAL TEMPORAL
-	# -----------------------------------------------------
-	#
-	# El cliente sigue moviendo visualmente al actor
-	# durante F13-B2A.
-	#
-	# El Game Server todavía no posee navegación propia.
+	# PREDICCIÓN LOCAL
 	# -----------------------------------------------------
 
 	player_actor.set_move_target(
@@ -336,6 +408,35 @@ func _request_move_to_screen_position(
 	)
 
 
-	# El click ya fue convertido en movimiento.
-	# No debe seguir propagándose a la GUI.
 	get_viewport().set_input_as_handled()
+
+# =========================================================
+# RESOLVER NPC DESDE COLLIDER
+# =========================================================
+
+func _find_npc_actor_from_collider(
+	collider_value: Variant
+) -> NpcActor:
+	var current_node := (
+		collider_value
+		as Node
+	)
+
+
+	while current_node != null:
+		var npc_actor := (
+			current_node
+			as NpcActor
+		)
+
+
+		if npc_actor != null:
+			return npc_actor
+
+
+		current_node = (
+			current_node.get_parent()
+		)
+
+
+	return null

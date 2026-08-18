@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://k70gqpgejvec"]
+
+[ext_resource type="PackedScene" uid="uid://dheo7b2a3dk7x" path="res://assets/characters/humanoids/base/models/base_humanoid/base_humanoid.gltf" id="1_em2ec"]
+[ext_resource type="Script" uid="uid://d0yqwion55t1k" path="res://features/world/npcs/npc_actor.gd" id="1_fy1hv"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_em2ec"]
+radius = 0.6
+
+[node name="NpcActor" type="Node3D" unique_id=755687868]
+script = ExtResource("1_fy1hv")
+
+[node name="VisualRoot" type="Node3D" parent="." unique_id=820976746]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
+
+[node name="base_humanoid" parent="VisualRoot" unique_id=1834511568 instance=ExtResource("1_em2ec")]
+
+[node name="InteractionArea" type="Area3D" parent="." unique_id=1310575454]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="InteractionArea" unique_id=815267168]
+shape = SubResource("CapsuleShape3D_em2ec")
+
+[node name="NameLabel" type="Label3D" parent="." unique_id=935278375]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+billboard = 1
+text = "NPC"

@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://ca00xmfs71qab" path="res://features/gameplay/ui/gameplay_ui.tscn" id="2_3tldw"]
 [ext_resource type="Script" uid="uid://d1r74avhqanhn" path="res://features/player/input/player_input_controller.gd" id="3_5wu12"]
 [ext_resource type="PackedScene" uid="uid://df28tfnlabxrk" path="res://features/player/camera/player_camera_controller.tscn" id="3_ut2oh"]
+[ext_resource type="Script" uid="uid://da83fiiahli25" path="res://features/world/npcs/npc_interaction_controller.gd" id="5_h841l"]
 
 [node name="GameplayScreen" type="Control" unique_id=368898034]
 layout_mode = 3
@@ -40,3 +41,6 @@ mouse_filter = 0
 
 [node name="PlayerInputController" type="Node" parent="." unique_id=1375599803]
 script = ExtResource("3_5wu12")
+
+[node name="NpcInteractionController" type="Node" parent="." unique_id=1638229451]
+script = ExtResource("5_h841l")

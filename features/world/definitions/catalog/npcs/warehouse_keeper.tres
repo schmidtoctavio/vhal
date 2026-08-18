@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="NpcDefinition" format=3 uid="uid://dt1kfd05r25mw"]
+
+[ext_resource type="Script" uid="uid://b7rknie3pw8xr" path="res://features/world/definitions/npc_definition.gd" id="1_bvq5v"]
+
+[resource]
+script = ExtResource("1_bvq5v")
+npc_id = "warehouse_keeper"
+display_name = "Warehouse Keeper"
+service_id = "warehouse"
+metadata/_custom_type_script = "uid://b7rknie3pw8xr"

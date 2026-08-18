@@ -30,6 +30,11 @@ signal movement_intent_requested(
 	target: Vector3
 )
 
+signal npc_interaction_requested(
+	npc_id: String,
+	service_id: String
+)
+
 # =========================================================
 # REFERENCIAS
 # =========================================================
@@ -58,6 +63,9 @@ signal movement_intent_requested(
 	$PlayerInputController
 )
 
+@onready var npc_interaction_controller: NpcInteractionController = (
+	$NpcInteractionController
+)
 
 # =========================================================
 # ESTADO DEL JUGADOR
@@ -436,6 +444,31 @@ func _spawn_player_from_state() -> bool:
 
 		return false
 
+	if npc_interaction_controller == null:
+		player_actor.queue_free()
+
+
+		player_spawn_failed.emit(
+			"No existe el controlador de interacción con NPCs."
+		)
+
+
+		return false
+
+
+	if not npc_interaction_controller.setup(
+		player_actor
+	):
+		player_actor.queue_free()
+
+
+		player_spawn_failed.emit(
+			"No se pudo configurar la interacción con NPCs."
+		)
+
+
+		return false
+
 	if not player_input_controller.move_target_requested.is_connected(
 		_on_move_target_requested
 	):
@@ -456,6 +489,9 @@ func _spawn_player_from_state() -> bool:
 func _clear_active_player() -> void:
 	if player_input_controller != null:
 		player_input_controller.clear()
+
+	if npc_interaction_controller != null:
+		npc_interaction_controller.clear()
 
 	if camera_controller != null:
 		camera_controller.clear_target()
@@ -902,4 +938,42 @@ func apply_remote_player_movement_state(
 		authoritative_rotation_y,
 		moving,
 		sequence
+	)
+
+# =========================================================
+# CLICK SOBRE NPC
+# =========================================================
+
+func _on_npc_clicked(
+	npc_actor: NpcActor
+) -> void:
+	if npc_interaction_controller == null:
+		return
+
+
+	npc_interaction_controller.request_interaction(
+		npc_actor
+	)
+
+
+# =========================================================
+# INTERACCIÓN NPC VALIDADA
+# =========================================================
+
+func _on_npc_interaction_requested(
+	npc_id: String,
+	service_id: String
+) -> void:
+	print(
+		"GameplayScreen | Interacción NPC solicitada",
+		" | NPC: ",
+		npc_id,
+		" | Servicio: ",
+		service_id
+	)
+
+
+	npc_interaction_requested.emit(
+		npc_id,
+		service_id
 	)
