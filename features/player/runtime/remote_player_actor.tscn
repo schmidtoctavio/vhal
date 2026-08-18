@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://nlctyqwyeqm"]
+
+[ext_resource type="Script" uid="uid://6tqpv7d6v860" path="res://features/player/runtime/remote_player_actor.gd" id="1_5axhk"]
+[ext_resource type="PackedScene" uid="uid://em77q7ge8ffh" path="res://features/player/visual/character_visual.tscn" id="2_elfek"]
+
+[node name="RemotePlayerActor" type="Node3D" unique_id=870407550]
+script = ExtResource("1_5axhk")
+
+[node name="CharacterVisual" parent="." unique_id=882147995 instance=ExtResource("2_elfek")]
+
+[node name="NameLabel" type="Label3D" parent="." unique_id=1652997866]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0)
+billboard = 1

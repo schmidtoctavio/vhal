@@ -314,6 +314,22 @@ func _bind_services() -> void:
 			_on_movement_decision_received
 		)
 
+	if not game_server_client.remote_player_joined.is_connected(
+		_on_remote_player_joined
+	):
+		game_server_client.remote_player_joined.connect(
+			_on_remote_player_joined
+		)
+
+
+	if not game_server_client.remote_player_left.is_connected(
+		_on_remote_player_left
+	):
+		game_server_client.remote_player_left.connect(
+			_on_remote_player_left
+		)
+
+
 # =========================================================
 # LOGIN
 # =========================================================
@@ -1288,6 +1304,10 @@ func _show_gameplay(
 		ClientSession.account_state
 	)
 
+	gameplay_screen.sync_remote_players(
+		game_server_client.remote_players.values()
+	)
+
 # =========================================================
 # MOVIMIENTO → GAME SERVER
 # =========================================================
@@ -1487,4 +1507,43 @@ func _on_movement_decision_received(
 		authoritative_rotation_y,
 		authorized_target,
 		reason
+	)
+
+# =========================================================
+# PRESENCIA REMOTA → GAMEPLAY
+# =========================================================
+
+func _on_remote_player_joined(
+	player: Dictionary
+) -> void:
+	var gameplay_screen := (
+		screen_router.current_screen
+		as GameplayScreen
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	gameplay_screen.apply_remote_player_joined(
+		player
+	)
+
+
+func _on_remote_player_left(
+	peer_id: int
+) -> void:
+	var gameplay_screen := (
+		screen_router.current_screen
+		as GameplayScreen
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	gameplay_screen.apply_remote_player_left(
+		peer_id
 	)

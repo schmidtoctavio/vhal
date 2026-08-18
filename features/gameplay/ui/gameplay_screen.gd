@@ -10,6 +10,9 @@ const PLAYER_ACTOR_SCENE: PackedScene = preload(
 	"res://features/player/runtime/player_actor.tscn"
 )
 
+const REMOTE_PLAYER_ACTOR_SCENE: PackedScene = preload(
+	"res://features/player/runtime/remote_player_actor.tscn"
+)
 
 # =========================================================
 # SEÑALES
@@ -85,6 +88,11 @@ var active_map_definition: MapDefinition = null
 
 var active_player_actor: PlayerActor = null
 
+# =========================================================
+# PLAYERS REMOTOS
+# =========================================================
+
+var remote_player_actors: Dictionary = {}
 
 # =========================================================
 # CONFIGURACIÓN
@@ -572,3 +580,279 @@ func apply_movement_decision(
 		authorized_target,
 		reason
 	)
+
+# =========================================================
+# SINCRONIZAR PLAYERS REMOTOS
+# =========================================================
+
+func sync_remote_players(
+	players: Array
+) -> void:
+	_clear_remote_players()
+
+
+	for player_value: Variant in players:
+		if typeof(player_value) != TYPE_DICTIONARY:
+			continue
+
+
+		var player: Dictionary = (
+			player_value
+		)
+
+
+		_spawn_or_update_remote_player(
+			player
+		)
+
+
+	print(
+		"GameplayScreen | Remotos sincronizados",
+		" | Cantidad: ",
+		remote_player_actors.size()
+	)
+
+
+# =========================================================
+# PLAYER REMOTO ENTRÓ
+# =========================================================
+
+func apply_remote_player_joined(
+	player: Dictionary
+) -> void:
+	_spawn_or_update_remote_player(
+		player
+	)
+
+
+# =========================================================
+# PLAYER REMOTO SALIÓ
+# =========================================================
+
+func apply_remote_player_left(
+	peer_id: int
+) -> void:
+	if not remote_player_actors.has(
+		peer_id
+	):
+		return
+
+
+	var actor_value: Variant = (
+		remote_player_actors[
+			peer_id
+		]
+	)
+
+
+	var remote_actor := (
+		actor_value
+		as RemotePlayerActor
+	)
+
+
+	remote_player_actors.erase(
+		peer_id
+	)
+
+
+	if (
+		remote_actor != null
+		and
+		is_instance_valid(
+			remote_actor
+		)
+	):
+		remote_actor.queue_free()
+
+
+	print(
+		"GameplayScreen | Player remoto eliminado",
+		" | Peer: ",
+		peer_id
+	)
+
+
+# =========================================================
+# CREAR / ACTUALIZAR PLAYER REMOTO
+# =========================================================
+
+func _spawn_or_update_remote_player(
+	player: Dictionary
+) -> void:
+	if actors_root == null:
+		return
+
+
+	var peer_id := int(
+		player.get(
+			"peer_id",
+			-1
+		)
+	)
+
+
+	if peer_id <= 1:
+		return
+
+
+	if player_state == null:
+		return
+
+
+	if player_state.world == null:
+		return
+
+
+	var world_value: Variant = (
+		player.get(
+			"world",
+			null
+		)
+	)
+
+
+	if typeof(world_value) != TYPE_DICTIONARY:
+		return
+
+
+	var world: Dictionary = (
+		world_value
+	)
+
+
+	var remote_map_id := String(
+		world.get(
+			"map_id",
+			""
+		)
+	).strip_edges()
+
+
+	if (
+		remote_map_id
+		!=
+		player_state.world.map_id
+	):
+		return
+
+
+	# -----------------------------------------------------
+	# YA EXISTE
+	# -----------------------------------------------------
+
+	if remote_player_actors.has(
+		peer_id
+	):
+		var existing_value: Variant = (
+			remote_player_actors[
+				peer_id
+			]
+		)
+
+
+		var existing_actor := (
+			existing_value
+			as RemotePlayerActor
+		)
+
+
+		if (
+			existing_actor != null
+			and
+			is_instance_valid(
+				existing_actor
+			)
+		):
+			existing_actor.setup(
+				player
+			)
+
+
+		return
+
+
+	# -----------------------------------------------------
+	# INSTANCIAR
+	# -----------------------------------------------------
+
+	var actor_instance: Node = (
+		REMOTE_PLAYER_ACTOR_SCENE.instantiate()
+	)
+
+
+	if actor_instance == null:
+		return
+
+
+	var remote_actor := (
+		actor_instance
+		as RemotePlayerActor
+	)
+
+
+	if remote_actor == null:
+		actor_instance.free()
+
+		return
+
+
+	remote_actor.name = (
+		"RemotePlayer_%d"
+		% peer_id
+	)
+
+
+	actors_root.add_child(
+		remote_actor
+	)
+
+
+	if not remote_actor.setup(
+		player
+	):
+		remote_actor.queue_free()
+
+		return
+
+
+	remote_player_actors[
+		peer_id
+	] = remote_actor
+
+
+	print(
+		"GameplayScreen | Player remoto instanciado",
+		" | Peer: ",
+		peer_id,
+		" | Personaje: ",
+		remote_actor.character_name
+	)
+
+
+# =========================================================
+# LIMPIAR PLAYERS REMOTOS
+# =========================================================
+
+func _clear_remote_players() -> void:
+	for actor_value: Variant in remote_player_actors.values():
+		var remote_actor := (
+			actor_value
+			as RemotePlayerActor
+		)
+
+
+		if (
+			remote_actor == null
+			or
+			not is_instance_valid(
+				remote_actor
+			)
+		):
+			continue
+
+
+		remote_actor.queue_free()
+
+
+	remote_player_actors.clear()

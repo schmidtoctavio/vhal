@@ -38,6 +38,7 @@ var player_state: PlayerRuntimeState = null
 
 var current_animation: StringName = &""
 
+var remote_character_data: Dictionary = {}
 
 # =========================================================
 # CONFIGURACIÓN
@@ -67,6 +68,72 @@ func setup(
 
 	return true
 
+# =========================================================
+# CONFIGURACIÓN DE PLAYER REMOTO
+# =========================================================
+
+func setup_remote(
+	character_data: Dictionary
+) -> bool:
+	if character_data.is_empty():
+		return false
+
+
+	var character_id := int(
+		character_data.get(
+			"id",
+			-1
+		)
+	)
+
+
+	var character_name := String(
+		character_data.get(
+			"name",
+			""
+		)
+	).strip_edges()
+
+
+	var class_id := String(
+		character_data.get(
+			"class_id",
+			""
+		)
+	).strip_edges()
+
+
+	if (
+		character_id <= 0
+		or
+		character_name.is_empty()
+		or
+		class_id.is_empty()
+	):
+		return false
+
+
+	player_state = null
+
+	remote_character_data = (
+		character_data.duplicate(
+			true
+		)
+	)
+
+
+	current_animation = &""
+
+
+	if not _setup_animation_player():
+		return false
+
+
+	if not play_idle():
+		return false
+
+
+	return true
 
 # =========================================================
 # CONFIGURAR ANIMATION PLAYER
