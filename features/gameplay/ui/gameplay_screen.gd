@@ -1066,3 +1066,27 @@ func apply_authorized_npc_service(
 
 func _on_authorized_vault_closed() -> void:
 	npc_service_end_requested.emit()
+
+# =========================================================
+# SERVICIO NPC FINALIZADO AUTORITATIVAMENTE
+# =========================================================
+
+func apply_authoritative_npc_service_end(
+	npc_id: String,
+	service_id: String,
+	reason: String
+) -> void:
+	match service_id.strip_edges():
+		"warehouse":
+			gameplay_ui.close_authorized_vault()
+
+
+			print(
+				"GameplayScreen | Servicio NPC cerrado autoritativamente",
+				" | NPC: ",
+				npc_id,
+				" | Servicio: ",
+				service_id,
+				" | Motivo: ",
+				reason
+			)

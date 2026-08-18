@@ -1015,3 +1015,11 @@ func _toggle_skills_window() -> void:
 
 func _close_skills_window() -> void:
 	skills_window.visible = false
+
+func close_authorized_vault() -> void:
+	_close_vault()
+
+
+	print(
+		"GameplayUI | Vault cerrada por Game Server."
+	)

@@ -64,6 +64,12 @@ signal remote_player_left(
 	peer_id: int
 )
 
+signal npc_service_ended_received(
+	npc_id: String,
+	service_id: String,
+	reason: String
+)
+
 # =========================================================
 # CONFIGURACIÓN
 # =========================================================
@@ -116,6 +122,10 @@ const MESSAGE_NPC_INTERACTION_DECISION: String = (
 
 const MESSAGE_NPC_SERVICE_END_REQUEST: String = (
 	"npc_service_end_request"
+)
+
+const MESSAGE_NPC_SERVICE_ENDED: String = (
+	"npc_service_ended"
 )
 
 # =========================================================
@@ -683,6 +693,26 @@ func _on_peer_packet(
 
 		_process_npc_interaction_decision(
 			decision_value
+		)
+
+
+		return
+
+	if message_type == MESSAGE_NPC_SERVICE_ENDED:
+		var service_end_value: Variant = (
+			message.get(
+				"data",
+				null
+			)
+		)
+
+
+		if typeof(service_end_value) != TYPE_DICTIONARY:
+			return
+
+
+		_process_npc_service_ended(
+			service_end_value
 		)
 
 
@@ -2109,3 +2139,63 @@ func send_npc_service_end_request() -> Error:
 
 
 	return OK
+
+# =========================================================
+# SERVICIO NPC FINALIZADO POR SERVIDOR
+# =========================================================
+
+func _process_npc_service_ended(
+	data: Dictionary
+) -> void:
+	var npc_id := String(
+		data.get(
+			"npc_id",
+			""
+		)
+	).strip_edges()
+
+
+	var service_id := String(
+		data.get(
+			"service_id",
+			""
+		)
+	).strip_edges()
+
+
+	var reason := String(
+		data.get(
+			"reason",
+			""
+		)
+	).strip_edges()
+
+
+	if npc_id.is_empty():
+		return
+
+
+	if service_id.is_empty():
+		return
+
+
+	if reason.is_empty():
+		return
+
+
+	print(
+		"GameServerClient | Servicio NPC finalizado por servidor",
+		" | NPC: ",
+		npc_id,
+		" | Servicio: ",
+		service_id,
+		" | Motivo: ",
+		reason
+	)
+
+
+	npc_service_ended_received.emit(
+		npc_id,
+		service_id,
+		reason
+	)

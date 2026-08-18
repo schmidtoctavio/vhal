@@ -287,6 +287,13 @@ func _bind_services() -> void:
 			_on_npc_interaction_decision_received
 		)
 
+	if not game_server_client.npc_service_ended_received.is_connected(
+		_on_npc_service_ended_received
+	):
+		game_server_client.npc_service_ended_received.connect(
+			_on_npc_service_ended_received
+		)
+
 	# -----------------------------------------------------
 	# GAME SESSION
 	# -----------------------------------------------------
@@ -1718,3 +1725,28 @@ func _on_gameplay_npc_service_end_requested() -> void:
 
 
 	game_session_service.end_session()
+
+# =========================================================
+# SERVICIO NPC FINALIZADO POR GAME SERVER
+# =========================================================
+
+func _on_npc_service_ended_received(
+	npc_id: String,
+	service_id: String,
+	reason: String
+) -> void:
+	var gameplay_screen := (
+		screen_router.current_screen
+		as GameplayScreen
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	gameplay_screen.apply_authoritative_npc_service_end(
+		npc_id,
+		service_id,
+		reason
+	)
