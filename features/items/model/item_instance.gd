@@ -24,6 +24,7 @@ var quantity: int = 1
 
 var grid_position: Vector2i = Vector2i.ZERO
 
+var state: Dictionary = {}
 
 # =========================================================
 # CONSTRUCTOR
@@ -33,7 +34,8 @@ func _init(
 	new_definition: ItemDefinition = null,
 	new_quantity: int = 1,
 	new_grid_position: Vector2i = Vector2i.ZERO,
-	new_uid: String = ""
+	new_uid: String = "",
+	new_state: Dictionary = {}
 ) -> void:
 	definition = new_definition
 
@@ -41,6 +43,9 @@ func _init(
 
 	uid = new_uid
 
+	state = new_state.duplicate(
+		true
+	)
 
 	if definition != null:
 		quantity = clampi(

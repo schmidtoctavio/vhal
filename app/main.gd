@@ -1798,6 +1798,24 @@ func _on_vault_snapshot_received(
 		items_value as Array
 	)
 
+	if ClientSession.account_state == null:
+		print(
+			"Main | No existe AccountState para aplicar Vault."
+		)
+
+
+		return
+
+
+	if not ClientSession.account_state.apply_vault_snapshot(
+		snapshot
+	):
+		print(
+			"Main | Snapshot autoritativo de Vault inválido."
+		)
+
+
+		return
 
 	print(
 		"Main | Snapshot autoritativo de Vault confirmado",
