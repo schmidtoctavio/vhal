@@ -75,7 +75,6 @@ var pending_game_character: CharacterSummary = null
 
 var pending_world_snapshot: Dictionary = {}
 
-
 # =========================================================
 # CICLO DE VIDA
 # =========================================================
