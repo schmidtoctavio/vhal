@@ -82,6 +82,12 @@ var player_state: PlayerRuntimeState = null
 
 var account_state: AccountState = null
 
+# =========================================================
+# SERVICIO NPC PENDIENTE DE DATOS
+# =========================================================
+
+var pending_authorized_npc_id: String = ""
+var pending_authorized_service_id: String = ""
 
 # =========================================================
 # ESTADO DEL MUNDO
@@ -1033,16 +1039,22 @@ func apply_authorized_npc_service(
 
 	match normalized_service_id:
 		"warehouse":
-			if not gameplay_ui.open_authorized_vault():
-				return false
+			pending_authorized_npc_id = (
+				normalized_npc_id
+			)
+
+			pending_authorized_service_id = (
+				normalized_service_id
+			)
 
 
 			print(
-				"GameplayScreen | Servicio NPC autorizado aplicado",
+				"GameplayScreen | Servicio NPC autorizado",
 				" | NPC: ",
 				normalized_npc_id,
 				" | Servicio: ",
-				normalized_service_id
+				normalized_service_id,
+				" | Esperando snapshot persistente."
 			)
 
 
@@ -1076,7 +1088,30 @@ func apply_authoritative_npc_service_end(
 	service_id: String,
 	reason: String
 ) -> void:
-	match service_id.strip_edges():
+
+	var normalized_npc_id := (
+		npc_id.strip_edges()
+	)
+
+
+	var normalized_service_id := (
+		service_id.strip_edges()
+	)
+
+
+	if (
+		pending_authorized_npc_id
+		==
+		normalized_npc_id
+		and
+		pending_authorized_service_id
+		==
+		normalized_service_id
+	):
+		pending_authorized_npc_id = ""
+		pending_authorized_service_id = ""
+
+	match normalized_service_id:
 		"warehouse":
 			gameplay_ui.close_authorized_vault()
 
@@ -1090,3 +1125,57 @@ func apply_authoritative_npc_service_end(
 				" | Motivo: ",
 				reason
 			)
+
+# =========================================================
+# VAULT PERSISTENTE LISTA
+# =========================================================
+
+func apply_authoritative_vault_ready() -> bool:
+	if account_state == null:
+		return false
+
+
+	if account_state.vault == null:
+		return false
+
+
+	if pending_authorized_service_id != "warehouse":
+		return false
+
+
+	if pending_authorized_npc_id.is_empty():
+		return false
+
+
+	# -----------------------------------------------------
+	# AccountState sigue siendo el mismo objeto,
+	# pero su propiedad `vault` fue reemplazada por el
+	# InventoryData reconstruido desde Laravel.
+	#
+	# Volvemos a vincular para que VaultWindow deje de
+	# apuntar al InventoryData anterior.
+	# -----------------------------------------------------
+
+	gameplay_ui.bind_account_state(
+		account_state
+	)
+
+
+	if not gameplay_ui.open_authorized_vault():
+		return false
+
+
+	print(
+		"GameplayScreen | Vault persistente aplicada",
+		" | NPC: ",
+		pending_authorized_npc_id,
+		" | Items: ",
+		account_state.vault.items.size()
+	)
+
+
+	pending_authorized_npc_id = ""
+	pending_authorized_service_id = ""
+
+
+	return true

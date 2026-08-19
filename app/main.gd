@@ -1824,3 +1824,23 @@ func _on_vault_snapshot_received(
 		" | Items: ",
 		items.size()
 	)
+
+	var gameplay_screen := (
+		screen_router.current_screen
+		as GameplayScreen
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	if not gameplay_screen.apply_authoritative_vault_ready():
+		print(
+			"Main | Vault hidratada pero no existe "
+			+
+			"un servicio Warehouse pendiente."
+		)
+
+
+		return
