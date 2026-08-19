@@ -294,6 +294,13 @@ func _bind_services() -> void:
 			_on_npc_service_ended_received
 		)
 
+	if not game_server_client.vault_snapshot_received.is_connected(
+		_on_vault_snapshot_received
+	):
+		game_server_client.vault_snapshot_received.connect(
+			_on_vault_snapshot_received
+		)
+
 	# -----------------------------------------------------
 	# GAME SESSION
 	# -----------------------------------------------------
@@ -1749,4 +1756,53 @@ func _on_npc_service_ended_received(
 		npc_id,
 		service_id,
 		reason
+	)
+
+# =========================================================
+# SNAPSHOT AUTORITATIVO DE VAULT
+# =========================================================
+
+func _on_vault_snapshot_received(
+	snapshot: Dictionary
+) -> void:
+	var account_id := int(
+		snapshot.get(
+			"account_id",
+			0
+		)
+	)
+
+
+	if account_id != ClientSession.account_id:
+		print(
+			"Main | Snapshot de Vault rechazado: cuenta incorrecta."
+		)
+
+
+		return
+
+
+	var items_value: Variant = (
+		snapshot.get(
+			"items",
+			null
+		)
+	)
+
+
+	if typeof(items_value) != TYPE_ARRAY:
+		return
+
+
+	var items: Array = (
+		items_value as Array
+	)
+
+
+	print(
+		"Main | Snapshot autoritativo de Vault confirmado",
+		" | Cuenta: ",
+		account_id,
+		" | Items: ",
+		items.size()
 	)

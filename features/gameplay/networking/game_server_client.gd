@@ -70,6 +70,10 @@ signal npc_service_ended_received(
 	reason: String
 )
 
+signal vault_snapshot_received(
+	snapshot: Dictionary
+)
+
 # =========================================================
 # CONFIGURACIÓN
 # =========================================================
@@ -126,6 +130,10 @@ const MESSAGE_NPC_SERVICE_END_REQUEST: String = (
 
 const MESSAGE_NPC_SERVICE_ENDED: String = (
 	"npc_service_ended"
+)
+
+const MESSAGE_VAULT_SNAPSHOT: String = (
+	"vault_snapshot"
 )
 
 # =========================================================
@@ -713,6 +721,26 @@ func _on_peer_packet(
 
 		_process_npc_service_ended(
 			service_end_value
+		)
+
+
+		return
+
+	if message_type == MESSAGE_VAULT_SNAPSHOT:
+		var vault_value: Variant = (
+			message.get(
+				"data",
+				null
+			)
+		)
+
+
+		if typeof(vault_value) != TYPE_DICTIONARY:
+			return
+
+
+		_process_vault_snapshot(
+			vault_value
 		)
 
 
@@ -2198,4 +2226,67 @@ func _process_npc_service_ended(
 		npc_id,
 		service_id,
 		reason
+	)
+
+# =========================================================
+# SNAPSHOT DE VAULT
+# =========================================================
+
+func _process_vault_snapshot(
+	snapshot: Dictionary
+) -> void:
+	var account_id := int(
+		snapshot.get(
+			"account_id",
+			0
+		)
+	)
+
+
+	var container := String(
+		snapshot.get(
+			"container",
+			""
+		)
+	).strip_edges()
+
+
+	var items_value: Variant = (
+		snapshot.get(
+			"items",
+			null
+		)
+	)
+
+
+	if account_id <= 0:
+		return
+
+
+	if container != "vault":
+		return
+
+
+	if typeof(items_value) != TYPE_ARRAY:
+		return
+
+
+	var items: Array = (
+		items_value as Array
+	)
+
+
+	print(
+		"GameServerClient | Snapshot de Vault recibido",
+		" | Cuenta: ",
+		account_id,
+		" | Items: ",
+		items.size()
+	)
+
+
+	vault_snapshot_received.emit(
+		snapshot.duplicate(
+			true
+		)
 	)
