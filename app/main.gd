@@ -726,7 +726,6 @@ func _on_enter_world_requested(
 
 	pending_game_character = character
 
-
 	_show_loading(
 		character
 	)
@@ -1939,14 +1938,6 @@ func _on_gameplay_vault_item_move_requested(
 func _on_character_inventory_snapshot_received(
 	snapshot: Dictionary
 ) -> void:
-	if pending_game_character == null:
-		return
-
-
-	if not pending_character_inventory_snapshot.is_empty():
-		return
-
-
 	var account_id := int(
 		snapshot.get(
 			"account_id",
@@ -1972,28 +1963,116 @@ func _on_character_inventory_snapshot_received(
 	)
 
 
-	if (
-		character_id
-		!=
-		pending_game_character.character_id
-	):
-		_on_game_server_connection_failed(
-			"El Inventory pertenece a otro personaje."
+	# =====================================================
+	# SNAPSHOT INICIAL
+	# =====================================================
+	#
+	# Todavía estamos en Loading y esperamos World +
+	# Inventory antes de crear Gameplay.
+	# =====================================================
+
+	if pending_game_character != null:
+		if not pending_character_inventory_snapshot.is_empty():
+			return
+
+
+		if (
+			character_id
+			!=
+			pending_game_character.character_id
+		):
+			_on_game_server_connection_failed(
+				"El Inventory pertenece a otro personaje."
+			)
+
+
+			return
+
+
+		pending_character_inventory_snapshot = (
+			snapshot.duplicate(
+				true
+			)
 		)
+
+
+		print(
+			"Main | Snapshot autoritativo de Inventory aceptado",
+			" | Character ID: ",
+			character_id,
+			" | Items: ",
+			(
+				snapshot.get(
+					"items",
+					[]
+				)
+				as Array
+			).size()
+		)
+
+		_try_start_game_session_from_authoritative_snapshots()
 
 
 		return
 
 
-	pending_character_inventory_snapshot = (
-		snapshot.duplicate(
-			true
-		)
+	# =====================================================
+	# SNAPSHOT DURANTE GAMEPLAY
+	# =====================================================
+
+	var gameplay_screen := (
+		screen_router.current_screen
+		as GameplayScreen
 	)
 
 
+	if gameplay_screen == null:
+		return
+
+
+	if gameplay_screen.player_state == null:
+		return
+
+
+	if gameplay_screen.player_state.character_summary == null:
+		return
+
+
+	if (
+		gameplay_screen.player_state
+		.character_summary
+		.character_id
+		!=
+		character_id
+	):
+		print(
+			"Main | Snapshot de Inventory rechazado",
+			" | Motivo: personaje incorrecto"
+		)
+
+
+		game_session_service.end_session()
+
+
+		return
+
+
+	if not gameplay_screen.apply_authoritative_inventory_snapshot(
+		snapshot
+	):
+		print(
+			"Main | Snapshot autoritativo de Inventory inválido."
+		)
+
+
+		game_session_service.end_session()
+
+
+		return
+
+
 	print(
-		"Main | Snapshot autoritativo de Inventory aceptado",
+		"Main | Snapshot autoritativo de Inventory aplicado en Gameplay",
 		" | Character ID: ",
 		character_id,
 		" | Items: ",
@@ -2005,9 +2084,6 @@ func _on_character_inventory_snapshot_received(
 			as Array
 		).size()
 	)
-
-
-	_try_start_game_session_from_authoritative_snapshots()
 
 # =========================================================
 # PREPARAR SESIÓN CUANDO TODO ESTÁ DISPONIBLE

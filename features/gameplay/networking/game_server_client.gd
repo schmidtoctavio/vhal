@@ -148,6 +148,10 @@ const MESSAGE_CHARACTER_INVENTORY_SNAPSHOT: String = (
 	"character_inventory_snapshot"
 )
 
+const MESSAGE_INVENTORY_ITEM_MOVE_REQUEST: String = (
+	"inventory_item_move_request"
+)
+
 # =========================================================
 # ESTADO
 # =========================================================
@@ -189,6 +193,10 @@ var remote_movement_sequences: Dictionary = {}
 var next_vault_item_move_request_id: int = 1
 
 var vault_item_move_request_pending: bool = false
+
+var next_inventory_item_move_request_id: int = 1
+
+var inventory_item_move_request_pending: bool = false
 
 # =========================================================
 # CICLO DE VIDA
@@ -1331,6 +1339,10 @@ func _reset_connection_state() -> void:
 	next_vault_item_move_request_id = 1
 
 	vault_item_move_request_pending = false
+
+	next_inventory_item_move_request_id = 1
+
+	inventory_item_move_request_pending = false
 
 	var scene_multiplayer := (
 		multiplayer
@@ -2615,6 +2627,7 @@ func _process_character_inventory_snapshot(
 		items_value as Array
 	)
 
+	inventory_item_move_request_pending = false
 
 	print(
 		"GameServerClient | Snapshot de Inventory recibido",
@@ -2632,3 +2645,140 @@ func _process_character_inventory_snapshot(
 			true
 		)
 	)
+
+# =========================================================
+# MOVER ITEM DE INVENTORY
+# =========================================================
+
+func send_inventory_item_move_request(
+	uid: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+) -> Error:
+	if not connected:
+		return ERR_UNAVAILABLE
+
+
+	if inventory_item_move_request_pending:
+		return ERR_BUSY
+
+
+	var normalized_uid := (
+		uid.strip_edges()
+	)
+
+
+	if normalized_uid.is_empty():
+		return ERR_INVALID_PARAMETER
+
+
+	if normalized_uid.length() > 64:
+		return ERR_INVALID_PARAMETER
+
+
+	if (
+		current_position.x < 0
+		or
+		current_position.x >= 8
+		or
+		current_position.y < 0
+		or
+		current_position.y >= 8
+	):
+		return ERR_INVALID_PARAMETER
+
+
+	if (
+		new_position.x < 0
+		or
+		new_position.x >= 8
+		or
+		new_position.y < 0
+		or
+		new_position.y >= 8
+	):
+		return ERR_INVALID_PARAMETER
+
+
+	if current_position == new_position:
+		return ERR_INVALID_PARAMETER
+
+
+	var scene_multiplayer := (
+		multiplayer
+		as SceneMultiplayer
+	)
+
+
+	if scene_multiplayer == null:
+		return ERR_UNAVAILABLE
+
+
+	var request_id := (
+		next_inventory_item_move_request_id
+	)
+
+
+	var message := {
+		"version": NETWORK_PROTOCOL_VERSION,
+
+		"type": MESSAGE_INVENTORY_ITEM_MOVE_REQUEST,
+
+		"data": {
+			"request_id": request_id,
+
+			"uid": normalized_uid,
+
+			"current_grid_position": {
+				"x": current_position.x,
+				"y": current_position.y,
+			},
+
+			"new_grid_position": {
+				"x": new_position.x,
+				"y": new_position.y,
+			},
+		},
+	}
+
+
+	var packet := (
+		JSON.stringify(
+			message
+		).to_utf8_buffer()
+	)
+
+
+	var result := (
+		scene_multiplayer.send_bytes(
+			packet,
+			SERVER_PEER_ID,
+			MultiplayerPeer.TRANSFER_MODE_RELIABLE,
+			0
+		)
+	)
+
+
+	if result != OK:
+		return result
+
+
+	inventory_item_move_request_pending = true
+
+	next_inventory_item_move_request_id += 1
+
+
+	print(
+		"GameServerClient | Solicitud de movimiento Inventory enviada",
+		" | Request: ",
+		request_id,
+		" | UID: ",
+		normalized_uid,
+		" | Desde: ",
+		current_position,
+		" | Hacia: ",
+		new_position
+	)
+
+
+	return OK

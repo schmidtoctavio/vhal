@@ -1254,3 +1254,32 @@ func refresh_authoritative_vault() -> bool:
 
 
 	return true
+
+# =========================================================
+# INVENTORY AUTORITATIVO
+# =========================================================
+
+func apply_authoritative_inventory_snapshot(
+	snapshot: Dictionary
+) -> bool:
+	if player_state == null:
+		return false
+
+
+	if not player_state.apply_inventory_snapshot(
+		snapshot
+	):
+		return false
+
+
+	gameplay_ui.refresh_inventory_state()
+
+
+	print(
+		"GameplayScreen | Inventory persistente actualizado",
+		" | Items: ",
+		player_state.inventory.items.size()
+	)
+
+
+	return true

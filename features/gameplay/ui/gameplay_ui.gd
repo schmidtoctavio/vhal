@@ -329,6 +329,17 @@ func _activate_inventory_state() -> void:
 	)
 
 # =========================================================
+# REFRESCAR INVENTORY AUTORITATIVO
+# =========================================================
+
+func refresh_inventory_state() -> void:
+	if player_state == null:
+		return
+
+
+	_activate_inventory_state()
+
+# =========================================================
 # DESCONECTAR PLAYER STATE
 # =========================================================
 
