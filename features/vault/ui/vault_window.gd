@@ -2,9 +2,20 @@
 class_name VaultWindow
 extends BaseWindow
 
+# =========================================================
+# SEÑALES
+# =========================================================
 
 signal vault_item_move_requested(
 	uid: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+)
+
+signal item_container_transfer_requested(
+	uid: String,
+	source_container: String,
+	target_container: String,
 	current_position: Vector2i,
 	new_position: Vector2i
 )
@@ -41,6 +52,9 @@ func _ready() -> void:
 		true
 	)
 
+	inventory_grid.set_authoritative_container_id(
+		"vault"
+	)
 
 	if not inventory_grid.authoritative_item_move_requested.is_connected(
 		_on_authoritative_item_move_requested
@@ -49,6 +63,12 @@ func _ready() -> void:
 			_on_authoritative_item_move_requested
 		)
 
+	if not inventory_grid.authoritative_item_transfer_requested.is_connected(
+		_on_authoritative_item_transfer_requested
+	):
+		inventory_grid.authoritative_item_transfer_requested.connect(
+			_on_authoritative_item_transfer_requested
+		)
 
 	_apply_vault_data()
 
@@ -96,6 +116,34 @@ func _on_authoritative_item_move_requested(
 
 	vault_item_move_requested.emit(
 		uid,
+		current_position,
+		new_position
+	)
+
+func _on_authoritative_item_transfer_requested(
+	item: ItemInstance,
+	source_container: String,
+	target_container: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+) -> void:
+	if item == null:
+		return
+
+
+	var uid := (
+		item.uid.strip_edges()
+	)
+
+
+	if uid.is_empty():
+		return
+
+
+	item_container_transfer_requested.emit(
+		uid,
+		source_container,
+		target_container,
 		current_position,
 		new_position
 	)

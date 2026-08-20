@@ -152,6 +152,10 @@ const MESSAGE_INVENTORY_ITEM_MOVE_REQUEST: String = (
 	"inventory_item_move_request"
 )
 
+const MESSAGE_ITEM_CONTAINER_TRANSFER_REQUEST: String = (
+	"item_container_transfer_request"
+)
+
 # =========================================================
 # ESTADO
 # =========================================================
@@ -197,6 +201,14 @@ var vault_item_move_request_pending: bool = false
 var next_inventory_item_move_request_id: int = 1
 
 var inventory_item_move_request_pending: bool = false
+
+var next_item_container_transfer_request_id: int = 1
+
+var item_container_transfer_request_pending: bool = false
+
+var item_container_transfer_inventory_synced: bool = false
+
+var item_container_transfer_vault_synced: bool = false
 
 # =========================================================
 # CICLO DE VIDA
@@ -1344,6 +1356,14 @@ func _reset_connection_state() -> void:
 
 	inventory_item_move_request_pending = false
 
+	next_item_container_transfer_request_id = 1
+
+	item_container_transfer_request_pending = false
+
+	item_container_transfer_inventory_synced = false
+
+	item_container_transfer_vault_synced = false
+
 	var scene_multiplayer := (
 		multiplayer
 		as SceneMultiplayer
@@ -2280,6 +2300,12 @@ func _process_npc_service_ended(
 
 	vault_item_move_request_pending = false
 
+	item_container_transfer_request_pending = false
+
+	item_container_transfer_inventory_synced = false
+
+	item_container_transfer_vault_synced = false
+
 	npc_service_ended_received.emit(
 		npc_id,
 		service_id,
@@ -2335,6 +2361,8 @@ func _process_vault_snapshot(
 
 	vault_item_move_request_pending = false
 
+	_mark_item_container_transfer_vault_synced()
+
 	print(
 		"GameServerClient | Snapshot de Vault recibido",
 		" | Cuenta: ",
@@ -2366,6 +2394,8 @@ func send_vault_item_move_request(
 	if vault_item_move_request_pending:
 		return ERR_BUSY
 
+	if item_container_transfer_request_pending:
+		return ERR_BUSY
 
 	var normalized_uid := (
 		uid.strip_edges()
@@ -2629,6 +2659,8 @@ func _process_character_inventory_snapshot(
 
 	inventory_item_move_request_pending = false
 
+	_mark_item_container_transfer_inventory_synced()
+
 	print(
 		"GameServerClient | Snapshot de Inventory recibido",
 		" | Cuenta: ",
@@ -2662,6 +2694,8 @@ func send_inventory_item_move_request(
 	if inventory_item_move_request_pending:
 		return ERR_BUSY
 
+	if item_container_transfer_request_pending:
+		return ERR_BUSY
 
 	var normalized_uid := (
 		uid.strip_edges()
@@ -2782,3 +2816,283 @@ func send_inventory_item_move_request(
 
 
 	return OK
+
+# =========================================================
+# TRANSFERIR ITEM ENTRE INVENTORY Y VAULT
+# =========================================================
+
+func send_item_container_transfer_request(
+	uid: String,
+	source_container: String,
+	target_container: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+) -> Error:
+	if not connected:
+		return ERR_UNAVAILABLE
+
+
+	if item_container_transfer_request_pending:
+		return ERR_BUSY
+
+
+	# -----------------------------------------------------
+	# No arrancamos una transferencia cruzada mientras
+	# alguno de los contenedores todavía espera snapshot
+	# por un movimiento anterior.
+	# -----------------------------------------------------
+
+	if inventory_item_move_request_pending:
+		return ERR_BUSY
+
+
+	if vault_item_move_request_pending:
+		return ERR_BUSY
+
+
+	var normalized_uid := (
+		uid.strip_edges()
+	)
+
+
+	var normalized_source := (
+		source_container.strip_edges().to_lower()
+	)
+
+
+	var normalized_target := (
+		target_container.strip_edges().to_lower()
+	)
+
+
+	if (
+		normalized_uid.is_empty()
+		or
+		normalized_uid.length() > 64
+	):
+		return ERR_INVALID_PARAMETER
+
+
+	if not _is_transfer_container(
+		normalized_source
+	):
+		return ERR_INVALID_PARAMETER
+
+
+	if not _is_transfer_container(
+		normalized_target
+	):
+		return ERR_INVALID_PARAMETER
+
+
+	if normalized_source == normalized_target:
+		return ERR_INVALID_PARAMETER
+
+
+	if not _is_position_inside_transfer_container(
+		normalized_source,
+		current_position
+	):
+		return ERR_INVALID_PARAMETER
+
+
+	if not _is_position_inside_transfer_container(
+		normalized_target,
+		new_position
+	):
+		return ERR_INVALID_PARAMETER
+
+
+	var scene_multiplayer := (
+		multiplayer
+		as SceneMultiplayer
+	)
+
+
+	if scene_multiplayer == null:
+		return ERR_UNAVAILABLE
+
+
+	var request_id := (
+		next_item_container_transfer_request_id
+	)
+
+
+	var message := {
+		"version": NETWORK_PROTOCOL_VERSION,
+
+		"type": MESSAGE_ITEM_CONTAINER_TRANSFER_REQUEST,
+
+		"data": {
+			"request_id": request_id,
+
+			"uid": normalized_uid,
+
+			"source_container": normalized_source,
+
+			"target_container": normalized_target,
+
+			"current_grid_position": {
+				"x": current_position.x,
+				"y": current_position.y,
+			},
+
+			"new_grid_position": {
+				"x": new_position.x,
+				"y": new_position.y,
+			},
+		},
+	}
+
+
+	var packet := (
+		JSON.stringify(
+			message
+		).to_utf8_buffer()
+	)
+
+
+	var result := (
+		scene_multiplayer.send_bytes(
+			packet,
+			SERVER_PEER_ID,
+			MultiplayerPeer.TRANSFER_MODE_RELIABLE,
+			0
+		)
+	)
+
+
+	if result != OK:
+		return result
+
+
+	item_container_transfer_request_pending = true
+
+	item_container_transfer_inventory_synced = false
+
+	item_container_transfer_vault_synced = false
+
+
+	next_item_container_transfer_request_id += 1
+
+
+	print(
+		"GameServerClient | Transferencia Inventory/Vault enviada",
+		" | Request: ",
+		request_id,
+		" | UID: ",
+		normalized_uid,
+		" | Desde: ",
+		normalized_source,
+		" ",
+		current_position,
+		" | Hacia: ",
+		normalized_target,
+		" ",
+		new_position
+	)
+
+
+	return OK
+
+
+# =========================================================
+# CONTENEDOR SOPORTADO
+# =========================================================
+
+func _is_transfer_container(
+	container: String
+) -> bool:
+	return (
+		container == "inventory"
+		or
+		container == "vault"
+	)
+
+
+# =========================================================
+# POSICIÓN VÁLIDA POR CONTENEDOR
+# =========================================================
+
+func _is_position_inside_transfer_container(
+	container: String,
+	position: Vector2i
+) -> bool:
+	if (
+		position.x < 0
+		or
+		position.x >= 8
+		or
+		position.y < 0
+	):
+		return false
+
+
+	match container:
+		"inventory":
+			return position.y < 8
+
+		"vault":
+			return position.y < 16
+
+
+	return false
+
+
+# =========================================================
+# SNAPSHOT INVENTORY RECIBIDO DURANTE TRANSFERENCIA
+# =========================================================
+
+func _mark_item_container_transfer_inventory_synced() -> void:
+	if not item_container_transfer_request_pending:
+		return
+
+
+	item_container_transfer_inventory_synced = true
+
+
+	_try_finish_item_container_transfer_sync()
+
+
+# =========================================================
+# SNAPSHOT VAULT RECIBIDO DURANTE TRANSFERENCIA
+# =========================================================
+
+func _mark_item_container_transfer_vault_synced() -> void:
+	if not item_container_transfer_request_pending:
+		return
+
+
+	item_container_transfer_vault_synced = true
+
+
+	_try_finish_item_container_transfer_sync()
+
+
+# =========================================================
+# FINALIZAR SINCRONIZACIÓN CROSS-CONTAINER
+# =========================================================
+
+func _try_finish_item_container_transfer_sync() -> void:
+	if not item_container_transfer_request_pending:
+		return
+
+
+	if not item_container_transfer_inventory_synced:
+		return
+
+
+	if not item_container_transfer_vault_synced:
+		return
+
+
+	item_container_transfer_request_pending = false
+
+	item_container_transfer_inventory_synced = false
+
+	item_container_transfer_vault_synced = false
+
+
+	print(
+		"GameServerClient | Transferencia Inventory/Vault sincronizada."
+	)

@@ -13,6 +13,13 @@ signal inventory_item_move_requested(
 	new_position: Vector2i
 )
 
+signal item_container_transfer_requested(
+	uid: String,
+	source_container: String,
+	target_container: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+)
 
 # =========================================================
 # REFERENCIAS
@@ -64,6 +71,14 @@ func _apply_authoritative_inventory_mode() -> void:
 		authoritative_inventory_mode
 	)
 
+	if authoritative_inventory_mode:
+		inventory_grid.set_authoritative_container_id(
+			"inventory"
+		)
+	else:
+		inventory_grid.set_authoritative_container_id(
+			""
+		)
 
 	sort_button.disabled = (
 		authoritative_inventory_mode
@@ -94,6 +109,12 @@ func _ready() -> void:
 			_on_authoritative_item_move_requested
 		)
 
+	if not inventory_grid.authoritative_item_transfer_requested.is_connected(
+		_on_authoritative_item_transfer_requested
+	):
+		inventory_grid.authoritative_item_transfer_requested.connect(
+			_on_authoritative_item_transfer_requested
+		)
 
 	# =====================================================
 	# INVENTARIO - DOBLE CLIC
@@ -203,6 +224,37 @@ func _on_authoritative_item_move_requested(
 		new_position
 	)
 
+func _on_authoritative_item_transfer_requested(
+	item: ItemInstance,
+	source_container: String,
+	target_container: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+) -> void:
+	if not authoritative_inventory_mode:
+		return
+
+
+	if item == null:
+		return
+
+
+	var uid := (
+		item.uid.strip_edges()
+	)
+
+
+	if uid.is_empty():
+		return
+
+
+	item_container_transfer_requested.emit(
+		uid,
+		source_container,
+		target_container,
+		current_position,
+		new_position
+	)
 
 # =========================================================
 # DOBLE CLIC INVENTARIO -> EQUIPAMIENTO

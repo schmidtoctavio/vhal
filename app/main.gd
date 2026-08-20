@@ -1399,6 +1399,13 @@ func _show_gameplay(
 			_on_gameplay_inventory_item_move_requested
 		)
 
+	if not gameplay_screen.item_container_transfer_requested.is_connected(
+		_on_gameplay_item_container_transfer_requested
+	):
+		gameplay_screen.item_container_transfer_requested.connect(
+			_on_gameplay_item_container_transfer_requested
+		)
+
 	gameplay_screen.setup(
 		player_state,
 		ClientSession.account_state
@@ -2147,6 +2154,48 @@ func _on_gameplay_inventory_item_move_requested(
 		"Main | No se pudo enviar movimiento de Inventory",
 		" | UID: ",
 		uid,
+		" | Error: ",
+		result
+	)
+
+# =========================================================
+# TRANSFERENCIA INVENTORY / VAULT → GAME SERVER
+# =========================================================
+
+func _on_gameplay_item_container_transfer_requested(
+	uid: String,
+	source_container: String,
+	target_container: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+) -> void:
+	var result := (
+		game_server_client.send_item_container_transfer_request(
+			uid,
+			source_container,
+			target_container,
+			current_position,
+			new_position
+		)
+	)
+
+
+	if result == OK:
+		return
+
+
+	print(
+		"Main | No se pudo enviar transferencia Inventory/Vault",
+		" | UID: ",
+		uid,
+		" | Desde: ",
+		source_container,
+		" ",
+		current_position,
+		" | Hacia: ",
+		target_container,
+		" ",
+		new_position,
 		" | Error: ",
 		result
 	)

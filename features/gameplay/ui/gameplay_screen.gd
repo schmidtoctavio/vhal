@@ -50,6 +50,14 @@ signal inventory_item_move_requested(
 	new_position: Vector2i
 )
 
+signal item_container_transfer_requested(
+	uid: String,
+	source_container: String,
+	target_container: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+)
+
 # =========================================================
 # REFERENCIAS
 # =========================================================
@@ -162,6 +170,13 @@ func _ready() -> void:
 	):
 		gameplay_ui.authorized_vault_closed.connect(
 			_on_authorized_vault_closed
+		)
+
+	if not gameplay_ui.item_container_transfer_requested.is_connected(
+		_on_item_container_transfer_requested
+	):
+		gameplay_ui.item_container_transfer_requested.connect(
+			_on_item_container_transfer_requested
 		)
 
 	if player_state != null:
@@ -1325,6 +1340,53 @@ func _on_inventory_item_move_requested(
 
 	inventory_item_move_requested.emit(
 		uid,
+		current_position,
+		new_position
+	)
+
+func _on_item_container_transfer_requested(
+	uid: String,
+	source_container: String,
+	target_container: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+) -> void:
+	# -----------------------------------------------------
+	# Si Vault no está realmente autorizada por Game Server
+	# no existe una transferencia válida.
+	# -----------------------------------------------------
+
+	if not authorized_vault_active:
+		return
+
+
+	if uid.strip_edges().is_empty():
+		return
+
+
+	var valid_direction := (
+		(
+			source_container == "inventory"
+			and
+			target_container == "vault"
+		)
+		or
+		(
+			source_container == "vault"
+			and
+			target_container == "inventory"
+		)
+	)
+
+
+	if not valid_direction:
+		return
+
+
+	item_container_transfer_requested.emit(
+		uid,
+		source_container,
+		target_container,
 		current_position,
 		new_position
 	)

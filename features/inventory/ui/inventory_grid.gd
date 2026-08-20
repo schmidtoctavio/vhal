@@ -11,6 +11,14 @@ signal authoritative_item_move_requested(
 	new_position: Vector2i
 )
 
+signal authoritative_item_transfer_requested(
+	item: ItemInstance,
+	source_container: String,
+	target_container: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+)
+
 # =========================================================
 # ESCENAS
 # =========================================================
@@ -96,6 +104,106 @@ func set_authoritative_move_only(
 	enabled: bool
 ) -> void:
 	authoritative_move_only = enabled
+
+var authoritative_container_id: String = ""
+
+
+func set_authoritative_container_id(
+	container_id: String
+) -> void:
+	var normalized := (
+		container_id.strip_edges().to_lower()
+	)
+
+
+	if normalized.is_empty():
+		authoritative_container_id = ""
+		return
+
+
+	if not _is_supported_authoritative_container(
+		normalized
+	):
+		push_warning(
+			(
+				"InventoryGrid | Contenedor autoritativo "
+				+
+				"no soportado: "
+				+
+				normalized
+			)
+		)
+
+
+		authoritative_container_id = ""
+		return
+
+
+	authoritative_container_id = normalized
+
+
+func _is_supported_authoritative_container(
+	container_id: String
+) -> bool:
+	return (
+		container_id == "inventory"
+		or
+		container_id == "vault"
+	)
+
+
+func _can_use_authoritative_cross_route(
+	source_grid: InventoryGrid
+) -> bool:
+	if source_grid == null:
+		return false
+
+
+	if not is_instance_valid(
+		source_grid
+	):
+		return false
+
+
+	if source_grid == self:
+		return false
+
+
+	if not authoritative_move_only:
+		return false
+
+
+	if not source_grid.authoritative_move_only:
+		return false
+
+
+	var source_container := (
+		source_grid.authoritative_container_id
+	)
+
+
+	var target_container := (
+		authoritative_container_id
+	)
+
+
+	if not _is_supported_authoritative_container(
+		source_container
+	):
+		return false
+
+
+	if not _is_supported_authoritative_container(
+		target_container
+	):
+		return false
+
+
+	if source_container == target_container:
+		return false
+
+
+	return true
 
 # =========================================================
 # RELACIÓN ITEMINSTANCE -> VIEW
@@ -1016,18 +1124,21 @@ func can_drop_data_at(
 	)
 
 
-	# -----------------------------------------------------
-	# Por ahora la ruta autoritativa sólo soporta
-	# movimiento dentro de LA MISMA Vault.
+		# -----------------------------------------------------
+	# CROSS-GRID AUTORITATIVO
 	#
-	# Vault -> Inventory e Inventory -> Vault llegarán
-	# después con operaciones persistentes específicas.
+	# Sólo permitimos transferencia entre dos grids
+	# autoritativos correctamente identificados.
 	# -----------------------------------------------------
 
 	if (
 		uses_authoritative_route
 		and
 		source_grid != self
+		and
+		not _can_use_authoritative_cross_route(
+			source_grid
+		)
 	):
 		_hide_drop_preview()
 
@@ -1231,6 +1342,10 @@ func drop_data_at(
 		uses_authoritative_route
 		and
 		source_grid != self
+		and
+		not _can_use_authoritative_cross_route(
+			source_grid
+		)
 	):
 		_hide_drop_preview()
 
@@ -1319,24 +1434,71 @@ func drop_data_at(
 		)
 
 
-		if origin == current_position:
+		# =================================================
+		# MISMO GRID
+		# =================================================
+
+		if source_grid == self:
+			if origin == current_position:
+				_hide_drop_preview()
+
+				return
+
+
+			if not inventory_data.can_place_item(
+				item,
+				origin,
+				item
+			):
+				_hide_drop_preview()
+
+				return
+
+
+			authoritative_item_move_requested.emit(
+				item,
+				current_position,
+				origin
+			)
+
+
 			_hide_drop_preview()
 
 			return
 
 
-		if not inventory_data.can_place_item(
-			item,
-			origin,
-			item
+		# =================================================
+		# CROSS-GRID
+		# =================================================
+
+		if not _can_use_authoritative_cross_route(
+			source_grid
 		):
 			_hide_drop_preview()
 
 			return
 
 
-		authoritative_item_move_requested.emit(
+		# -------------------------------------------------
+		# En destino NO ignoramos el item.
+		#
+		# El item pertenece al otro InventoryData y la
+		# casilla destino debe estar realmente libre.
+		# -------------------------------------------------
+
+		if not inventory_data.can_place_item(
 			item,
+			origin
+		):
+			_hide_drop_preview()
+
+			return
+
+
+		authoritative_item_transfer_requested.emit(
+			item,
+			source_grid.authoritative_container_id,
+			authoritative_container_id,
 			current_position,
 			origin
 		)

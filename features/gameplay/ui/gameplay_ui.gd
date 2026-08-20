@@ -20,6 +20,14 @@ signal inventory_item_move_requested(
 	new_position: Vector2i
 )
 
+signal item_container_transfer_requested(
+	uid: String,
+	source_container: String,
+	target_container: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+)
+
 # =========================================================
 # BARRAS
 # =========================================================
@@ -536,6 +544,13 @@ func _ready() -> void:
 			_on_inventory_item_move_requested
 		)
 
+	if not inventory_window.item_container_transfer_requested.is_connected(
+		_on_item_container_transfer_requested
+	):
+		inventory_window.item_container_transfer_requested.connect(
+			_on_item_container_transfer_requested
+		)
+
 	# =====================================================
 	# VAULT
 	# =====================================================
@@ -561,6 +576,13 @@ func _ready() -> void:
 	):
 		vault_window.vault_item_move_requested.connect(
 			_on_vault_item_move_requested
+		)
+
+	if not vault_window.item_container_transfer_requested.is_connected(
+		_on_item_container_transfer_requested
+	):
+		vault_window.item_container_transfer_requested.connect(
+			_on_item_container_transfer_requested
 		)
 
 	# =====================================================
@@ -1086,6 +1108,21 @@ func _on_inventory_item_move_requested(
 ) -> void:
 	inventory_item_move_requested.emit(
 		uid,
+		current_position,
+		new_position
+	)
+
+func _on_item_container_transfer_requested(
+	uid: String,
+	source_container: String,
+	target_container: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+) -> void:
+	item_container_transfer_requested.emit(
+		uid,
+		source_container,
+		target_container,
 		current_position,
 		new_position
 	)
