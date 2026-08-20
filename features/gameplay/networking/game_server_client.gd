@@ -2361,8 +2361,6 @@ func _process_vault_snapshot(
 
 	vault_item_move_request_pending = false
 
-	_mark_item_container_transfer_vault_synced()
-
 	print(
 		"GameServerClient | Snapshot de Vault recibido",
 		" | Cuenta: ",
@@ -2377,6 +2375,14 @@ func _process_vault_snapshot(
 			true
 		)
 	)
+
+
+	# -----------------------------------------------------
+	# La transferencia se considera sincronizada sólo
+	# después de que Main haya podido aplicar este snapshot.
+	# -----------------------------------------------------
+
+	_mark_item_container_transfer_vault_synced()
 
 # =========================================================
 # MOVER ITEM DE VAULT
@@ -2659,8 +2665,6 @@ func _process_character_inventory_snapshot(
 
 	inventory_item_move_request_pending = false
 
-	_mark_item_container_transfer_inventory_synced()
-
 	print(
 		"GameServerClient | Snapshot de Inventory recibido",
 		" | Cuenta: ",
@@ -2677,6 +2681,14 @@ func _process_character_inventory_snapshot(
 			true
 		)
 	)
+
+
+	# -----------------------------------------------------
+	# El bloqueo cross-container se libera después de que
+	# Main haya recibido/aplicado el Inventory autoritativo.
+	# -----------------------------------------------------
+
+	_mark_item_container_transfer_inventory_synced()
 
 # =========================================================
 # MOVER ITEM DE INVENTORY
