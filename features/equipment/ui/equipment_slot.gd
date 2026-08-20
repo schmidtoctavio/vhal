@@ -180,6 +180,14 @@ func get_item() -> ItemInstance:
 func has_item() -> bool:
 	return get_item() != null
 
+# =========================================================
+# ID ESTABLE DEL SLOT
+# =========================================================
+
+func get_slot_id() -> StringName:
+	return EquipmentData.get_slot_id(
+		slot_type
+	)
 
 # =========================================================
 # VISUAL

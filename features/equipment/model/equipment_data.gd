@@ -23,6 +23,11 @@ enum Slot {
 	RING_RIGHT
 }
 
+# =========================================================
+# SLOT INVÁLIDO
+# =========================================================
+
+const INVALID_SLOT: int = -1
 
 # =========================================================
 # SEÑALES
@@ -110,40 +115,24 @@ func get_slot_of_item(
 func get_required_equipment_type(
 	slot: Slot
 ) -> ItemDefinition.EquipmentType:
-	match slot:
-
-		Slot.HEAD:
-			return ItemDefinition.EquipmentType.HEAD
-
-		Slot.CHEST:
-			return ItemDefinition.EquipmentType.CHEST
-
-		Slot.PANTS:
-			return ItemDefinition.EquipmentType.PANTS
-
-		Slot.GLOVES:
-			return ItemDefinition.EquipmentType.GLOVES
-
-		Slot.BOOTS:
-			return ItemDefinition.EquipmentType.BOOTS
-
-		Slot.WEAPON_LEFT, \
-		Slot.WEAPON_RIGHT:
-			return ItemDefinition.EquipmentType.WEAPON
-
-		Slot.WINGS:
-			return ItemDefinition.EquipmentType.WINGS
-
-		Slot.PENDANT:
-			return ItemDefinition.EquipmentType.PENDANT
-
-		Slot.RING_LEFT, \
-		Slot.RING_RIGHT:
-			return ItemDefinition.EquipmentType.RING
+	var slot_id := (
+		get_slot_id(
+			slot
+		)
+	)
 
 
-	return ItemDefinition.EquipmentType.NONE
+	if (
+		slot_id
+		==
+		EquipmentSlotContract.INVALID_SLOT_ID
+	):
+		return ItemDefinition.EquipmentType.NONE
 
+
+	return EquipmentSlotContract.get_required_equipment_type(
+		String(slot_id)
+	)
 
 # =========================================================
 # VALIDACIÓN
@@ -471,3 +460,194 @@ func find_first_compatible_empty_slot(
 
 
 	return -1
+
+# =========================================================
+# RUNTIME SLOT -> STABLE SLOT ID
+# =========================================================
+
+static func get_slot_id(
+	slot: int
+) -> StringName:
+	match slot:
+		Slot.HEAD:
+			return EquipmentSlotContract.HEAD
+
+		Slot.CHEST:
+			return EquipmentSlotContract.CHEST
+
+		Slot.PANTS:
+			return EquipmentSlotContract.PANTS
+
+		Slot.GLOVES:
+			return EquipmentSlotContract.GLOVES
+
+		Slot.BOOTS:
+			return EquipmentSlotContract.BOOTS
+
+		Slot.WEAPON_LEFT:
+			return EquipmentSlotContract.WEAPON_LEFT
+
+		Slot.WEAPON_RIGHT:
+			return EquipmentSlotContract.WEAPON_RIGHT
+
+		Slot.WINGS:
+			return EquipmentSlotContract.WINGS
+
+		Slot.PENDANT:
+			return EquipmentSlotContract.PENDANT
+
+		Slot.RING_LEFT:
+			return EquipmentSlotContract.RING_LEFT
+
+		Slot.RING_RIGHT:
+			return EquipmentSlotContract.RING_RIGHT
+
+
+	return EquipmentSlotContract.INVALID_SLOT_ID
+
+
+# =========================================================
+# STABLE SLOT ID -> RUNTIME SLOT
+# =========================================================
+
+static func get_slot_from_id(
+	slot_id: String
+) -> int:
+	var normalized := (
+		EquipmentSlotContract.normalize_slot_id(
+			slot_id
+		)
+	)
+
+
+	match normalized:
+		EquipmentSlotContract.HEAD:
+			return Slot.HEAD
+
+		EquipmentSlotContract.CHEST:
+			return Slot.CHEST
+
+		EquipmentSlotContract.PANTS:
+			return Slot.PANTS
+
+		EquipmentSlotContract.GLOVES:
+			return Slot.GLOVES
+
+		EquipmentSlotContract.BOOTS:
+			return Slot.BOOTS
+
+		EquipmentSlotContract.WEAPON_LEFT:
+			return Slot.WEAPON_LEFT
+
+		EquipmentSlotContract.WEAPON_RIGHT:
+			return Slot.WEAPON_RIGHT
+
+		EquipmentSlotContract.WINGS:
+			return Slot.WINGS
+
+		EquipmentSlotContract.PENDANT:
+			return Slot.PENDANT
+
+		EquipmentSlotContract.RING_LEFT:
+			return Slot.RING_LEFT
+
+		EquipmentSlotContract.RING_RIGHT:
+			return Slot.RING_RIGHT
+
+
+	return INVALID_SLOT
+
+
+# =========================================================
+# VALIDAR RUNTIME SLOT
+# =========================================================
+
+static func is_valid_slot(
+	slot: int
+) -> bool:
+	return (
+		get_slot_id(
+			slot
+		)
+		!=
+		EquipmentSlotContract.INVALID_SLOT_ID
+	)
+
+
+# =========================================================
+# VALIDAR MAPPING COMPLETO
+# =========================================================
+
+static func validate_slot_contract_mapping() -> bool:
+	if not EquipmentSlotContract.validate_contract():
+		return false
+
+
+	var runtime_slots: Array[int] = [
+		Slot.HEAD,
+		Slot.CHEST,
+		Slot.PANTS,
+		Slot.GLOVES,
+		Slot.BOOTS,
+
+		Slot.WEAPON_LEFT,
+		Slot.WEAPON_RIGHT,
+
+		Slot.WINGS,
+		Slot.PENDANT,
+
+		Slot.RING_LEFT,
+		Slot.RING_RIGHT,
+	]
+
+
+	if (
+		runtime_slots.size()
+		!=
+		EquipmentSlotContract.SLOT_IDS.size()
+	):
+		return false
+
+
+	for runtime_slot: int in runtime_slots:
+		var slot_id := (
+			get_slot_id(
+				runtime_slot
+			)
+		)
+
+
+		if (
+			slot_id
+			==
+			EquipmentSlotContract.INVALID_SLOT_ID
+		):
+			return false
+
+
+		var restored_slot := (
+			get_slot_from_id(
+				String(slot_id)
+			)
+		)
+
+
+		if restored_slot != runtime_slot:
+			return false
+
+
+	return true
+
+# =========================================================
+# CONSTRUCTOR
+# =========================================================
+
+func _init() -> void:
+	assert(
+		validate_slot_contract_mapping(),
+		(
+			"EquipmentData | "
+			+
+			"Equipment Slot Contract inválido."
+		)
+	)
