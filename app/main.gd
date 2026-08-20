@@ -75,6 +75,10 @@ var pending_game_character: CharacterSummary = null
 
 var pending_world_snapshot: Dictionary = {}
 
+var pending_character_inventory_snapshot: Dictionary = {}
+
+var game_session_start_requested: bool = false
+
 # =========================================================
 # CICLO DE VIDA
 # =========================================================
@@ -183,6 +187,12 @@ func _bind_services() -> void:
 			_on_auth_logout_failed
 		)
 
+	if not game_server_client.character_inventory_snapshot_received.is_connected(
+		_on_character_inventory_snapshot_received
+	):
+		game_server_client.character_inventory_snapshot_received.connect(
+			_on_character_inventory_snapshot_received
+		)
 
 	# -----------------------------------------------------
 	# CHARACTERS
@@ -710,6 +720,10 @@ func _on_enter_world_requested(
 
 	pending_world_snapshot = {}
 
+	pending_character_inventory_snapshot = {}
+
+	game_session_start_requested = false
+
 	pending_game_character = character
 
 
@@ -895,10 +909,7 @@ func _on_world_snapshot_received(
 	)
 
 
-	game_session_service.start_session(
-		ClientSession.account_id,
-		character_id
-	)
+	_try_start_game_session_from_authoritative_snapshots()
 
 func _on_game_server_connection_failed(
 	message: String
@@ -914,6 +925,8 @@ func _on_game_server_connection_failed(
 
 	pending_game_character = null
 	pending_world_snapshot = {}
+	pending_character_inventory_snapshot = {}
+	game_session_start_requested = false
 
 	print(
 		"GameServerClient | Error: ",
@@ -1186,6 +1199,35 @@ func _on_game_session_started(
 
 		return
 
+	if pending_character_inventory_snapshot.is_empty():
+		pending_game_character = null
+
+		game_session_start_requested = false
+
+		game_session_service.end_session()
+
+
+		return
+
+
+	if not player_state.apply_inventory_snapshot(
+		pending_character_inventory_snapshot
+	):
+		pending_game_character = null
+
+		pending_character_inventory_snapshot = {}
+
+		game_session_start_requested = false
+
+		game_session_service.end_session()
+
+
+		return
+
+
+	pending_character_inventory_snapshot = {}
+
+	game_session_start_requested = false
 
 	var character := (
 		player_state.character_summary
@@ -1221,6 +1263,8 @@ func _on_game_session_failed(
 
 	pending_game_character = null
 	pending_world_snapshot = {}
+	pending_character_inventory_snapshot = {}
+	game_session_start_requested = false
 
 	print(
 		"GameSessionService | Error: ",
@@ -1235,6 +1279,8 @@ func _on_game_session_failed(
 
 func _on_game_session_ended() -> void:
 	pending_world_snapshot = {}
+	pending_character_inventory_snapshot = {}
+	game_session_start_requested = false
 	game_server_client.disconnect_from_game_server()
 	var return_slot := maxi(
 		ClientSession.selected_character_slot,
@@ -1884,4 +1930,110 @@ func _on_gameplay_vault_item_move_requested(
 		uid,
 		" | Error: ",
 		result
+	)
+
+# =========================================================
+# INVENTORY AUTORITATIVO RECIBIDO
+# =========================================================
+
+func _on_character_inventory_snapshot_received(
+	snapshot: Dictionary
+) -> void:
+	if pending_game_character == null:
+		return
+
+
+	if not pending_character_inventory_snapshot.is_empty():
+		return
+
+
+	var account_id := int(
+		snapshot.get(
+			"account_id",
+			-1
+		)
+	)
+
+
+	if account_id != ClientSession.account_id:
+		_on_game_server_connection_failed(
+			"El Inventory pertenece a otra cuenta."
+		)
+
+
+		return
+
+
+	var character_id := int(
+		snapshot.get(
+			"character_id",
+			-1
+		)
+	)
+
+
+	if (
+		character_id
+		!=
+		pending_game_character.character_id
+	):
+		_on_game_server_connection_failed(
+			"El Inventory pertenece a otro personaje."
+		)
+
+
+		return
+
+
+	pending_character_inventory_snapshot = (
+		snapshot.duplicate(
+			true
+		)
+	)
+
+
+	print(
+		"Main | Snapshot autoritativo de Inventory aceptado",
+		" | Character ID: ",
+		character_id,
+		" | Items: ",
+		(
+			snapshot.get(
+				"items",
+				[]
+			)
+			as Array
+		).size()
+	)
+
+
+	_try_start_game_session_from_authoritative_snapshots()
+
+# =========================================================
+# PREPARAR SESIÓN CUANDO TODO ESTÁ DISPONIBLE
+# =========================================================
+
+func _try_start_game_session_from_authoritative_snapshots() -> void:
+	if game_session_start_requested:
+		return
+
+
+	if pending_game_character == null:
+		return
+
+
+	if pending_world_snapshot.is_empty():
+		return
+
+
+	if pending_character_inventory_snapshot.is_empty():
+		return
+
+
+	game_session_start_requested = true
+
+
+	game_session_service.start_session(
+		ClientSession.account_id,
+		pending_game_character.character_id
 	)

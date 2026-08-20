@@ -74,6 +74,10 @@ signal vault_snapshot_received(
 	snapshot: Dictionary
 )
 
+signal character_inventory_snapshot_received(
+	snapshot: Dictionary
+)
+
 # =========================================================
 # CONFIGURACIÓN
 # =========================================================
@@ -138,6 +142,10 @@ const MESSAGE_VAULT_SNAPSHOT: String = (
 
 const MESSAGE_VAULT_ITEM_MOVE_REQUEST: String = (
 	"vault_item_move_request"
+)
+
+const MESSAGE_CHARACTER_INVENTORY_SNAPSHOT: String = (
+	"character_inventory_snapshot"
 )
 
 # =========================================================
@@ -729,6 +737,31 @@ func _on_peer_packet(
 
 		_process_npc_service_ended(
 			service_end_value
+		)
+
+
+		return
+
+	if message_type == MESSAGE_CHARACTER_INVENTORY_SNAPSHOT:
+		var inventory_value: Variant = (
+			message.get(
+				"data",
+				null
+			)
+		)
+
+
+		if typeof(inventory_value) != TYPE_DICTIONARY:
+			_fail_connection(
+				"El snapshot de Inventory es inválido."
+			)
+
+
+			return
+
+
+		_process_character_inventory_snapshot(
+			inventory_value
 		)
 
 
@@ -2437,3 +2470,165 @@ func send_vault_item_move_request(
 
 
 	return OK
+
+
+# =========================================================
+# SNAPSHOT DE INVENTORY DEL PERSONAJE
+# =========================================================
+
+func _process_character_inventory_snapshot(
+	snapshot: Dictionary
+) -> void:
+	var account_id := int(
+		snapshot.get(
+			"account_id",
+			0
+		)
+	)
+
+
+	var character_id := int(
+		snapshot.get(
+			"character_id",
+			0
+		)
+	)
+
+
+	var container := String(
+		snapshot.get(
+			"container",
+			""
+		)
+	).strip_edges()
+
+
+	var items_value: Variant = (
+		snapshot.get(
+			"items",
+			null
+		)
+	)
+
+
+	if account_id <= 0:
+		_fail_connection(
+			"Inventory sin cuenta válida."
+		)
+
+
+		return
+
+
+	if character_id <= 0:
+		_fail_connection(
+			"Inventory sin personaje válido."
+		)
+
+
+		return
+
+
+	if container != "inventory":
+		_fail_connection(
+			"Contenedor de Inventory inválido."
+		)
+
+
+		return
+
+
+	if typeof(items_value) != TYPE_ARRAY:
+		_fail_connection(
+			"Items de Inventory inválidos."
+		)
+
+
+		return
+
+
+	# -----------------------------------------------------
+	# También comprobamos contra el world snapshot recibido
+	# del MISMO Game Server.
+	# -----------------------------------------------------
+
+	if latest_world_snapshot.is_empty():
+		_fail_connection(
+			"Inventory recibido antes de la identidad de mundo."
+		)
+
+
+		return
+
+
+	if int(
+		latest_world_snapshot.get(
+			"account_id",
+			0
+		)
+	) != account_id:
+		_fail_connection(
+			"Inventory pertenece a otra cuenta."
+		)
+
+
+		return
+
+
+	var world_character_value: Variant = (
+		latest_world_snapshot.get(
+			"character",
+			null
+		)
+	)
+
+
+	if typeof(world_character_value) != TYPE_DICTIONARY:
+		_fail_connection(
+			"Identidad de personaje no disponible."
+		)
+
+
+		return
+
+
+	var world_character: Dictionary = (
+		world_character_value
+	)
+
+
+	if int(
+		world_character.get(
+			"id",
+			0
+		)
+	) != character_id:
+		_fail_connection(
+			"Inventory pertenece a otro personaje."
+		)
+
+
+		return
+
+
+	var items: Array = (
+		items_value as Array
+	)
+
+
+	print(
+		"GameServerClient | Snapshot de Inventory recibido",
+		" | Cuenta: ",
+		account_id,
+		" | Character ID: ",
+		character_id,
+		" | Items: ",
+		items.size()
+	)
+
+
+	character_inventory_snapshot_received.emit(
+		snapshot.duplicate(
+			true
+		)
+	)

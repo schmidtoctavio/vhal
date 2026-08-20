@@ -59,10 +59,6 @@ static func create_default() -> PlayerRuntimeState:
 		state
 	)
 
-	_setup_inventory(
-		state
-	)
-
 	_setup_skills(
 		state
 	)
