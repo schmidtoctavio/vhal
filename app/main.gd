@@ -1340,6 +1340,13 @@ func _show_gameplay(
 			_on_gameplay_npc_service_end_requested
 		)
 
+	if not gameplay_screen.vault_item_move_requested.is_connected(
+		_on_gameplay_vault_item_move_requested
+	):
+		gameplay_screen.vault_item_move_requested.connect(
+			_on_gameplay_vault_item_move_requested
+		)
+
 	gameplay_screen.setup(
 		player_state,
 		ClientSession.account_state
@@ -1823,7 +1830,7 @@ func _on_vault_snapshot_received(
 		" | Items: ",
 		items.size()
 	)
-
+	
 	var gameplay_screen := (
 		screen_router.current_screen
 		as GameplayScreen
@@ -1834,12 +1841,47 @@ func _on_vault_snapshot_received(
 		return
 
 
-	if not gameplay_screen.apply_authoritative_vault_ready():
-		print(
-			"Main | Vault hidratada pero no existe "
-			+
-			"un servicio Warehouse pendiente."
-		)
-
-
+	if gameplay_screen.apply_authoritative_vault_ready():
 		return
+
+
+	if gameplay_screen.refresh_authoritative_vault():
+		return
+
+
+	print(
+		"Main | Vault hidratada pero no existe "
+		+
+		"un servicio Warehouse activo."
+	)
+
+
+# =========================================================
+# MOVIMIENTO VAULT → GAME SERVER
+# =========================================================
+
+func _on_gameplay_vault_item_move_requested(
+	uid: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+) -> void:
+	var result := (
+		game_server_client.send_vault_item_move_request(
+			uid,
+			current_position,
+			new_position
+		)
+	)
+
+
+	if result == OK:
+		return
+
+
+	print(
+		"Main | No se pudo enviar movimiento de Vault",
+		" | UID: ",
+		uid,
+		" | Error: ",
+		result
+	)

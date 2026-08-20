@@ -5,6 +5,12 @@ signal item_activated(
 	item: ItemInstance
 )
 
+signal authoritative_item_move_requested(
+	item: ItemInstance,
+	current_position: Vector2i,
+	new_position: Vector2i
+)
+
 # =========================================================
 # ESCENAS
 # =========================================================
@@ -78,6 +84,18 @@ var cell_gap: int = 8
 #
 var inventory_data: InventoryData = null
 
+
+# =========================================================
+# MUTACIÓN AUTORITATIVA
+# =========================================================
+
+var authoritative_move_only: bool = false
+
+
+func set_authoritative_move_only(
+	enabled: bool
+) -> void:
+	authoritative_move_only = enabled
 
 # =========================================================
 # RELACIÓN ITEMINSTANCE -> VIEW
@@ -919,6 +937,11 @@ func can_drop_data_at(
 	if _is_equipment_drag_data(
 		data
 	):
+		if authoritative_move_only:
+			_hide_drop_preview()
+
+			return false
+		
 		var equipment_dictionary := (
 			data as Dictionary
 		)
@@ -986,6 +1009,29 @@ func can_drop_data_at(
 		_hide_drop_preview()
 		return false
 
+	var uses_authoritative_route := (
+		authoritative_move_only
+		or
+		source_grid.authoritative_move_only
+	)
+
+
+	# -----------------------------------------------------
+	# Por ahora la ruta autoritativa sólo soporta
+	# movimiento dentro de LA MISMA Vault.
+	#
+	# Vault -> Inventory e Inventory -> Vault llegarán
+	# después con operaciones persistentes específicas.
+	# -----------------------------------------------------
+
+	if (
+		uses_authoritative_route
+		and
+		source_grid != self
+	):
+		_hide_drop_preview()
+
+		return false
 
 	# =====================================================
 	# CELDA REAL DEBAJO DEL CURSOR
@@ -1012,6 +1058,8 @@ func can_drop_data_at(
 	# =====================================================
 
 	if (
+		not uses_authoritative_route
+		and
 		target_item != null
 		and
 		target_item != item
@@ -1088,6 +1136,11 @@ func drop_data_at(
 	if _is_equipment_drag_data(
 		data
 	):
+		if authoritative_move_only:
+			_hide_drop_preview()
+
+			return
+		
 		var equipment_dictionary := (
 			data as Dictionary
 		)
@@ -1167,6 +1220,21 @@ func drop_data_at(
 		_hide_drop_preview()
 		return
 
+	var uses_authoritative_route := (
+		authoritative_move_only
+		or
+		source_grid.authoritative_move_only
+	)
+
+
+	if (
+		uses_authoritative_route
+		and
+		source_grid != self
+	):
+		_hide_drop_preview()
+
+		return
 
 	# =====================================================
 	# CELDA DEBAJO DEL CURSOR
@@ -1193,6 +1261,8 @@ func drop_data_at(
 	# =====================================================
 
 	if (
+		not uses_authoritative_route
+		and
 		target_item != null
 		and
 		target_item != item
@@ -1232,6 +1302,49 @@ func drop_data_at(
 		dictionary
 	)
 
+	# =====================================================
+	# MOVIMIENTO AUTORITATIVO
+	# =====================================================
+	#
+	# IMPORTANTE:
+	# NO llamamos inventory_data.move_item().
+	#
+	# El ItemInstance queda exactamente donde estaba
+	# hasta que llegue el nuevo snapshot del Game Server.
+	# =====================================================
+
+	if uses_authoritative_route:
+		var current_position := (
+			item.grid_position
+		)
+
+
+		if origin == current_position:
+			_hide_drop_preview()
+
+			return
+
+
+		if not inventory_data.can_place_item(
+			item,
+			origin,
+			item
+		):
+			_hide_drop_preview()
+
+			return
+
+
+		authoritative_item_move_requested.emit(
+			item,
+			current_position,
+			origin
+		)
+
+
+		_hide_drop_preview()
+
+		return
 
 	var success := false
 

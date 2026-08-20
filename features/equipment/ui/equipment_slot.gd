@@ -341,6 +341,12 @@ func _can_drop_data(
 		_reset_drop_feedback()
 		return false
 
+	if source_grid.authoritative_move_only:
+		_set_drop_feedback(
+			false
+		)
+
+		return false
 
 	var valid := equipment_data.can_equip(
 		slot_type,
@@ -425,6 +431,8 @@ func _drop_data(
 	):
 		return
 
+	if source_grid.authoritative_move_only:
+		return
 
 	var success := (
 		equipment_data.equip_from_inventory(

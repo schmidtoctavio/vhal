@@ -37,6 +37,12 @@ signal npc_interaction_requested(
 
 signal npc_service_end_requested
 
+signal vault_item_move_requested(
+	uid: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+)
+
 # =========================================================
 # REFERENCIAS
 # =========================================================
@@ -88,6 +94,8 @@ var account_state: AccountState = null
 
 var pending_authorized_npc_id: String = ""
 var pending_authorized_service_id: String = ""
+
+var authorized_vault_active: bool = false
 
 # =========================================================
 # ESTADO DEL MUNDO
@@ -152,6 +160,13 @@ func _ready() -> void:
 	if player_state != null:
 		if not _prepare_gameplay():
 			return
+
+	if not gameplay_ui.vault_item_move_requested.is_connected(
+		_on_vault_item_move_requested
+	):
+		gameplay_ui.vault_item_move_requested.connect(
+			_on_vault_item_move_requested
+		)
 
 
 	_apply_states()
@@ -1077,6 +1092,8 @@ func apply_authorized_npc_service(
 # =========================================================
 
 func _on_authorized_vault_closed() -> void:
+	authorized_vault_active = false
+
 	npc_service_end_requested.emit()
 
 # =========================================================
@@ -1113,6 +1130,7 @@ func apply_authoritative_npc_service_end(
 
 	match normalized_service_id:
 		"warehouse":
+			authorized_vault_active = false
 			gameplay_ui.close_authorized_vault()
 
 
@@ -1164,6 +1182,7 @@ func apply_authoritative_vault_ready() -> bool:
 	if not gameplay_ui.open_authorized_vault():
 		return false
 
+	authorized_vault_active = true
 
 	print(
 		"GameplayScreen | Vault persistente aplicada",
@@ -1176,6 +1195,62 @@ func apply_authoritative_vault_ready() -> bool:
 
 	pending_authorized_npc_id = ""
 	pending_authorized_service_id = ""
+
+
+	return true
+
+
+func _on_vault_item_move_requested(
+	uid: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+) -> void:
+	if not authorized_vault_active:
+		return
+
+
+	if uid.strip_edges().is_empty():
+		return
+
+
+	if current_position == new_position:
+		return
+
+
+	vault_item_move_requested.emit(
+		uid,
+		current_position,
+		new_position
+	)
+
+
+# =========================================================
+# REFRESCAR VAULT YA ABIERTA
+# =========================================================
+
+func refresh_authoritative_vault() -> bool:
+	if not authorized_vault_active:
+		return false
+
+
+	if account_state == null:
+		return false
+
+
+	if account_state.vault == null:
+		return false
+
+
+	gameplay_ui.bind_account_state(
+		account_state
+	)
+
+
+	print(
+		"GameplayScreen | Vault persistente actualizada",
+		" | Items: ",
+		account_state.vault.items.size()
+	)
 
 
 	return true

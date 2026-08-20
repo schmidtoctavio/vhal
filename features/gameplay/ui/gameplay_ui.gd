@@ -8,6 +8,12 @@ extends Control
 
 signal authorized_vault_closed
 
+signal vault_item_move_requested(
+	uid: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+)
+
 # =========================================================
 # BARRAS
 # =========================================================
@@ -523,6 +529,13 @@ func _ready() -> void:
 			_on_vault_close_requested
 		)
 
+	if not vault_window.vault_item_move_requested.is_connected(
+		_on_vault_item_move_requested
+	):
+		vault_window.vault_item_move_requested.connect(
+			_on_vault_item_move_requested
+		)
+
 	# =====================================================
 	# SELECTED SKILL SLOT
 	# =====================================================
@@ -1022,4 +1035,15 @@ func close_authorized_vault() -> void:
 
 	print(
 		"GameplayUI | Vault cerrada por Game Server."
+	)
+
+func _on_vault_item_move_requested(
+	uid: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+) -> void:
+	vault_item_move_requested.emit(
+		uid,
+		current_position,
+		new_position
 	)
