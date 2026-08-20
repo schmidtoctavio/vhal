@@ -1392,6 +1392,13 @@ func _show_gameplay(
 			_on_gameplay_vault_item_move_requested
 		)
 
+	if not gameplay_screen.inventory_item_move_requested.is_connected(
+		_on_gameplay_inventory_item_move_requested
+	):
+		gameplay_screen.inventory_item_move_requested.connect(
+			_on_gameplay_inventory_item_move_requested
+		)
+
 	gameplay_screen.setup(
 		player_state,
 		ClientSession.account_state
@@ -2112,4 +2119,34 @@ func _try_start_game_session_from_authoritative_snapshots() -> void:
 	game_session_service.start_session(
 		ClientSession.account_id,
 		pending_game_character.character_id
+	)
+
+# =========================================================
+# MOVIMIENTO INVENTORY → GAME SERVER
+# =========================================================
+
+func _on_gameplay_inventory_item_move_requested(
+	uid: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+) -> void:
+	var result := (
+		game_server_client.send_inventory_item_move_request(
+			uid,
+			current_position,
+			new_position
+		)
+	)
+
+
+	if result == OK:
+		return
+
+
+	print(
+		"Main | No se pudo enviar movimiento de Inventory",
+		" | UID: ",
+		uid,
+		" | Error: ",
+		result
 	)

@@ -4,6 +4,17 @@ extends BaseWindow
 
 
 # =========================================================
+# SEÑALES
+# =========================================================
+
+signal inventory_item_move_requested(
+	uid: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+)
+
+
+# =========================================================
 # REFERENCIAS
 # =========================================================
 
@@ -15,6 +26,7 @@ extends BaseWindow
 @onready var inventory_grid: InventoryGrid = (
 	$ContentMargin/Content/Body/InventoryContent/BagPanel/BagMargin/GridCenter/InventoryGrid
 )
+
 
 @onready var sort_button: Button = (
 	$ContentMargin/Content/Body/InventoryContent/Footer/SortButton
@@ -31,6 +43,34 @@ var equipment_data: EquipmentData = null
 
 
 # =========================================================
+# MODO AUTORITATIVO
+# =========================================================
+
+var authoritative_inventory_mode: bool = false
+
+
+func set_authoritative_inventory_mode(
+	enabled: bool
+) -> void:
+	authoritative_inventory_mode = enabled
+
+
+	if is_node_ready():
+		_apply_authoritative_inventory_mode()
+
+
+func _apply_authoritative_inventory_mode() -> void:
+	inventory_grid.set_authoritative_move_only(
+		authoritative_inventory_mode
+	)
+
+
+	sort_button.disabled = (
+		authoritative_inventory_mode
+	)
+
+
+# =========================================================
 # CICLO DE VIDA
 # =========================================================
 
@@ -43,6 +83,16 @@ func _ready() -> void:
 
 
 	_apply_models()
+
+	_apply_authoritative_inventory_mode()
+
+
+	if not inventory_grid.authoritative_item_move_requested.is_connected(
+		_on_authoritative_item_move_requested
+	):
+		inventory_grid.authoritative_item_move_requested.connect(
+			_on_authoritative_item_move_requested
+		)
 
 
 	# =====================================================
@@ -118,12 +168,53 @@ func _apply_models() -> void:
 
 
 # =========================================================
+# MOVIMIENTO AUTORITATIVO
+# =========================================================
+
+func _on_authoritative_item_move_requested(
+	item: ItemInstance,
+	current_position: Vector2i,
+	new_position: Vector2i
+) -> void:
+	if not authoritative_inventory_mode:
+		return
+
+
+	if item == null:
+		return
+
+
+	var uid := (
+		item.uid.strip_edges()
+	)
+
+
+	if uid.is_empty():
+		return
+
+
+	if current_position == new_position:
+		return
+
+
+	inventory_item_move_requested.emit(
+		uid,
+		current_position,
+		new_position
+	)
+
+
+# =========================================================
 # DOBLE CLIC INVENTARIO -> EQUIPAMIENTO
 # =========================================================
 
 func _on_inventory_item_activated(
 	item: ItemInstance
 ) -> void:
+	if authoritative_inventory_mode:
+		return
+
+
 	if item == null:
 		return
 
@@ -137,8 +228,7 @@ func _on_inventory_item_activated(
 
 
 	var slot := (
-		equipment_data
-		.find_first_compatible_empty_slot(
+		equipment_data.find_first_compatible_empty_slot(
 			item
 		)
 	)
@@ -150,12 +240,12 @@ func _on_inventory_item_activated(
 			item.definition.display_name
 		)
 
+
 		return
 
 
 	var success := (
-		equipment_data
-		.equip_from_inventory(
+		equipment_data.equip_from_inventory(
 			inventory_data,
 			item,
 			slot
@@ -178,6 +268,10 @@ func _on_equipment_item_activated(
 	slot: EquipmentData.Slot,
 	item: ItemInstance
 ) -> void:
+	if authoritative_inventory_mode:
+		return
+
+
 	if item == null:
 		return
 
@@ -191,8 +285,7 @@ func _on_equipment_item_activated(
 
 
 	var free_position := (
-		inventory_data
-		.find_first_free_position(
+		inventory_data.find_first_free_position(
 			item
 		)
 	)
@@ -204,12 +297,12 @@ func _on_equipment_item_activated(
 			item.definition.display_name
 		)
 
+
 		return
 
 
 	var success := (
-		equipment_data
-		.unequip_to_inventory(
+		equipment_data.unequip_to_inventory(
 			inventory_data,
 			slot,
 			free_position
@@ -229,6 +322,10 @@ func _on_equipment_item_activated(
 # =========================================================
 
 func _on_sort_button_pressed() -> void:
+	if authoritative_inventory_mode:
+		return
+
+
 	if inventory_data == null:
 		return
 

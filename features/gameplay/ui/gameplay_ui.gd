@@ -14,6 +14,12 @@ signal vault_item_move_requested(
 	new_position: Vector2i
 )
 
+signal inventory_item_move_requested(
+	uid: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+)
+
 # =========================================================
 # BARRAS
 # =========================================================
@@ -319,6 +325,11 @@ func _activate_skill_state() -> void:
 # =========================================================
 
 func _activate_inventory_state() -> void:
+	inventory_window.set_authoritative_inventory_mode(
+		true
+	)
+
+
 	if player_state == null:
 		return
 
@@ -327,7 +338,6 @@ func _activate_inventory_state() -> void:
 		player_state.inventory,
 		player_state.equipment
 	)
-
 # =========================================================
 # REFRESCAR INVENTORY AUTORITATIVO
 # =========================================================
@@ -519,6 +529,12 @@ func _ready() -> void:
 			_on_inventory_close_requested
 		)
 
+	if not inventory_window.inventory_item_move_requested.is_connected(
+		_on_inventory_item_move_requested
+	):
+		inventory_window.inventory_item_move_requested.connect(
+			_on_inventory_item_move_requested
+		)
 
 	# =====================================================
 	# VAULT
@@ -1054,6 +1070,21 @@ func _on_vault_item_move_requested(
 	new_position: Vector2i
 ) -> void:
 	vault_item_move_requested.emit(
+		uid,
+		current_position,
+		new_position
+	)
+
+# =========================================================
+# MOVIMIENTO DE INVENTORY
+# =========================================================
+
+func _on_inventory_item_move_requested(
+	uid: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+) -> void:
+	inventory_item_move_requested.emit(
 		uid,
 		current_position,
 		new_position

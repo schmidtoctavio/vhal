@@ -2,6 +2,7 @@ class_name GameplayScreen
 extends Control
 
 
+
 # =========================================================
 # PLAYER ACTOR
 # =========================================================
@@ -38,6 +39,12 @@ signal npc_interaction_requested(
 signal npc_service_end_requested
 
 signal vault_item_move_requested(
+	uid: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+)
+
+signal inventory_item_move_requested(
 	uid: String,
 	current_position: Vector2i,
 	new_position: Vector2i
@@ -166,6 +173,13 @@ func _ready() -> void:
 	):
 		gameplay_ui.vault_item_move_requested.connect(
 			_on_vault_item_move_requested
+		)
+
+	if not gameplay_ui.inventory_item_move_requested.is_connected(
+		_on_inventory_item_move_requested
+	):
+		gameplay_ui.inventory_item_move_requested.connect(
+			_on_inventory_item_move_requested
 		)
 
 
@@ -1283,3 +1297,34 @@ func apply_authoritative_inventory_snapshot(
 
 
 	return true
+
+# =========================================================
+# MOVIMIENTO DE INVENTORY
+# =========================================================
+
+func _on_inventory_item_move_requested(
+	uid: String,
+	current_position: Vector2i,
+	new_position: Vector2i
+) -> void:
+	if player_state == null:
+		return
+
+
+	if player_state.inventory == null:
+		return
+
+
+	if uid.strip_edges().is_empty():
+		return
+
+
+	if current_position == new_position:
+		return
+
+
+	inventory_item_move_requested.emit(
+		uid,
+		current_position,
+		new_position
+	)
