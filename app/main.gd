@@ -77,6 +77,8 @@ var pending_world_snapshot: Dictionary = {}
 
 var pending_character_inventory_snapshot: Dictionary = {}
 
+var pending_character_equipment_snapshot: Dictionary = {}
+
 var game_session_start_requested: bool = false
 
 # =========================================================
@@ -192,6 +194,13 @@ func _bind_services() -> void:
 	):
 		game_server_client.character_inventory_snapshot_received.connect(
 			_on_character_inventory_snapshot_received
+		)
+
+	if not game_server_client.character_equipment_snapshot_received.is_connected(
+		_on_character_equipment_snapshot_received
+	):
+		game_server_client.character_equipment_snapshot_received.connect(
+			_on_character_equipment_snapshot_received
 		)
 
 	# -----------------------------------------------------
@@ -722,6 +731,8 @@ func _on_enter_world_requested(
 
 	pending_character_inventory_snapshot = {}
 
+	pending_character_equipment_snapshot = {}
+
 	game_session_start_requested = false
 
 	pending_game_character = character
@@ -925,6 +936,7 @@ func _on_game_server_connection_failed(
 	pending_game_character = null
 	pending_world_snapshot = {}
 	pending_character_inventory_snapshot = {}
+	pending_character_equipment_snapshot = {}
 	game_session_start_requested = false
 
 	print(
@@ -1240,6 +1252,42 @@ func _on_game_session_started(
 		character
 	)
 
+	if pending_character_equipment_snapshot.is_empty():
+		pending_game_character = null
+
+		pending_world_snapshot = {}
+
+		pending_character_inventory_snapshot = {}
+
+		pending_character_equipment_snapshot = {}
+
+		game_session_start_requested = false
+
+
+		game_session_service.end_session()
+
+
+		return
+
+
+	if not player_state.apply_equipment_snapshot(
+		pending_character_equipment_snapshot
+	):
+		pending_game_character = null
+
+		pending_world_snapshot = {}
+
+		pending_character_inventory_snapshot = {}
+
+		pending_character_equipment_snapshot = {}
+
+		game_session_start_requested = false
+
+
+		game_session_service.end_session()
+
+
+		return
 
 	_show_gameplay(
 		player_state
@@ -1263,6 +1311,7 @@ func _on_game_session_failed(
 	pending_game_character = null
 	pending_world_snapshot = {}
 	pending_character_inventory_snapshot = {}
+	pending_character_equipment_snapshot = {}
 	game_session_start_requested = false
 
 	print(
@@ -1279,6 +1328,7 @@ func _on_game_session_failed(
 func _on_game_session_ended() -> void:
 	pending_world_snapshot = {}
 	pending_character_inventory_snapshot = {}
+	pending_character_equipment_snapshot = {}
 	game_session_start_requested = false
 	game_server_client.disconnect_from_game_server()
 	var return_slot := maxi(
@@ -1946,6 +1996,156 @@ func _on_gameplay_vault_item_move_requested(
 	)
 
 # =========================================================
+# EQUIPMENT AUTORITATIVO RECIBIDO
+# =========================================================
+
+func _on_character_equipment_snapshot_received(
+	snapshot: Dictionary
+) -> void:
+	var account_id := int(
+		snapshot.get(
+			"account_id",
+			0
+		)
+	)
+
+
+	var character_id := int(
+		snapshot.get(
+			"character_id",
+			0
+		)
+	)
+
+
+	var items_value: Variant = (
+		snapshot.get(
+			"items",
+			null
+		)
+	)
+
+
+	if account_id != ClientSession.account_id:
+		_on_game_server_connection_failed(
+			"El Equipment recibido pertenece a otra cuenta."
+		)
+
+
+		return
+
+
+	if character_id <= 0:
+		_on_game_server_connection_failed(
+			"El Equipment recibido no posee un personaje válido."
+		)
+
+
+		return
+
+
+	if typeof(items_value) != TYPE_ARRAY:
+		_on_game_server_connection_failed(
+			"El Equipment recibido posee items inválidos."
+		)
+
+
+		return
+
+
+	# =====================================================
+	# LOADING
+	#
+	# Todavía no existe PlayerRuntimeState definitivo.
+	# Guardamos el snapshot hasta tener:
+	#
+	# World + Inventory + Equipment.
+	# =====================================================
+
+	if pending_game_character != null:
+		if not pending_character_equipment_snapshot.is_empty():
+			return
+
+
+		if (
+			character_id
+			!=
+			pending_game_character.character_id
+		):
+			_on_game_server_connection_failed(
+				(
+					"El Equipment recibido no corresponde "
+					+
+					"al personaje seleccionado."
+				)
+			)
+
+
+			return
+
+
+		pending_character_equipment_snapshot = (
+			snapshot.duplicate(
+				true
+			)
+		)
+
+
+		print(
+			"Main | Snapshot autoritativo de Equipment aceptado",
+			" | Character ID: ",
+			character_id,
+			" | Items: ",
+			(
+				items_value
+				as Array
+			).size()
+		)
+
+
+		_try_start_game_session_from_authoritative_snapshots()
+
+
+		return
+
+
+	# =====================================================
+	# GAMEPLAY YA ACTIVO
+	# =====================================================
+
+	var gameplay_screen := (
+		screen_router.current_screen
+		as GameplayScreen
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	if not gameplay_screen.apply_authoritative_equipment_snapshot(
+		snapshot
+	):
+		_on_game_server_connection_failed(
+			"No se pudo aplicar el Equipment autoritativo."
+		)
+
+
+		return
+
+
+	print(
+		"Main | Snapshot autoritativo de Equipment aplicado en Gameplay",
+		" | Character ID: ",
+		character_id,
+		" | Items: ",
+		(
+			items_value
+			as Array
+		).size()
+	)
+
+# =========================================================
 # INVENTORY AUTORITATIVO RECIBIDO
 # =========================================================
 
@@ -1981,8 +2181,9 @@ func _on_character_inventory_snapshot_received(
 	# SNAPSHOT INICIAL
 	# =====================================================
 	#
-	# Todavía estamos en Loading y esperamos World +
-	# Inventory antes de crear Gameplay.
+	# Todavía estamos en Loading y esperamos:
+	# World + Inventory + Equipment
+	# antes de crear Gameplay.
 	# =====================================================
 
 	if pending_game_character != null:
@@ -2117,6 +2318,10 @@ func _try_start_game_session_from_authoritative_snapshots() -> void:
 
 
 	if pending_character_inventory_snapshot.is_empty():
+		return
+
+
+	if pending_character_equipment_snapshot.is_empty():
 		return
 
 

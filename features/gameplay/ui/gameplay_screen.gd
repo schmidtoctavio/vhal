@@ -1314,6 +1314,46 @@ func apply_authoritative_inventory_snapshot(
 	return true
 
 # =========================================================
+# EQUIPMENT AUTORITATIVO
+# =========================================================
+
+func apply_authoritative_equipment_snapshot(
+	snapshot: Dictionary
+) -> bool:
+	if player_state == null:
+		return false
+
+
+	if not player_state.apply_equipment_snapshot(
+		snapshot
+	):
+		return false
+
+
+	if gameplay_ui == null:
+		return false
+
+
+	# -----------------------------------------------------
+	# InventoryWindow consume InventoryData + EquipmentData.
+	#
+	# Como apply_equipment_snapshot reemplaza la instancia
+	# completa de EquipmentData, debemos rebindeárselos.
+	# -----------------------------------------------------
+
+	gameplay_ui.refresh_inventory_state()
+
+
+	print(
+		"GameplayScreen | Equipment persistente actualizado",
+		" | Items: ",
+		player_state.equipment.get_equipped_items().size()
+	)
+
+
+	return true
+
+# =========================================================
 # MOVIMIENTO DE INVENTORY
 # =========================================================
 
