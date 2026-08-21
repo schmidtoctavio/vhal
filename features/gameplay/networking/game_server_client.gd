@@ -2371,6 +2371,21 @@ func _process_npc_service_ended(
 	)
 
 # =========================================================
+# MUTACIÓN DE ITEMS PENDIENTE
+# =========================================================
+
+func _has_item_mutation_pending() -> bool:
+	return (
+		vault_item_move_request_pending
+		or
+		inventory_item_move_request_pending
+		or
+		item_container_transfer_request_pending
+		or
+		equipment_transfer_request_pending
+	)
+
+# =========================================================
 # SNAPSHOT DE VAULT
 # =========================================================
 
@@ -2455,10 +2470,7 @@ func send_vault_item_move_request(
 		return ERR_UNAVAILABLE
 
 
-	if vault_item_move_request_pending:
-		return ERR_BUSY
-
-	if item_container_transfer_request_pending:
+	if _has_item_mutation_pending():
 		return ERR_BUSY
 
 	var normalized_uid := (
@@ -2936,13 +2948,7 @@ func send_inventory_item_move_request(
 		return ERR_UNAVAILABLE
 
 
-	if inventory_item_move_request_pending:
-		return ERR_BUSY
-
-	if item_container_transfer_request_pending:
-		return ERR_BUSY
-
-	if equipment_transfer_request_pending:
+	if _has_item_mutation_pending():
 		return ERR_BUSY
 
 	var normalized_uid := (
@@ -3080,24 +3086,12 @@ func send_item_container_transfer_request(
 		return ERR_UNAVAILABLE
 
 
-	if item_container_transfer_request_pending:
-		return ERR_BUSY
-
-
 	# -----------------------------------------------------
-	# No arrancamos una transferencia cruzada mientras
-	# alguno de los contenedores todavía espera snapshot
-	# por un movimiento anterior.
+	# Toda mutación de items se serializa hasta converger
+	# nuevamente con el estado autoritativo.
 	# -----------------------------------------------------
 
-	if inventory_item_move_request_pending:
-		return ERR_BUSY
-
-
-	if vault_item_move_request_pending:
-		return ERR_BUSY
-
-	if equipment_transfer_request_pending:
+	if _has_item_mutation_pending():
 		return ERR_BUSY
 
 	var normalized_uid := (
@@ -3360,15 +3354,7 @@ func send_equipment_equip_request(
 		return ERR_UNAVAILABLE
 
 
-	if equipment_transfer_request_pending:
-		return ERR_BUSY
-
-
-	if inventory_item_move_request_pending:
-		return ERR_BUSY
-
-
-	if item_container_transfer_request_pending:
+	if _has_item_mutation_pending():
 		return ERR_BUSY
 
 
@@ -3504,15 +3490,7 @@ func send_equipment_unequip_request(
 		return ERR_UNAVAILABLE
 
 
-	if equipment_transfer_request_pending:
-		return ERR_BUSY
-
-
-	if inventory_item_move_request_pending:
-		return ERR_BUSY
-
-
-	if item_container_transfer_request_pending:
+	if _has_item_mutation_pending():
 		return ERR_BUSY
 
 
