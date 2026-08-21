@@ -78,6 +78,10 @@ signal character_inventory_snapshot_received(
 	snapshot: Dictionary
 )
 
+signal character_equipment_snapshot_received(
+	snapshot: Dictionary
+)
+
 # =========================================================
 # CONFIGURACIÓN
 # =========================================================
@@ -148,12 +152,25 @@ const MESSAGE_CHARACTER_INVENTORY_SNAPSHOT: String = (
 	"character_inventory_snapshot"
 )
 
+const MESSAGE_CHARACTER_EQUIPMENT_SNAPSHOT: String = (
+	"character_equipment_snapshot"
+)
+
 const MESSAGE_INVENTORY_ITEM_MOVE_REQUEST: String = (
 	"inventory_item_move_request"
 )
 
 const MESSAGE_ITEM_CONTAINER_TRANSFER_REQUEST: String = (
 	"item_container_transfer_request"
+)
+
+const MESSAGE_EQUIPMENT_EQUIP_REQUEST: String = (
+	"equipment_equip_request"
+)
+
+
+const MESSAGE_EQUIPMENT_UNEQUIP_REQUEST: String = (
+	"equipment_unequip_request"
 )
 
 # =========================================================
@@ -209,6 +226,14 @@ var item_container_transfer_request_pending: bool = false
 var item_container_transfer_inventory_synced: bool = false
 
 var item_container_transfer_vault_synced: bool = false
+
+var next_equipment_transfer_request_id: int = 1
+
+var equipment_transfer_request_pending: bool = false
+
+var equipment_transfer_inventory_synced: bool = false
+
+var equipment_transfer_equipment_synced: bool = false
 
 # =========================================================
 # CICLO DE VIDA
@@ -782,6 +807,31 @@ func _on_peer_packet(
 
 		_process_character_inventory_snapshot(
 			inventory_value
+		)
+
+
+		return
+
+	if message_type == MESSAGE_CHARACTER_EQUIPMENT_SNAPSHOT:
+		var equipment_value: Variant = (
+			message.get(
+				"data",
+				null
+			)
+		)
+
+
+		if typeof(equipment_value) != TYPE_DICTIONARY:
+			_fail_connection(
+				"El snapshot de Equipment es inválido."
+			)
+
+
+			return
+
+
+		_process_character_equipment_snapshot(
+			equipment_value
 		)
 
 
@@ -1363,6 +1413,14 @@ func _reset_connection_state() -> void:
 	item_container_transfer_inventory_synced = false
 
 	item_container_transfer_vault_synced = false
+
+	next_equipment_transfer_request_id = 1
+
+	equipment_transfer_request_pending = false
+
+	equipment_transfer_inventory_synced = false
+
+	equipment_transfer_equipment_synced = false
 
 	var scene_multiplayer := (
 		multiplayer
@@ -2691,6 +2749,174 @@ func _process_character_inventory_snapshot(
 	_mark_item_container_transfer_inventory_synced()
 
 # =========================================================
+# SNAPSHOT DE EQUIPMENT DEL PERSONAJE
+# =========================================================
+
+func _process_character_equipment_snapshot(
+	snapshot: Dictionary
+) -> void:
+	var account_id := int(
+		snapshot.get(
+			"account_id",
+			0
+		)
+	)
+
+
+	var character_id := int(
+		snapshot.get(
+			"character_id",
+			0
+		)
+	)
+
+
+	var container := String(
+		snapshot.get(
+			"container",
+			""
+		)
+	).strip_edges()
+
+
+	var items_value: Variant = (
+		snapshot.get(
+			"items",
+			null
+		)
+	)
+
+
+	if account_id <= 0:
+		_fail_connection(
+			"Equipment sin cuenta válida."
+		)
+
+
+		return
+
+
+	if character_id <= 0:
+		_fail_connection(
+			"Equipment sin personaje válido."
+		)
+
+
+		return
+
+
+	if container != "equipment":
+		_fail_connection(
+			"Contenedor de Equipment inválido."
+		)
+
+
+		return
+
+
+	if typeof(items_value) != TYPE_ARRAY:
+		_fail_connection(
+			"Items de Equipment inválidos."
+		)
+
+
+		return
+
+
+	# -----------------------------------------------------
+	# EQUIPMENT DEBE PERTENECER A LA IDENTIDAD ACTIVA
+	# -----------------------------------------------------
+
+	if latest_world_snapshot.is_empty():
+		_fail_connection(
+			"Equipment recibido antes de la identidad de mundo."
+		)
+
+
+		return
+
+
+	if int(
+		latest_world_snapshot.get(
+			"account_id",
+			0
+		)
+	) != account_id:
+		_fail_connection(
+			"Equipment pertenece a otra cuenta."
+		)
+
+
+		return
+
+
+	var world_character_value: Variant = (
+		latest_world_snapshot.get(
+			"character",
+			null
+		)
+	)
+
+
+	if typeof(world_character_value) != TYPE_DICTIONARY:
+		_fail_connection(
+			"Identidad de personaje no disponible."
+		)
+
+
+		return
+
+
+	var world_character: Dictionary = (
+		world_character_value
+	)
+
+
+	if int(
+		world_character.get(
+			"id",
+			0
+		)
+	) != character_id:
+		_fail_connection(
+			"Equipment pertenece a otro personaje."
+		)
+
+
+		return
+
+
+	var items: Array = (
+		items_value as Array
+	)
+
+
+	print(
+		"GameServerClient | Snapshot de Equipment recibido",
+		" | Cuenta: ",
+		account_id,
+		" | Character ID: ",
+		character_id,
+		" | Items: ",
+		items.size()
+	)
+
+
+	character_equipment_snapshot_received.emit(
+		snapshot.duplicate(
+			true
+		)
+	)
+
+
+	# -----------------------------------------------------
+	# Si había un Equip/Unequip pendiente, este snapshot
+	# representa una de las dos mitades de la convergencia.
+	# -----------------------------------------------------
+
+	_mark_equipment_transfer_equipment_synced()
+
+# =========================================================
 # MOVER ITEM DE INVENTORY
 # =========================================================
 
@@ -2707,6 +2933,12 @@ func send_inventory_item_move_request(
 		return ERR_BUSY
 
 	if item_container_transfer_request_pending:
+		return ERR_BUSY
+
+	if equipment_transfer_request_pending:
+		return ERR_BUSY
+
+	if equipment_transfer_request_pending:
 		return ERR_BUSY
 
 	var normalized_uid := (
@@ -3107,4 +3339,350 @@ func _try_finish_item_container_transfer_sync() -> void:
 
 	print(
 		"GameServerClient | Transferencia Inventory/Vault sincronizada."
+	)
+
+# =========================================================
+# EQUIPAR ITEM DESDE INVENTORY
+# =========================================================
+
+func send_equipment_equip_request(
+	uid: String,
+	current_position: Vector2i,
+	equipment_slot: Variant
+) -> Error:
+	if not connected:
+		return ERR_UNAVAILABLE
+
+
+	if equipment_transfer_request_pending:
+		return ERR_BUSY
+
+
+	if inventory_item_move_request_pending:
+		return ERR_BUSY
+
+
+	if item_container_transfer_request_pending:
+		return ERR_BUSY
+
+
+	var normalized_uid := (
+		uid.strip_edges()
+	)
+
+
+	if (
+		normalized_uid.is_empty()
+		or
+		normalized_uid.length() > 64
+	):
+		return ERR_INVALID_PARAMETER
+
+
+	if (
+		current_position.x < 0
+		or
+		current_position.x >= 8
+		or
+		current_position.y < 0
+		or
+		current_position.y >= 8
+	):
+		return ERR_INVALID_PARAMETER
+
+
+	var normalized_slot := String(
+		equipment_slot
+	).strip_edges().to_lower()
+
+
+	if (
+		normalized_slot.is_empty()
+		or
+		normalized_slot.length() > 32
+	):
+		return ERR_INVALID_PARAMETER
+
+
+	var scene_multiplayer := (
+		multiplayer
+		as SceneMultiplayer
+	)
+
+
+	if scene_multiplayer == null:
+		return ERR_UNAVAILABLE
+
+
+	var request_id := (
+		next_equipment_transfer_request_id
+	)
+
+
+	var message := {
+		"version": NETWORK_PROTOCOL_VERSION,
+
+		"type": MESSAGE_EQUIPMENT_EQUIP_REQUEST,
+
+		"data": {
+			"request_id": request_id,
+
+			"uid": normalized_uid,
+
+			"current_grid_position": {
+				"x": current_position.x,
+				"y": current_position.y,
+			},
+
+			"equipment_slot": normalized_slot,
+		},
+	}
+
+
+	var packet := (
+		JSON.stringify(
+			message
+		).to_utf8_buffer()
+	)
+
+
+	var result := (
+		scene_multiplayer.send_bytes(
+			packet,
+			SERVER_PEER_ID,
+			MultiplayerPeer.TRANSFER_MODE_RELIABLE,
+			0
+		)
+	)
+
+
+	if result != OK:
+		return result
+
+
+	equipment_transfer_request_pending = true
+
+	equipment_transfer_inventory_synced = false
+
+	equipment_transfer_equipment_synced = false
+
+
+	next_equipment_transfer_request_id += 1
+
+
+	print(
+		"GameServerClient | Solicitud Equip enviada",
+		" | Request: ",
+		request_id,
+		" | UID: ",
+		normalized_uid,
+		" | Desde: ",
+		current_position,
+		" | Slot: ",
+		normalized_slot
+	)
+
+
+	return OK
+
+# =========================================================
+# DESEQUIPAR ITEM HACIA INVENTORY
+# =========================================================
+
+func send_equipment_unequip_request(
+	uid: String,
+	current_equipment_slot: Variant,
+	new_position: Vector2i
+) -> Error:
+	if not connected:
+		return ERR_UNAVAILABLE
+
+
+	if equipment_transfer_request_pending:
+		return ERR_BUSY
+
+
+	if inventory_item_move_request_pending:
+		return ERR_BUSY
+
+
+	if item_container_transfer_request_pending:
+		return ERR_BUSY
+
+
+	var normalized_uid := (
+		uid.strip_edges()
+	)
+
+
+	if (
+		normalized_uid.is_empty()
+		or
+		normalized_uid.length() > 64
+	):
+		return ERR_INVALID_PARAMETER
+
+
+	var normalized_slot := String(
+		current_equipment_slot
+	).strip_edges().to_lower()
+
+
+	if (
+		normalized_slot.is_empty()
+		or
+		normalized_slot.length() > 32
+	):
+		return ERR_INVALID_PARAMETER
+
+
+	if (
+		new_position.x < 0
+		or
+		new_position.x >= 8
+		or
+		new_position.y < 0
+		or
+		new_position.y >= 8
+	):
+		return ERR_INVALID_PARAMETER
+
+
+	var scene_multiplayer := (
+		multiplayer
+		as SceneMultiplayer
+	)
+
+
+	if scene_multiplayer == null:
+		return ERR_UNAVAILABLE
+
+
+	var request_id := (
+		next_equipment_transfer_request_id
+	)
+
+
+	var message := {
+		"version": NETWORK_PROTOCOL_VERSION,
+
+		"type": MESSAGE_EQUIPMENT_UNEQUIP_REQUEST,
+
+		"data": {
+			"request_id": request_id,
+
+			"uid": normalized_uid,
+
+			"current_equipment_slot": normalized_slot,
+
+			"new_grid_position": {
+				"x": new_position.x,
+				"y": new_position.y,
+			},
+		},
+	}
+
+
+	var packet := (
+		JSON.stringify(
+			message
+		).to_utf8_buffer()
+	)
+
+
+	var result := (
+		scene_multiplayer.send_bytes(
+			packet,
+			SERVER_PEER_ID,
+			MultiplayerPeer.TRANSFER_MODE_RELIABLE,
+			0
+		)
+	)
+
+
+	if result != OK:
+		return result
+
+
+	equipment_transfer_request_pending = true
+
+	equipment_transfer_inventory_synced = false
+
+	equipment_transfer_equipment_synced = false
+
+
+	next_equipment_transfer_request_id += 1
+
+
+	print(
+		"GameServerClient | Solicitud Unequip enviada",
+		" | Request: ",
+		request_id,
+		" | UID: ",
+		normalized_uid,
+		" | Slot: ",
+		normalized_slot,
+		" | Destino: ",
+		new_position
+	)
+
+
+	return OK
+
+# =========================================================
+# INVENTORY RECIBIDO DURANTE EQUIPMENT TRANSFER
+# =========================================================
+
+func _mark_equipment_transfer_inventory_synced() -> void:
+	if not equipment_transfer_request_pending:
+		return
+
+
+	equipment_transfer_inventory_synced = true
+
+
+	_try_finish_equipment_transfer_sync()
+
+
+# =========================================================
+# EQUIPMENT RECIBIDO DURANTE EQUIPMENT TRANSFER
+# =========================================================
+
+func _mark_equipment_transfer_equipment_synced() -> void:
+	if not equipment_transfer_request_pending:
+		return
+
+
+	equipment_transfer_equipment_synced = true
+
+
+	_try_finish_equipment_transfer_sync()
+
+
+# =========================================================
+# FINALIZAR SINCRONIZACIÓN INVENTORY / EQUIPMENT
+# =========================================================
+
+func _try_finish_equipment_transfer_sync() -> void:
+	if not equipment_transfer_request_pending:
+		return
+
+
+	if not equipment_transfer_inventory_synced:
+		return
+
+
+	if not equipment_transfer_equipment_synced:
+		return
+
+
+	equipment_transfer_request_pending = false
+
+	equipment_transfer_inventory_synced = false
+
+	equipment_transfer_equipment_synced = false
+
+
+	print(
+		"GameServerClient | Transferencia Inventory/Equipment sincronizada."
 	)
