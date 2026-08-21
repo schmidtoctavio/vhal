@@ -279,14 +279,18 @@ func _on_inventory_item_activated(
 		return
 
 
-	var slot := (
+	var slot_id := (
 		equipment_data.find_first_compatible_empty_slot(
 			item
 		)
 	)
 
 
-	if slot < 0:
+	if (
+		slot_id
+		==
+		EquipmentSlotCatalog.INVALID_SLOT_ID
+	):
 		print(
 			"No hay un slot compatible libre para ",
 			item.definition.display_name
@@ -300,7 +304,7 @@ func _on_inventory_item_activated(
 		equipment_data.equip_from_inventory(
 			inventory_data,
 			item,
-			slot
+			slot_id
 		)
 	)
 
@@ -311,13 +315,12 @@ func _on_inventory_item_activated(
 			item.definition.display_name
 		)
 
-
 # =========================================================
 # DOBLE CLIC EQUIPAMIENTO -> INVENTARIO
 # =========================================================
 
 func _on_equipment_item_activated(
-	slot: EquipmentData.Slot,
+	slot_id: StringName,
 	item: ItemInstance
 ) -> void:
 	if authoritative_inventory_mode:
@@ -333,6 +336,12 @@ func _on_equipment_item_activated(
 
 
 	if equipment_data == null:
+		return
+
+
+	if not EquipmentSlotCatalog.is_valid_slot_id(
+		slot_id
+	):
 		return
 
 
@@ -356,7 +365,7 @@ func _on_equipment_item_activated(
 	var success := (
 		equipment_data.unequip_to_inventory(
 			inventory_data,
-			slot,
+			slot_id,
 			free_position
 		)
 	)
@@ -367,7 +376,6 @@ func _on_equipment_item_activated(
 			"No se pudo desequipar automáticamente ",
 			item.definition.display_name
 		)
-
 
 # =========================================================
 # ORDENAR INVENTARIO

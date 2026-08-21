@@ -929,7 +929,22 @@ func _is_equipment_drag_data(
 
 
 	if not dictionary.has(
-		"source_slot"
+		"source_slot_id"
+	):
+		return false
+
+
+	var source_slot_id := (
+		EquipmentSlotCatalog.normalize_slot_id(
+			dictionary[
+				"source_slot_id"
+			]
+		)
+	)
+
+
+	if not EquipmentSlotCatalog.is_valid_slot_id(
+		source_slot_id
 	):
 		return false
 
@@ -1269,8 +1284,12 @@ func drop_data_at(
 		)
 
 
-		var source_slot = (
-			equipment_dictionary["source_slot"]
+		var source_slot_id := (
+			EquipmentSlotCatalog.normalize_slot_id(
+				equipment_dictionary[
+					"source_slot_id"
+				]
+			)
 		)
 
 
@@ -1283,7 +1302,7 @@ func drop_data_at(
 		var equipment_success := (
 			source_equipment.unequip_to_inventory(
 				inventory_data,
-				source_slot,
+				source_slot_id,
 				equipment_origin
 			)
 		)

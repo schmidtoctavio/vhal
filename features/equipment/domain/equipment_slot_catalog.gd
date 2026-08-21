@@ -1,24 +1,25 @@
-class_name EquipmentSlotContract
+class_name EquipmentSlotCatalog
 extends RefCounted
 
 
 # =========================================================
-# IDS ESTABLES
+# IDENTIDAD ESTABLE
 # =========================================================
 #
-# IMPORTANTE:
+# Estos IDs son la identidad canónica de los slots.
 #
-# Estos valores forman parte del contrato lógico de VHAL.
+# Deben poder utilizarse sin traducción en:
 #
-# Pueden utilizarse en:
-#
+# - Runtime
+# - UI
+# - ENet
 # - Game Server
 # - Backend
 # - Database
-# - Networking
 # - Snapshots
 #
-# NO deben reemplazarse por los valores numéricos de enums.
+# Nunca utilizar ordinales numéricos como identidad
+# persistente o de red.
 # =========================================================
 
 const INVALID_SLOT_ID: StringName = &""
@@ -35,9 +36,9 @@ const GLOVES: StringName = &"gloves"
 const BOOTS: StringName = &"boots"
 
 
-const WEAPON_LEFT: StringName = &"weapon_left"
+const MAIN_HAND: StringName = &"main_hand"
 
-const WEAPON_RIGHT: StringName = &"weapon_right"
+const OFF_HAND: StringName = &"off_hand"
 
 
 const WINGS: StringName = &"wings"
@@ -51,7 +52,7 @@ const RING_RIGHT: StringName = &"ring_right"
 
 
 # =========================================================
-# TODOS LOS SLOTS
+# SLOTS EXISTENTES
 # =========================================================
 
 const SLOT_IDS: Array[StringName] = [
@@ -61,8 +62,8 @@ const SLOT_IDS: Array[StringName] = [
 	GLOVES,
 	BOOTS,
 
-	WEAPON_LEFT,
-	WEAPON_RIGHT,
+	MAIN_HAND,
+	OFF_HAND,
 
 	WINGS,
 	PENDANT,
@@ -73,79 +74,118 @@ const SLOT_IDS: Array[StringName] = [
 
 
 # =========================================================
-# TIPO DE EQUIPMENT ACEPTADO
+# PRIORIDAD DE AUTO-EQUIP
 # =========================================================
 #
-# Esta tabla describe una propiedad DEL SLOT.
+# Es solamente prioridad de búsqueda.
 #
-# No describe todavía:
-#
-# - clase permitida
-# - nivel mínimo
-# - stats requeridas
-# - arma de dos manos
-# - dual wield
-# - restricciones especiales
-#
-# Esas reglas tendrán sus propias capas cuando existan.
+# No define si el item realmente puede equiparse ahí.
 # =========================================================
 
-const REQUIRED_EQUIPMENT_TYPE_BY_SLOT_ID: Dictionary = {
-	HEAD:
+const AUTO_EQUIP_PRIORITY: Array[StringName] = [
+	HEAD,
+	CHEST,
+	PANTS,
+	GLOVES,
+	BOOTS,
+
+	MAIN_HAND,
+	OFF_HAND,
+
+	WINGS,
+	PENDANT,
+
+	RING_LEFT,
+	RING_RIGHT,
+]
+
+
+# =========================================================
+# TIPOS ACEPTADOS
+# =========================================================
+#
+# Por ahora MAIN_HAND y OFF_HAND aceptan WEAPON.
+#
+# En B1R2 agregaremos semántica de:
+#
+# - one hand
+# - two hand
+# - main hand only
+# - off hand only
+# - shield
+#
+# sin cambiar estos IDs.
+# =========================================================
+
+const ALLOWED_EQUIPMENT_TYPES_BY_SLOT_ID: Dictionary = {
+	HEAD: [
 		ItemDefinition.EquipmentType.HEAD,
+	],
 
-	CHEST:
+	CHEST: [
 		ItemDefinition.EquipmentType.CHEST,
+	],
 
-	PANTS:
+	PANTS: [
 		ItemDefinition.EquipmentType.PANTS,
+	],
 
-	GLOVES:
+	GLOVES: [
 		ItemDefinition.EquipmentType.GLOVES,
+	],
 
-	BOOTS:
+	BOOTS: [
 		ItemDefinition.EquipmentType.BOOTS,
+	],
 
-	WEAPON_LEFT:
+	MAIN_HAND: [
 		ItemDefinition.EquipmentType.WEAPON,
+	],
 
-	WEAPON_RIGHT:
+	OFF_HAND: [
 		ItemDefinition.EquipmentType.WEAPON,
+	],
 
-	WINGS:
+	WINGS: [
 		ItemDefinition.EquipmentType.WINGS,
+	],
 
-	PENDANT:
+	PENDANT: [
 		ItemDefinition.EquipmentType.PENDANT,
+	],
 
-	RING_LEFT:
+	RING_LEFT: [
 		ItemDefinition.EquipmentType.RING,
+	],
 
-	RING_RIGHT:
+	RING_RIGHT: [
 		ItemDefinition.EquipmentType.RING,
+	],
 }
 
 
 # =========================================================
-# NORMALIZAR ID
+# NORMALIZACIÓN
 # =========================================================
 
 static func normalize_slot_id(
-	slot_id: String
+	slot_id: Variant
 ) -> StringName:
 	return StringName(
-		slot_id
+		String(
+			slot_id
+		)
 		.strip_edges()
 		.to_lower()
 	)
 
 
 # =========================================================
-# VALIDAR ID
+# VALIDACIÓN
 # =========================================================
 
 static func is_valid_slot_id(
-	slot_id: String
+	slot_id: Variant
 ) -> bool:
 	var normalized := (
 		normalize_slot_id(
@@ -158,18 +198,18 @@ static func is_valid_slot_id(
 		return false
 
 
-	return REQUIRED_EQUIPMENT_TYPE_BY_SLOT_ID.has(
+	return ALLOWED_EQUIPMENT_TYPES_BY_SLOT_ID.has(
 		normalized
 	)
 
 
 # =========================================================
-# OBTENER TIPO REQUERIDO
+# SLOTS DE MANO
 # =========================================================
 
-static func get_required_equipment_type(
-	slot_id: String
-) -> ItemDefinition.EquipmentType:
+static func is_hand_slot(
+	slot_id: Variant
+) -> bool:
 	var normalized := (
 		normalize_slot_id(
 			slot_id
@@ -177,55 +217,84 @@ static func get_required_equipment_type(
 	)
 
 
-	if not REQUIRED_EQUIPMENT_TYPE_BY_SLOT_ID.has(
-		normalized
-	):
-		return ItemDefinition.EquipmentType.NONE
-
-
-	return int(
-		REQUIRED_EQUIPMENT_TYPE_BY_SLOT_ID[
-			normalized
-		]
-	) as ItemDefinition.EquipmentType
+	return (
+		normalized == MAIN_HAND
+		or
+		normalized == OFF_HAND
+	)
 
 
 # =========================================================
-# VALIDAR DEFINICIÓN CONTRA SLOT
+# TIPOS ACEPTADOS
 # =========================================================
 
-static func accepts_definition(
-	slot_id: String,
-	definition: ItemDefinition
-) -> bool:
-	if definition == null:
-		return false
-
-
-	if not definition.is_equipment():
-		return false
-
-
-	var required_type := (
-		get_required_equipment_type(
+static func get_allowed_equipment_types(
+	slot_id: Variant
+) -> Array[int]:
+	var normalized := (
+		normalize_slot_id(
 			slot_id
 		)
 	)
 
 
-	if required_type == ItemDefinition.EquipmentType.NONE:
-		return false
+	if not ALLOWED_EQUIPMENT_TYPES_BY_SLOT_ID.has(
+		normalized
+	):
+		return []
 
 
-	return (
-		definition.equipment_type
-		==
-		required_type
+	var value: Variant = (
+		ALLOWED_EQUIPMENT_TYPES_BY_SLOT_ID[
+			normalized
+		]
+	)
+
+
+	if typeof(value) != TYPE_ARRAY:
+		return []
+
+
+	var result: Array[int] = []
+
+
+	for equipment_type in value:
+		result.append(
+			int(
+				equipment_type
+			)
+		)
+
+
+	return result
+
+
+static func accepts_equipment_type(
+	slot_id: Variant,
+	equipment_type: int
+) -> bool:
+	var allowed_types := (
+		get_allowed_equipment_types(
+			slot_id
+		)
+	)
+
+
+	return allowed_types.has(
+		equipment_type
 	)
 
 
 # =========================================================
-# OBTENER TODOS LOS IDS
+# AUTO EQUIP
+# =========================================================
+
+static func get_auto_equip_priority() -> Array[StringName]:
+	return AUTO_EQUIP_PRIORITY.duplicate()
+
+
+# =========================================================
+# TODOS LOS IDS
 # =========================================================
 
 static func get_slot_ids() -> Array[StringName]:
@@ -233,16 +302,10 @@ static func get_slot_ids() -> Array[StringName]:
 
 
 # =========================================================
-# SELF-VALIDATION
-# =========================================================
-#
-# Esto valida invariantes estructurales del contrato.
-#
-# Si alguien agrega un slot nuevo en SLOT_IDS y olvida
-# agregar su metadata, queremos descubrirlo inmediatamente.
+# SELF VALIDATION
 # =========================================================
 
-static func validate_contract() -> bool:
+static func validate_catalog() -> bool:
 	if SLOT_IDS.is_empty():
 		return false
 
@@ -266,27 +329,36 @@ static func validate_contract() -> bool:
 		] = true
 
 
-		if not REQUIRED_EQUIPMENT_TYPE_BY_SLOT_ID.has(
+		if not ALLOWED_EQUIPMENT_TYPES_BY_SLOT_ID.has(
 			slot_id
 		):
 			return false
 
 
-		var equipment_type := int(
-			REQUIRED_EQUIPMENT_TYPE_BY_SLOT_ID[
+		var allowed_types := (
+			get_allowed_equipment_types(
 				slot_id
-			]
+			)
 		)
 
 
-		if equipment_type == ItemDefinition.EquipmentType.NONE:
+		if allowed_types.is_empty():
 			return false
+
+
+		for equipment_type: int in allowed_types:
+			if (
+				equipment_type
+				==
+				ItemDefinition.EquipmentType.NONE
+			):
+				return false
 
 
 	if (
 		seen.size()
 		!=
-		REQUIRED_EQUIPMENT_TYPE_BY_SLOT_ID.size()
+		ALLOWED_EQUIPMENT_TYPES_BY_SLOT_ID.size()
 	):
 		return false
 

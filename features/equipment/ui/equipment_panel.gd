@@ -1,10 +1,12 @@
 class_name EquipmentPanel
 extends PanelContainer
 
+
 signal item_activated(
-	slot: EquipmentData.Slot,
+	slot_id: StringName,
 	item: ItemInstance
 )
+
 
 # =========================================================
 # MODELO
@@ -24,8 +26,8 @@ var equipment_data: EquipmentData = null
 	$ContentMargin/EquipmentLayout/GlovesSlot,
 	$ContentMargin/EquipmentLayout/BootsSlot,
 
-	$ContentMargin/EquipmentLayout/LeftWeaponSlot,
-	$ContentMargin/EquipmentLayout/RightWeaponSlot,
+	$ContentMargin/EquipmentLayout/MainHandSlot,
+	$ContentMargin/EquipmentLayout/OffHandSlot,
 
 	$ContentMargin/EquipmentLayout/WingsSlot,
 	$ContentMargin/EquipmentLayout/PendantSlot,
@@ -79,11 +81,12 @@ func _bind_slots() -> void:
 				_on_slot_item_activated
 			)
 
+
 func _on_slot_item_activated(
-	slot: EquipmentData.Slot,
+	slot_id: StringName,
 	item: ItemInstance
 ) -> void:
 	item_activated.emit(
-		slot,
+		slot_id,
 		item
 	)

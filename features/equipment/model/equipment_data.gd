@@ -3,43 +3,16 @@ extends RefCounted
 
 
 # =========================================================
-# SLOTS FÍSICOS DEL PERSONAJE
-# =========================================================
-
-enum Slot {
-	HEAD,
-	CHEST,
-	PANTS,
-	GLOVES,
-	BOOTS,
-
-	WEAPON_LEFT,
-	WEAPON_RIGHT,
-
-	WINGS,
-	PENDANT,
-
-	RING_LEFT,
-	RING_RIGHT
-}
-
-# =========================================================
-# SLOT INVÁLIDO
-# =========================================================
-
-const INVALID_SLOT: int = -1
-
-# =========================================================
 # SEÑALES
 # =========================================================
 
 signal item_equipped(
-	slot: Slot,
+	slot_id: StringName,
 	item: ItemInstance
 )
 
 signal item_unequipped(
-	slot: Slot,
+	slot_id: StringName,
 	item: ItemInstance
 )
 
@@ -47,15 +20,31 @@ signal item_unequipped(
 # =========================================================
 # ESTADO
 # =========================================================
-
-# Slot -> ItemInstance
+#
+# StringName -> ItemInstance
 #
 # Ejemplo:
 #
-# HEAD         -> Leather Helmet
-# WEAPON_LEFT  -> Bronze Sword
-#
+# &"head"      -> Leather Helmet
+# &"main_hand" -> Bronze Sword
+# =========================================================
+
 var _equipped: Dictionary = {}
+
+
+# =========================================================
+# CONSTRUCTOR
+# =========================================================
+
+func _init() -> void:
+	assert(
+		EquipmentSlotCatalog.validate_catalog(),
+		(
+			"EquipmentData | "
+			+
+			"Equipment Slot Catalog inválido."
+		)
+	)
 
 
 # =========================================================
@@ -63,23 +52,42 @@ var _equipped: Dictionary = {}
 # =========================================================
 
 func get_item(
-	slot: Slot
+	slot_id: Variant
 ) -> ItemInstance:
-	var item = _equipped.get(
-		slot,
-		null
+	var normalized := (
+		EquipmentSlotCatalog.normalize_slot_id(
+			slot_id
+		)
 	)
+
+
+	if not EquipmentSlotCatalog.is_valid_slot_id(
+		normalized
+	):
+		return null
+
+
+	var item: Variant = (
+		_equipped.get(
+			normalized,
+			null
+		)
+	)
+
 
 	if item is ItemInstance:
 		return item as ItemInstance
+
 
 	return null
 
 
 func is_slot_empty(
-	slot: Slot
+	slot_id: Variant
 ) -> bool:
-	return get_item(slot) == null
+	return get_item(
+		slot_id
+	) == null
 
 
 func contains_item(
@@ -88,58 +96,44 @@ func contains_item(
 	if item == null:
 		return false
 
+
 	for equipped_item in _equipped.values():
 		if equipped_item == item:
 			return true
+
 
 	return false
 
 
 func get_slot_of_item(
 	item: ItemInstance
-) -> int:
+) -> StringName:
 	if item == null:
-		return -1
-
-	for key in _equipped.keys():
-		if _equipped[key] == item:
-			return int(key)
-
-	return -1
+		return EquipmentSlotCatalog.INVALID_SLOT_ID
 
 
-# =========================================================
-# TIPO ACEPTADO POR CADA SLOT
-# =========================================================
-
-func get_required_equipment_type(
-	slot: Slot
-) -> ItemDefinition.EquipmentType:
-	var slot_id := (
-		get_slot_id(
-			slot
-		)
-	)
+	for slot_key in _equipped.keys():
+		if _equipped[
+			slot_key
+		] == item:
+			return EquipmentSlotCatalog.normalize_slot_id(
+				slot_key
+			)
 
 
-	if (
-		slot_id
-		==
-		EquipmentSlotContract.INVALID_SLOT_ID
-	):
-		return ItemDefinition.EquipmentType.NONE
+	return EquipmentSlotCatalog.INVALID_SLOT_ID
 
 
-	return EquipmentSlotContract.get_required_equipment_type(
-		String(slot_id)
-	)
+func get_equipped_items() -> Dictionary:
+	return _equipped.duplicate()
+
 
 # =========================================================
 # VALIDACIÓN
 # =========================================================
 
 func can_equip(
-	slot: Slot,
+	slot_id: Variant,
 	item: ItemInstance
 ) -> bool:
 	if (
@@ -150,7 +144,22 @@ func can_equip(
 		return false
 
 
-	if not is_slot_empty(slot):
+	var normalized := (
+		EquipmentSlotCatalog.normalize_slot_id(
+			slot_id
+		)
+	)
+
+
+	if not EquipmentSlotCatalog.is_valid_slot_id(
+		normalized
+	):
+		return false
+
+
+	if not is_slot_empty(
+		normalized
+	):
 		return false
 
 
@@ -161,17 +170,9 @@ func can_equip(
 		return false
 
 
-	var required_type := (
-		get_required_equipment_type(
-			slot
-		)
-	)
-
-
-	return (
+	return EquipmentSlotCatalog.accepts_equipment_type(
+		normalized,
 		definition.equipment_type
-		==
-		required_type
 	)
 
 
@@ -180,21 +181,30 @@ func can_equip(
 # =========================================================
 
 func equip_item(
-	slot: Slot,
+	slot_id: Variant,
 	item: ItemInstance
 ) -> bool:
+	var normalized := (
+		EquipmentSlotCatalog.normalize_slot_id(
+			slot_id
+		)
+	)
+
+
 	if not can_equip(
-		slot,
+		normalized,
 		item
 	):
 		return false
 
 
-	_equipped[slot] = item
+	_equipped[
+		normalized
+	] = item
 
 
 	item_equipped.emit(
-		slot,
+		normalized,
 		item
 	)
 
@@ -207,10 +217,23 @@ func equip_item(
 # =========================================================
 
 func unequip_item(
-	slot: Slot
+	slot_id: Variant
 ) -> ItemInstance:
+	var normalized := (
+		EquipmentSlotCatalog.normalize_slot_id(
+			slot_id
+		)
+	)
+
+
+	if not EquipmentSlotCatalog.is_valid_slot_id(
+		normalized
+	):
+		return null
+
+
 	var item := get_item(
-		slot
+		normalized
 	)
 
 
@@ -219,12 +242,12 @@ func unequip_item(
 
 
 	_equipped.erase(
-		slot
+		normalized
 	)
 
 
 	item_unequipped.emit(
-		slot,
+		normalized,
 		item
 	)
 
@@ -233,13 +256,21 @@ func unequip_item(
 
 
 # =========================================================
-# INVENTARIO -> EQUIPAMIENTO
+# INVENTORY -> EQUIPMENT
+# =========================================================
+#
+# TRANSITORIO:
+#
+# Esta operación sigue existiendo para el modo local.
+#
+# Cuando F15-B llegue al flujo autoritativo completo,
+# Inventory -> Equipment dejará de mutarse localmente.
 # =========================================================
 
 func equip_from_inventory(
 	source_inventory: InventoryData,
 	item: ItemInstance,
-	slot: Slot
+	slot_id: Variant
 ) -> bool:
 	if source_inventory == null:
 		return false
@@ -249,16 +280,21 @@ func equip_from_inventory(
 		return false
 
 
-	# El item debe pertenecer al inventario origen.
 	if not source_inventory.items.has(
 		item
 	):
 		return false
 
 
-	# Primero validamos TODO antes de modificar nada.
+	var normalized := (
+		EquipmentSlotCatalog.normalize_slot_id(
+			slot_id
+		)
+	)
+
+
 	if not can_equip(
-		slot,
+		normalized,
 		item
 	):
 		return false
@@ -269,36 +305,25 @@ func equip_from_inventory(
 	)
 
 
-	# -----------------------------------------------------
-	# Lo quitamos del inventario.
-	# -----------------------------------------------------
-
 	if not source_inventory.remove_item(
 		item
 	):
 		return false
 
 
-	# -----------------------------------------------------
-	# Lo equipamos.
-	# -----------------------------------------------------
-
 	if equip_item(
-		slot,
+		normalized,
 		item
 	):
 		return true
 
 
 	# -----------------------------------------------------
-	# Seguridad:
-	#
-	# Si por algún motivo extraordinario fallara el equip
-	# después de quitarlo del inventario, intentamos
-	# restaurarlo.
+	# ROLLBACK
 	# -----------------------------------------------------
 
 	item.grid_position = old_position
+
 
 	source_inventory.add_item(
 		item
@@ -307,32 +332,48 @@ func equip_from_inventory(
 
 	return false
 
+
 # =========================================================
-# EQUIPAMIENTO -> INVENTARIO
+# EQUIPMENT -> INVENTORY
+# =========================================================
+#
+# TRANSITORIO:
+#
+# Igual que equip_from_inventory(), desaparecerá del flujo
+# autoritativo cuando el servidor sea quien confirme el
+# transfer.
 # =========================================================
 
 func unequip_to_inventory(
 	target_inventory: InventoryData,
-	slot: Slot,
+	slot_id: Variant,
 	new_position: Vector2i
 ) -> bool:
 	if target_inventory == null:
 		return false
 
 
+	var normalized := (
+		EquipmentSlotCatalog.normalize_slot_id(
+			slot_id
+		)
+	)
+
+
+	if not EquipmentSlotCatalog.is_valid_slot_id(
+		normalized
+	):
+		return false
+
+
 	var item := get_item(
-		slot
+		normalized
 	)
 
 
 	if item == null:
 		return false
 
-
-	# -----------------------------------------------------
-	# ANTES de modificar nada comprobamos que el item
-	# entre en el inventario destino.
-	# -----------------------------------------------------
 
 	if not target_inventory.can_place_item(
 		item,
@@ -347,307 +388,75 @@ func unequip_to_inventory(
 
 
 	# -----------------------------------------------------
-	# Quitamos lógicamente del equipamiento.
-	#
-	# No llamamos todavía a unequip_item() porque queremos
-	# que la operación sea lo más atómica posible.
+	# Quitamos temporalmente del Equipment sin emitir
+	# todavía la señal.
 	# -----------------------------------------------------
 
 	_equipped.erase(
-		slot
+		normalized
 	)
 
-
-	# -----------------------------------------------------
-	# Nueva posición dentro del inventario.
-	# -----------------------------------------------------
 
 	item.grid_position = (
 		new_position
 	)
 
 
-	# -----------------------------------------------------
-	# Intentamos agregarlo al inventario.
-	# -----------------------------------------------------
-
 	if not target_inventory.add_item(
 		item
 	):
 		# -------------------------------------------------
 		# ROLLBACK
-		#
-		# Si algo fallara inesperadamente, restauramos
-		# el estado anterior.
 		# -------------------------------------------------
 
 		item.grid_position = (
 			old_position
 		)
 
-		_equipped[slot] = item
+
+		_equipped[
+			normalized
+		] = item
+
 
 		return false
 
 
-	# -----------------------------------------------------
-	# Ahora sí avisamos que dejó el equipamiento.
-	#
-	# InventoryData.add_item() ya emitió item_added,
-	# por lo que InventoryGrid creará automáticamente
-	# su InventoryItemView.
-	# -----------------------------------------------------
-
 	item_unequipped.emit(
-		slot,
+		normalized,
 		item
 	)
 
 
 	return true
-	
+
+
 # =========================================================
-# BUSCAR SLOT COMPATIBLE AUTOMÁTICAMENTE
+# AUTO EQUIP
 # =========================================================
 
 func find_first_compatible_empty_slot(
 	item: ItemInstance
-) -> int:
+) -> StringName:
 	if (
 		item == null
 		or
 		not item.is_valid()
 	):
-		return -1
+		return EquipmentSlotCatalog.INVALID_SLOT_ID
 
 
-	# -----------------------------------------------------
-	# Prioridad automática.
-	#
-	# Para WEAPON:
-	# LEFT primero, luego RIGHT.
-	#
-	# Para RING:
-	# LEFT primero, luego RIGHT.
-	#
-	# Más adelante podemos cambiar esta prioridad.
-	# -----------------------------------------------------
-
-	var priority := [
-		Slot.HEAD,
-		Slot.CHEST,
-		Slot.PANTS,
-		Slot.GLOVES,
-		Slot.BOOTS,
-
-		Slot.WEAPON_LEFT,
-		Slot.WEAPON_RIGHT,
-
-		Slot.WINGS,
-		Slot.PENDANT,
-
-		Slot.RING_LEFT,
-		Slot.RING_RIGHT
-	]
+	var priority := (
+		EquipmentSlotCatalog.get_auto_equip_priority()
+	)
 
 
-	for slot in priority:
+	for slot_id: StringName in priority:
 		if can_equip(
-			slot,
+			slot_id,
 			item
 		):
-			return slot
+			return slot_id
 
 
-	return -1
-
-# =========================================================
-# RUNTIME SLOT -> STABLE SLOT ID
-# =========================================================
-
-static func get_slot_id(
-	slot: int
-) -> StringName:
-	match slot:
-		Slot.HEAD:
-			return EquipmentSlotContract.HEAD
-
-		Slot.CHEST:
-			return EquipmentSlotContract.CHEST
-
-		Slot.PANTS:
-			return EquipmentSlotContract.PANTS
-
-		Slot.GLOVES:
-			return EquipmentSlotContract.GLOVES
-
-		Slot.BOOTS:
-			return EquipmentSlotContract.BOOTS
-
-		Slot.WEAPON_LEFT:
-			return EquipmentSlotContract.WEAPON_LEFT
-
-		Slot.WEAPON_RIGHT:
-			return EquipmentSlotContract.WEAPON_RIGHT
-
-		Slot.WINGS:
-			return EquipmentSlotContract.WINGS
-
-		Slot.PENDANT:
-			return EquipmentSlotContract.PENDANT
-
-		Slot.RING_LEFT:
-			return EquipmentSlotContract.RING_LEFT
-
-		Slot.RING_RIGHT:
-			return EquipmentSlotContract.RING_RIGHT
-
-
-	return EquipmentSlotContract.INVALID_SLOT_ID
-
-
-# =========================================================
-# STABLE SLOT ID -> RUNTIME SLOT
-# =========================================================
-
-static func get_slot_from_id(
-	slot_id: String
-) -> int:
-	var normalized := (
-		EquipmentSlotContract.normalize_slot_id(
-			slot_id
-		)
-	)
-
-
-	match normalized:
-		EquipmentSlotContract.HEAD:
-			return Slot.HEAD
-
-		EquipmentSlotContract.CHEST:
-			return Slot.CHEST
-
-		EquipmentSlotContract.PANTS:
-			return Slot.PANTS
-
-		EquipmentSlotContract.GLOVES:
-			return Slot.GLOVES
-
-		EquipmentSlotContract.BOOTS:
-			return Slot.BOOTS
-
-		EquipmentSlotContract.WEAPON_LEFT:
-			return Slot.WEAPON_LEFT
-
-		EquipmentSlotContract.WEAPON_RIGHT:
-			return Slot.WEAPON_RIGHT
-
-		EquipmentSlotContract.WINGS:
-			return Slot.WINGS
-
-		EquipmentSlotContract.PENDANT:
-			return Slot.PENDANT
-
-		EquipmentSlotContract.RING_LEFT:
-			return Slot.RING_LEFT
-
-		EquipmentSlotContract.RING_RIGHT:
-			return Slot.RING_RIGHT
-
-
-	return INVALID_SLOT
-
-
-# =========================================================
-# VALIDAR RUNTIME SLOT
-# =========================================================
-
-static func is_valid_slot(
-	slot: int
-) -> bool:
-	return (
-		get_slot_id(
-			slot
-		)
-		!=
-		EquipmentSlotContract.INVALID_SLOT_ID
-	)
-
-
-# =========================================================
-# VALIDAR MAPPING COMPLETO
-# =========================================================
-
-static func validate_slot_contract_mapping() -> bool:
-	if not EquipmentSlotContract.validate_contract():
-		return false
-
-
-	var runtime_slots: Array[int] = [
-		Slot.HEAD,
-		Slot.CHEST,
-		Slot.PANTS,
-		Slot.GLOVES,
-		Slot.BOOTS,
-
-		Slot.WEAPON_LEFT,
-		Slot.WEAPON_RIGHT,
-
-		Slot.WINGS,
-		Slot.PENDANT,
-
-		Slot.RING_LEFT,
-		Slot.RING_RIGHT,
-	]
-
-
-	if (
-		runtime_slots.size()
-		!=
-		EquipmentSlotContract.SLOT_IDS.size()
-	):
-		return false
-
-
-	for runtime_slot: int in runtime_slots:
-		var slot_id := (
-			get_slot_id(
-				runtime_slot
-			)
-		)
-
-
-		if (
-			slot_id
-			==
-			EquipmentSlotContract.INVALID_SLOT_ID
-		):
-			return false
-
-
-		var restored_slot := (
-			get_slot_from_id(
-				String(slot_id)
-			)
-		)
-
-
-		if restored_slot != runtime_slot:
-			return false
-
-
-	return true
-
-# =========================================================
-# CONSTRUCTOR
-# =========================================================
-
-func _init() -> void:
-	assert(
-		validate_slot_contract_mapping(),
-		(
-			"EquipmentData | "
-			+
-			"Equipment Slot Contract inválido."
-		)
-	)
+	return EquipmentSlotCatalog.INVALID_SLOT_ID

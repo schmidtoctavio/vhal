@@ -6,7 +6,7 @@ const ITEM_TOOLTIP_SCENE := preload(
 )
 
 signal item_activated(
-	slot: EquipmentData.Slot,
+	slot_id: StringName,
 	item: ItemInstance
 )
 
@@ -16,8 +16,9 @@ signal item_activated(
 
 @export_group("Equipment")
 
-@export var slot_type: EquipmentData.Slot = \
-	EquipmentData.Slot.HEAD
+@export var slot_id: StringName = (
+	EquipmentSlotCatalog.HEAD
+)
 
 
 @export_group("Visual")
@@ -52,17 +53,26 @@ var equipment_data: EquipmentData = null
 # =========================================================
 
 func _ready() -> void:
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	slot_id = (
+		EquipmentSlotCatalog.normalize_slot_id(
+			slot_id
+		)
+	)
 
-	if not mouse_exited.is_connected(
-		_reset_drop_feedback
+
+	if not EquipmentSlotCatalog.is_valid_slot_id(
+		slot_id
 	):
-		mouse_exited.connect(
-			_reset_drop_feedback
+		push_error(
+			(
+				"EquipmentSlot | slot_id inválido: "
+				+
+				String(slot_id)
+			)
 		)
 
-	_refresh()
 
+	mouse_filter = Control.MOUSE_FILTER_STOP
 
 func _notification(
 	what: int
@@ -145,21 +155,23 @@ func _disconnect_equipment_data() -> void:
 # =========================================================
 
 func _on_item_equipped(
-	slot: EquipmentData.Slot,
+	changed_slot_id: StringName,
 	_item: ItemInstance
 ) -> void:
-	if slot != slot_type:
+	if changed_slot_id != slot_id:
 		return
+
 
 	_refresh()
 
 
 func _on_item_unequipped(
-	slot: EquipmentData.Slot,
+	changed_slot_id: StringName,
 	_item: ItemInstance
 ) -> void:
-	if slot != slot_type:
+	if changed_slot_id != slot_id:
 		return
+
 
 	_refresh()
 
@@ -173,21 +185,13 @@ func get_item() -> ItemInstance:
 		return null
 
 	return equipment_data.get_item(
-		slot_type
+		slot_id
 	)
 
 
 func has_item() -> bool:
 	return get_item() != null
 
-# =========================================================
-# ID ESTABLE DEL SLOT
-# =========================================================
-
-func get_slot_id() -> StringName:
-	return EquipmentData.get_slot_id(
-		slot_type
-	)
 
 # =========================================================
 # VISUAL
@@ -317,6 +321,13 @@ func _can_drop_data(
 		return false
 
 
+	if not EquipmentSlotCatalog.is_valid_slot_id(
+		slot_id
+	):
+		_reset_drop_feedback()
+		return false
+
+
 	if not _is_inventory_drag_data(
 		data
 	):
@@ -349,6 +360,13 @@ func _can_drop_data(
 		_reset_drop_feedback()
 		return false
 
+
+	# -----------------------------------------------------
+	# Mientras Equipment todavía no tenga su protocolo
+	# autoritativo, no permitimos mutación local cuando
+	# Inventory está trabajando en authoritative mode.
+	# -----------------------------------------------------
+
 	if source_grid.authoritative_move_only:
 		_set_drop_feedback(
 			false
@@ -356,33 +374,12 @@ func _can_drop_data(
 
 		return false
 
-	var valid := equipment_data.can_equip(
-		slot_type,
-		item
-	)
 
-
-	# =====================================================
-	# DEBUG TEMPORAL
-	# =====================================================
-
-	var required_type := (
-		equipment_data.get_required_equipment_type(
-			slot_type
+	var valid := (
+		equipment_data.can_equip(
+			slot_id,
+			item
 		)
-	)
-
-
-	print(
-		"EQUIPMENT DROP | ",
-		"slot_type=", slot_type,
-		" | item=", item.definition.display_name,
-		" | item_type=", item.definition.item_type,
-		" | equipment_type=", item.definition.equipment_type,
-		" | required_type=", required_type,
-		" | is_equipment=", item.definition.is_equipment(),
-		" | slot_empty=", equipment_data.is_slot_empty(slot_type),
-		" | VALID=", valid
 	)
 
 
@@ -392,6 +389,8 @@ func _can_drop_data(
 
 
 	return valid
+
+
 
 
 # =========================================================
@@ -446,7 +445,7 @@ func _drop_data(
 		equipment_data.equip_from_inventory(
 			source_grid.inventory_data,
 			item,
-			slot_type
+			slot_id
 		)
 	)
 
@@ -456,7 +455,7 @@ func _drop_data(
 			"No se pudo equipar ",
 			item.definition.display_name,
 			" en slot ",
-			slot_type
+			slot_id
 		)
 
 # =========================================================
@@ -546,7 +545,7 @@ func _get_drag_data(
 		"kind": &"equipment_item",
 		"item": item,
 		"source_equipment_data": equipment_data,
-		"source_slot": slot_type,
+		"source_slot_id": slot_id,
 		"grab_cell_offset": Vector2i.ZERO
 	}
 
@@ -591,7 +590,7 @@ func _gui_input(
 
 
 	item_activated.emit(
-		slot_type,
+		slot_id,
 		item
 	)
 
