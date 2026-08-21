@@ -5,22 +5,6 @@ extends RefCounted
 # =========================================================
 # IDENTIDAD ESTABLE
 # =========================================================
-#
-# Estos IDs son la identidad canónica de los slots.
-#
-# Deben poder utilizarse sin traducción en:
-#
-# - Runtime
-# - UI
-# - ENet
-# - Game Server
-# - Backend
-# - Database
-# - Snapshots
-#
-# Nunca utilizar ordinales numéricos como identidad
-# persistente o de red.
-# =========================================================
 
 const INVALID_SLOT_ID: StringName = &""
 
@@ -52,7 +36,7 @@ const RING_RIGHT: StringName = &"ring_right"
 
 
 # =========================================================
-# SLOTS EXISTENTES
+# SLOTS
 # =========================================================
 
 const SLOT_IDS: Array[StringName] = [
@@ -74,12 +58,7 @@ const SLOT_IDS: Array[StringName] = [
 
 
 # =========================================================
-# PRIORIDAD DE AUTO-EQUIP
-# =========================================================
-#
-# Es solamente prioridad de búsqueda.
-#
-# No define si el item realmente puede equiparse ahí.
+# AUTO EQUIP
 # =========================================================
 
 const AUTO_EQUIP_PRIORITY: Array[StringName] = [
@@ -101,65 +80,58 @@ const AUTO_EQUIP_PRIORITY: Array[StringName] = [
 
 
 # =========================================================
-# TIPOS ACEPTADOS
+# CATEGORÍAS ESTRUCTURALMENTE ACEPTADAS
 # =========================================================
 #
-# Por ahora MAIN_HAND y OFF_HAND aceptan WEAPON.
+# Esto sólo expresa compatibilidad SLOT <-> CATEGORY.
 #
-# En B1R2 agregaremos semántica de:
-#
-# - one hand
-# - two hand
-# - main hand only
-# - off hand only
-# - shield
-#
-# sin cambiar estos IDs.
+# Las reglas de manos viven en EquipmentRules.
 # =========================================================
 
-const ALLOWED_EQUIPMENT_TYPES_BY_SLOT_ID: Dictionary = {
+const ALLOWED_CATEGORIES_BY_SLOT_ID: Dictionary = {
 	HEAD: [
-		ItemDefinition.EquipmentType.HEAD,
+		EquipmentCategoryCatalog.HEAD,
 	],
 
 	CHEST: [
-		ItemDefinition.EquipmentType.CHEST,
+		EquipmentCategoryCatalog.CHEST,
 	],
 
 	PANTS: [
-		ItemDefinition.EquipmentType.PANTS,
+		EquipmentCategoryCatalog.PANTS,
 	],
 
 	GLOVES: [
-		ItemDefinition.EquipmentType.GLOVES,
+		EquipmentCategoryCatalog.GLOVES,
 	],
 
 	BOOTS: [
-		ItemDefinition.EquipmentType.BOOTS,
+		EquipmentCategoryCatalog.BOOTS,
 	],
 
 	MAIN_HAND: [
-		ItemDefinition.EquipmentType.WEAPON,
+		EquipmentCategoryCatalog.WEAPON,
 	],
 
 	OFF_HAND: [
-		ItemDefinition.EquipmentType.WEAPON,
+		EquipmentCategoryCatalog.WEAPON,
+		EquipmentCategoryCatalog.SHIELD,
 	],
 
 	WINGS: [
-		ItemDefinition.EquipmentType.WINGS,
+		EquipmentCategoryCatalog.WINGS,
 	],
 
 	PENDANT: [
-		ItemDefinition.EquipmentType.PENDANT,
+		EquipmentCategoryCatalog.PENDANT,
 	],
 
 	RING_LEFT: [
-		ItemDefinition.EquipmentType.RING,
+		EquipmentCategoryCatalog.RING,
 	],
 
 	RING_RIGHT: [
-		ItemDefinition.EquipmentType.RING,
+		EquipmentCategoryCatalog.RING,
 	],
 }
 
@@ -198,13 +170,13 @@ static func is_valid_slot_id(
 		return false
 
 
-	return ALLOWED_EQUIPMENT_TYPES_BY_SLOT_ID.has(
+	return ALLOWED_CATEGORIES_BY_SLOT_ID.has(
 		normalized
 	)
 
 
 # =========================================================
-# SLOTS DE MANO
+# MANOS
 # =========================================================
 
 static func is_hand_slot(
@@ -225,12 +197,12 @@ static func is_hand_slot(
 
 
 # =========================================================
-# TIPOS ACEPTADOS
+# CATEGORÍAS
 # =========================================================
 
-static func get_allowed_equipment_types(
+static func get_allowed_categories(
 	slot_id: Variant
-) -> Array[int]:
+) -> Array[StringName]:
 	var normalized := (
 		normalize_slot_id(
 			slot_id
@@ -238,14 +210,14 @@ static func get_allowed_equipment_types(
 	)
 
 
-	if not ALLOWED_EQUIPMENT_TYPES_BY_SLOT_ID.has(
+	if not ALLOWED_CATEGORIES_BY_SLOT_ID.has(
 		normalized
 	):
 		return []
 
 
 	var value: Variant = (
-		ALLOWED_EQUIPMENT_TYPES_BY_SLOT_ID[
+		ALLOWED_CATEGORIES_BY_SLOT_ID[
 			normalized
 		]
 	)
@@ -255,13 +227,13 @@ static func get_allowed_equipment_types(
 		return []
 
 
-	var result: Array[int] = []
+	var result: Array[StringName] = []
 
 
-	for equipment_type in value:
+	for category_value: Variant in value:
 		result.append(
-			int(
-				equipment_type
+			EquipmentCategoryCatalog.normalize_category_id(
+				category_value
 			)
 		)
 
@@ -269,19 +241,21 @@ static func get_allowed_equipment_types(
 	return result
 
 
-static func accepts_equipment_type(
+static func accepts_category(
 	slot_id: Variant,
-	equipment_type: int
+	category_id: Variant
 ) -> bool:
-	var allowed_types := (
-		get_allowed_equipment_types(
-			slot_id
+	var normalized_category := (
+		EquipmentCategoryCatalog.normalize_category_id(
+			category_id
 		)
 	)
 
 
-	return allowed_types.has(
-		equipment_type
+	return get_allowed_categories(
+		slot_id
+	).has(
+		normalized_category
 	)
 
 
@@ -310,6 +284,10 @@ static func validate_catalog() -> bool:
 		return false
 
 
+	if not EquipmentCategoryCatalog.validate_catalog():
+		return false
+
+
 	var seen: Dictionary = {}
 
 
@@ -329,28 +307,26 @@ static func validate_catalog() -> bool:
 		] = true
 
 
-		if not ALLOWED_EQUIPMENT_TYPES_BY_SLOT_ID.has(
+		if not ALLOWED_CATEGORIES_BY_SLOT_ID.has(
 			slot_id
 		):
 			return false
 
 
-		var allowed_types := (
-			get_allowed_equipment_types(
+		var allowed_categories := (
+			get_allowed_categories(
 				slot_id
 			)
 		)
 
 
-		if allowed_types.is_empty():
+		if allowed_categories.is_empty():
 			return false
 
 
-		for equipment_type: int in allowed_types:
-			if (
-				equipment_type
-				==
-				ItemDefinition.EquipmentType.NONE
+		for category_id: StringName in allowed_categories:
+			if not EquipmentCategoryCatalog.is_equipment_category(
+				category_id
 			):
 				return false
 
@@ -358,7 +334,7 @@ static func validate_catalog() -> bool:
 	if (
 		seen.size()
 		!=
-		ALLOWED_EQUIPMENT_TYPES_BY_SLOT_ID.size()
+		ALLOWED_CATEGORIES_BY_SLOT_ID.size()
 	):
 		return false
 

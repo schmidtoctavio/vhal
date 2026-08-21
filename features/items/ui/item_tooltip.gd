@@ -151,7 +151,10 @@ func _refresh() -> void:
 
 	else:
 		description_label.visible = true
-		description_label.text = description
+
+		description_label.text = (
+			description
+		)
 
 
 	# -----------------------------------------------------
@@ -175,55 +178,123 @@ func _fit_to_content() -> void:
 func _get_type_text(
 	definition: ItemDefinition
 ) -> String:
+	if definition == null:
+		return "Objeto"
+
+
 	match definition.item_type:
 
 		ItemDefinition.ItemType.CONSUMABLE:
 			return "Consumible"
 
+
 		ItemDefinition.ItemType.EQUIPMENT:
 			return _get_equipment_type_text(
-				definition.equipment_type
+				definition
 			)
+
 
 		_:
 			return "Objeto"
 
 
 # =========================================================
-# TIPO DE EQUIPAMIENTO
+# EQUIPMENT
 # =========================================================
 
 func _get_equipment_type_text(
-	equipment_type: ItemDefinition.EquipmentType
+	definition: ItemDefinition
 ) -> String:
-	match equipment_type:
+	if definition == null:
+		return "Equipamiento"
 
-		ItemDefinition.EquipmentType.HEAD:
+
+	var category_id := (
+		definition.get_equipment_category_id()
+	)
+
+
+	match category_id:
+
+		EquipmentCategoryCatalog.HEAD:
 			return "Equipamiento · Casco"
 
-		ItemDefinition.EquipmentType.CHEST:
+
+		EquipmentCategoryCatalog.CHEST:
 			return "Equipamiento · Pechera"
 
-		ItemDefinition.EquipmentType.PANTS:
+
+		EquipmentCategoryCatalog.PANTS:
 			return "Equipamiento · Pantalones"
 
-		ItemDefinition.EquipmentType.GLOVES:
+
+		EquipmentCategoryCatalog.GLOVES:
 			return "Equipamiento · Guantes"
 
-		ItemDefinition.EquipmentType.BOOTS:
+
+		EquipmentCategoryCatalog.BOOTS:
 			return "Equipamiento · Botas"
 
-		ItemDefinition.EquipmentType.WEAPON:
-			return "Equipamiento · Arma"
 
-		ItemDefinition.EquipmentType.WINGS:
+		EquipmentCategoryCatalog.WEAPON:
+			return _get_weapon_type_text(
+				definition
+			)
+
+
+		EquipmentCategoryCatalog.SHIELD:
+			return "Equipamiento · Escudo"
+
+
+		EquipmentCategoryCatalog.WINGS:
 			return "Equipamiento · Alas"
 
-		ItemDefinition.EquipmentType.PENDANT:
+
+		EquipmentCategoryCatalog.PENDANT:
 			return "Equipamiento · Pendiente"
 
-		ItemDefinition.EquipmentType.RING:
+
+		EquipmentCategoryCatalog.RING:
 			return "Equipamiento · Anillo"
+
 
 		_:
 			return "Equipamiento"
+
+
+# =========================================================
+# ARMA / MODO DE MANO
+# =========================================================
+
+func _get_weapon_type_text(
+	definition: ItemDefinition
+) -> String:
+	if definition == null:
+		return "Equipamiento · Arma"
+
+
+	var hand_mode_id := (
+		definition.get_hand_equip_mode_id()
+	)
+
+
+	match hand_mode_id:
+
+		HandEquipModeCatalog.ONE_HAND:
+			return "Equipamiento · Arma · Una mano"
+
+
+		HandEquipModeCatalog.TWO_HAND:
+			return "Equipamiento · Arma · Dos manos"
+
+
+		HandEquipModeCatalog.MAIN_HAND_ONLY:
+			return "Equipamiento · Arma · Mano principal"
+
+
+		HandEquipModeCatalog.OFF_HAND_ONLY:
+			return "Equipamiento · Arma · Mano secundaria"
+
+
+		_:
+			return "Equipamiento · Arma"

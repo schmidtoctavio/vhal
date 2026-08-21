@@ -38,14 +38,13 @@ var _equipped: Dictionary = {}
 
 func _init() -> void:
 	assert(
-		EquipmentSlotCatalog.validate_catalog(),
+		EquipmentRules.validate_contract(),
 		(
 			"EquipmentData | "
 			+
-			"Equipment Slot Catalog inválido."
+			"Equipment Domain Contract inválido."
 		)
 	)
-
 
 # =========================================================
 # CONSULTAS
@@ -136,43 +135,10 @@ func can_equip(
 	slot_id: Variant,
 	item: ItemInstance
 ) -> bool:
-	if (
-		item == null
-		or
-		not item.is_valid()
-	):
-		return false
-
-
-	var normalized := (
-		EquipmentSlotCatalog.normalize_slot_id(
-			slot_id
-		)
-	)
-
-
-	if not EquipmentSlotCatalog.is_valid_slot_id(
-		normalized
-	):
-		return false
-
-
-	if not is_slot_empty(
-		normalized
-	):
-		return false
-
-
-	var definition := item.definition
-
-
-	if not definition.is_equipment():
-		return false
-
-
-	return EquipmentSlotCatalog.accepts_equipment_type(
-		normalized,
-		definition.equipment_type
+	return EquipmentRules.can_equip(
+		_equipped,
+		item,
+		slot_id
 	)
 
 
@@ -460,3 +426,34 @@ func find_first_compatible_empty_slot(
 
 
 	return EquipmentSlotCatalog.INVALID_SLOT_ID
+
+func is_slot_reserved(
+	slot_id: Variant
+) -> bool:
+	return EquipmentRules.is_slot_reserved(
+		_equipped,
+		slot_id
+	)
+
+
+func get_reserving_item(
+	slot_id: Variant
+) -> ItemInstance:
+	return EquipmentRules.get_reserving_item(
+		_equipped,
+		slot_id
+	)
+
+
+func is_slot_available(
+	slot_id: Variant
+) -> bool:
+	return (
+		is_slot_empty(
+			slot_id
+		)
+		and
+		not is_slot_reserved(
+			slot_id
+		)
+	)
