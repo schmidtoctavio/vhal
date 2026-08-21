@@ -2742,11 +2742,18 @@ func _process_character_inventory_snapshot(
 
 
 	# -----------------------------------------------------
-	# El bloqueo cross-container se libera después de que
-	# Main haya recibido/aplicado el Inventory autoritativo.
+	# El Inventory puede completar una sincronización de:
+	#
+	# Inventory <-> Vault
+	# Inventory <-> Equipment
+	#
+	# Los helpers ignoran la llamada cuando no existe
+	# una operación de ese tipo pendiente.
 	# -----------------------------------------------------
 
 	_mark_item_container_transfer_inventory_synced()
+
+	_mark_equipment_transfer_inventory_synced()
 
 # =========================================================
 # SNAPSHOT DE EQUIPMENT DEL PERSONAJE
@@ -2938,9 +2945,6 @@ func send_inventory_item_move_request(
 	if equipment_transfer_request_pending:
 		return ERR_BUSY
 
-	if equipment_transfer_request_pending:
-		return ERR_BUSY
-
 	var normalized_uid := (
 		uid.strip_edges()
 	)
@@ -3093,6 +3097,8 @@ func send_item_container_transfer_request(
 	if vault_item_move_request_pending:
 		return ERR_BUSY
 
+	if equipment_transfer_request_pending:
+		return ERR_BUSY
 
 	var normalized_uid := (
 		uid.strip_edges()

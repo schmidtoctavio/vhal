@@ -1,12 +1,20 @@
 class_name EquipmentPanel
 extends PanelContainer
 
+# =========================================================
+# SEÑALES
+# =========================================================
 
 signal item_activated(
 	slot_id: StringName,
 	item: ItemInstance
 )
 
+signal authoritative_inventory_item_equip_requested(
+	item: ItemInstance,
+	current_position: Vector2i,
+	target_slot_id: StringName
+)
 
 # =========================================================
 # MODELO
@@ -81,6 +89,23 @@ func _bind_slots() -> void:
 				_on_slot_item_activated
 			)
 
+		if not slot.authoritative_inventory_item_equip_requested.is_connected(
+			_on_slot_authoritative_inventory_item_equip_requested
+		):
+			slot.authoritative_inventory_item_equip_requested.connect(
+				_on_slot_authoritative_inventory_item_equip_requested
+			)
+
+func _on_slot_authoritative_inventory_item_equip_requested(
+	item: ItemInstance,
+	current_position: Vector2i,
+	target_slot_id: StringName
+) -> void:
+	authoritative_inventory_item_equip_requested.emit(
+		item,
+		current_position,
+		target_slot_id
+	)
 
 func _on_slot_item_activated(
 	slot_id: StringName,

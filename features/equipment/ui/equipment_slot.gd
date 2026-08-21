@@ -5,9 +5,19 @@ const ITEM_TOOLTIP_SCENE := preload(
     "res://features/items/ui/item_tooltip.tscn"
 )
 
+# =========================================================
+# SEÑALES
+# =========================================================
+
 signal item_activated(
 	slot_id: StringName,
 	item: ItemInstance
+)
+
+signal authoritative_inventory_item_equip_requested(
+	item: ItemInstance,
+	current_position: Vector2i,
+	target_slot_id: StringName
 )
 
 # =========================================================
@@ -362,17 +372,31 @@ func _can_drop_data(
 
 
 	# -----------------------------------------------------
-	# Mientras Equipment todavía no tenga su protocolo
-	# autoritativo, no permitimos mutación local cuando
-	# Inventory está trabajando en authoritative mode.
+	# MODO AUTORITATIVO
+	#
+	# Equipment sólo recibe items desde Inventory.
+	# Nunca desde Vault.
 	# -----------------------------------------------------
 
 	if source_grid.authoritative_move_only:
-		_set_drop_feedback(
-			false
-		)
+		if (
+			source_grid.authoritative_container_id
+			!=
+			"inventory"
+		):
+			_set_drop_feedback(
+				false
+			)
 
-		return false
+			return false
+
+
+		if item.uid.strip_edges().is_empty():
+			_set_drop_feedback(
+				false
+			)
+
+			return false
 
 
 	var valid := (
@@ -438,8 +462,49 @@ func _drop_data(
 	):
 		return
 
+
+	# =====================================================
+	# INVENTORY AUTORITATIVO -> EQUIPMENT
+	# =====================================================
+
 	if source_grid.authoritative_move_only:
+		if (
+			source_grid.authoritative_container_id
+			!=
+			"inventory"
+		):
+			return
+
+
+		if not equipment_data.can_equip(
+			slot_id,
+			item
+		):
+			return
+
+
+		var uid := (
+			item.uid.strip_edges()
+		)
+
+
+		if uid.is_empty():
+			return
+
+
+		authoritative_inventory_item_equip_requested.emit(
+			item,
+			item.grid_position,
+			slot_id
+		)
+
+
 		return
+
+
+	# =====================================================
+	# MODO LOCAL / DEBUG
+	# =====================================================
 
 	var success := (
 		equipment_data.equip_from_inventory(

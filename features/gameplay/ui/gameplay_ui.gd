@@ -28,6 +28,19 @@ signal item_container_transfer_requested(
 	new_position: Vector2i
 )
 
+signal equipment_item_equip_requested(
+	uid: String,
+	current_position: Vector2i,
+	target_slot_id: StringName
+)
+
+
+signal equipment_item_unequip_requested(
+	uid: String,
+	source_slot_id: StringName,
+	new_position: Vector2i
+)
+
 # =========================================================
 # BARRAS
 # =========================================================
@@ -549,6 +562,21 @@ func _ready() -> void:
 	):
 		inventory_window.item_container_transfer_requested.connect(
 			_on_item_container_transfer_requested
+		)
+
+	if not inventory_window.equipment_item_equip_requested.is_connected(
+		_on_equipment_item_equip_requested
+	):
+		inventory_window.equipment_item_equip_requested.connect(
+			_on_equipment_item_equip_requested
+		)
+
+
+	if not inventory_window.equipment_item_unequip_requested.is_connected(
+		_on_equipment_item_unequip_requested
+	):
+		inventory_window.equipment_item_unequip_requested.connect(
+			_on_equipment_item_unequip_requested
 		)
 
 	# =====================================================
@@ -1124,5 +1152,36 @@ func _on_item_container_transfer_requested(
 		source_container,
 		target_container,
 		current_position,
+		new_position
+	)
+
+# =========================================================
+# INVENTORY -> EQUIPMENT
+# =========================================================
+
+func _on_equipment_item_equip_requested(
+	uid: String,
+	current_position: Vector2i,
+	target_slot_id: StringName
+) -> void:
+	equipment_item_equip_requested.emit(
+		uid,
+		current_position,
+		target_slot_id
+	)
+
+
+# =========================================================
+# EQUIPMENT -> INVENTORY
+# =========================================================
+
+func _on_equipment_item_unequip_requested(
+	uid: String,
+	source_slot_id: StringName,
+	new_position: Vector2i
+) -> void:
+	equipment_item_unequip_requested.emit(
+		uid,
+		source_slot_id,
 		new_position
 	)

@@ -58,6 +58,19 @@ signal item_container_transfer_requested(
 	new_position: Vector2i
 )
 
+signal equipment_item_equip_requested(
+	uid: String,
+	current_position: Vector2i,
+	target_slot_id: StringName
+)
+
+
+signal equipment_item_unequip_requested(
+	uid: String,
+	source_slot_id: StringName,
+	new_position: Vector2i
+)
+
 # =========================================================
 # REFERENCIAS
 # =========================================================
@@ -197,6 +210,20 @@ func _ready() -> void:
 			_on_inventory_item_move_requested
 		)
 
+	if not gameplay_ui.equipment_item_equip_requested.is_connected(
+		_on_equipment_item_equip_requested
+	):
+		gameplay_ui.equipment_item_equip_requested.connect(
+			_on_equipment_item_equip_requested
+		)
+
+
+	if not gameplay_ui.equipment_item_unequip_requested.is_connected(
+		_on_equipment_item_unequip_requested
+	):
+		gameplay_ui.equipment_item_unequip_requested.connect(
+			_on_equipment_item_unequip_requested
+		)
 
 	_apply_states()
 
@@ -1381,6 +1408,91 @@ func _on_inventory_item_move_requested(
 	inventory_item_move_requested.emit(
 		uid,
 		current_position,
+		new_position
+	)
+
+# =========================================================
+# INVENTORY -> EQUIPMENT
+# =========================================================
+
+func _on_equipment_item_equip_requested(
+	uid: String,
+	current_position: Vector2i,
+	target_slot_id: StringName
+) -> void:
+	if player_state == null:
+		return
+
+
+	if player_state.inventory == null:
+		return
+
+
+	if player_state.equipment == null:
+		return
+
+
+	var normalized_uid := (
+		uid.strip_edges()
+	)
+
+
+	if normalized_uid.is_empty():
+		return
+
+
+	if not EquipmentSlotCatalog.is_valid_slot_id(
+		target_slot_id
+	):
+		return
+
+
+	equipment_item_equip_requested.emit(
+		normalized_uid,
+		current_position,
+		target_slot_id
+	)
+
+
+# =========================================================
+# EQUIPMENT -> INVENTORY
+# =========================================================
+
+func _on_equipment_item_unequip_requested(
+	uid: String,
+	source_slot_id: StringName,
+	new_position: Vector2i
+) -> void:
+	if player_state == null:
+		return
+
+
+	if player_state.inventory == null:
+		return
+
+
+	if player_state.equipment == null:
+		return
+
+
+	var normalized_uid := (
+		uid.strip_edges()
+	)
+
+
+	if normalized_uid.is_empty():
+		return
+
+
+	if not EquipmentSlotCatalog.is_valid_slot_id(
+		source_slot_id
+	):
+		return
+
+
+	equipment_item_unequip_requested.emit(
+		normalized_uid,
+		source_slot_id,
 		new_position
 	)
 

@@ -1,6 +1,10 @@
 class_name InventoryGrid
 extends Control
 
+# =========================================================
+# SEÑALES
+# =========================================================
+
 signal item_activated(
 	item: ItemInstance
 )
@@ -18,6 +22,13 @@ signal authoritative_item_transfer_requested(
 	current_position: Vector2i,
 	new_position: Vector2i
 )
+
+signal authoritative_equipment_item_unequip_requested(
+	item: ItemInstance,
+	source_slot_id: StringName,
+	new_position: Vector2i
+)
+
 
 # =========================================================
 # ESCENAS
@@ -1060,11 +1071,6 @@ func can_drop_data_at(
 	if _is_equipment_drag_data(
 		data
 	):
-		if authoritative_move_only:
-			_hide_drop_preview()
-
-			return false
-		
 		var equipment_dictionary := (
 			data as Dictionary
 		)
@@ -1080,6 +1086,30 @@ func can_drop_data_at(
 			at_position,
 			equipment_dictionary
 		)
+
+
+		# -------------------------------------------------
+		# En modo autoritativo Equipment sólo puede
+		# regresar al Inventory del personaje.
+		#
+		# Esto también bloquea Equipment -> Vault.
+		# -------------------------------------------------
+
+		if authoritative_move_only:
+			if (
+				authoritative_container_id
+				!=
+				"inventory"
+			):
+				_hide_drop_preview()
+
+				return false
+
+
+			if equipment_item.uid.strip_edges().is_empty():
+				_hide_drop_preview()
+
+				return false
 
 
 		var equipment_valid := (
@@ -1262,11 +1292,6 @@ func drop_data_at(
 	if _is_equipment_drag_data(
 		data
 	):
-		if authoritative_move_only:
-			_hide_drop_preview()
-
-			return
-		
 		var equipment_dictionary := (
 			data as Dictionary
 		)
@@ -1298,6 +1323,60 @@ func drop_data_at(
 			equipment_dictionary
 		)
 
+
+		# =================================================
+		# EQUIPMENT AUTORITATIVO -> INVENTORY
+		# =================================================
+
+		if authoritative_move_only:
+			if (
+				authoritative_container_id
+				!=
+				"inventory"
+			):
+				_hide_drop_preview()
+
+				return
+
+
+			if not inventory_data.can_place_item(
+				equipment_item,
+				equipment_origin
+			):
+				_hide_drop_preview()
+
+				return
+
+
+			if not EquipmentSlotCatalog.is_valid_slot_id(
+				source_slot_id
+			):
+				_hide_drop_preview()
+
+				return
+
+
+			if equipment_item.uid.strip_edges().is_empty():
+				_hide_drop_preview()
+
+				return
+
+
+			authoritative_equipment_item_unequip_requested.emit(
+				equipment_item,
+				source_slot_id,
+				equipment_origin
+			)
+
+
+			_hide_drop_preview()
+
+			return
+
+
+		# =================================================
+		# MODO LOCAL / DEBUG
+		# =================================================
 
 		var equipment_success := (
 			source_equipment.unequip_to_inventory(

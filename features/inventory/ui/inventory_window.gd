@@ -21,6 +21,19 @@ signal item_container_transfer_requested(
 	new_position: Vector2i
 )
 
+signal equipment_item_equip_requested(
+	uid: String,
+	current_position: Vector2i,
+	target_slot_id: StringName
+)
+
+
+signal equipment_item_unequip_requested(
+	uid: String,
+	source_slot_id: StringName,
+	new_position: Vector2i
+)
+
 # =========================================================
 # REFERENCIAS
 # =========================================================
@@ -114,6 +127,21 @@ func _ready() -> void:
 	):
 		inventory_grid.authoritative_item_transfer_requested.connect(
 			_on_authoritative_item_transfer_requested
+		)
+
+	if not inventory_grid.authoritative_equipment_item_unequip_requested.is_connected(
+		_on_authoritative_equipment_item_unequip_requested
+	):
+		inventory_grid.authoritative_equipment_item_unequip_requested.connect(
+			_on_authoritative_equipment_item_unequip_requested
+		)
+
+
+	if not equipment_panel.authoritative_inventory_item_equip_requested.is_connected(
+		_on_authoritative_inventory_item_equip_requested
+	):
+		equipment_panel.authoritative_inventory_item_equip_requested.connect(
+			_on_authoritative_inventory_item_equip_requested
 		)
 
 	# =====================================================
@@ -399,3 +427,130 @@ func _on_sort_button_pressed() -> void:
 		print(
 			"No se pudo ordenar el inventario."
 		)
+
+# =========================================================
+# EQUIP AUTORITATIVO
+# =========================================================
+
+func _on_authoritative_inventory_item_equip_requested(
+	item: ItemInstance,
+	current_position: Vector2i,
+	target_slot_id: StringName
+) -> void:
+	if not authoritative_inventory_mode:
+		return
+
+
+	if item == null:
+		return
+
+
+	if inventory_data == null:
+		return
+
+
+	if equipment_data == null:
+		return
+
+
+	if not inventory_data.items.has(
+		item
+	):
+		return
+
+
+	if item.grid_position != current_position:
+		return
+
+
+	if not EquipmentSlotCatalog.is_valid_slot_id(
+		target_slot_id
+	):
+		return
+
+
+	if not equipment_data.can_equip(
+		target_slot_id,
+		item
+	):
+		return
+
+
+	var uid := (
+		item.uid.strip_edges()
+	)
+
+
+	if uid.is_empty():
+		return
+
+
+	equipment_item_equip_requested.emit(
+		uid,
+		current_position,
+		target_slot_id
+	)
+
+
+# =========================================================
+# UNEQUIP AUTORITATIVO
+# =========================================================
+
+func _on_authoritative_equipment_item_unequip_requested(
+	item: ItemInstance,
+	source_slot_id: StringName,
+	new_position: Vector2i
+) -> void:
+	if not authoritative_inventory_mode:
+		return
+
+
+	if item == null:
+		return
+
+
+	if inventory_data == null:
+		return
+
+
+	if equipment_data == null:
+		return
+
+
+	if not EquipmentSlotCatalog.is_valid_slot_id(
+		source_slot_id
+	):
+		return
+
+
+	if (
+		equipment_data.get_item(
+			source_slot_id
+		)
+		!=
+		item
+	):
+		return
+
+
+	if not inventory_data.can_place_item(
+		item,
+		new_position
+	):
+		return
+
+
+	var uid := (
+		item.uid.strip_edges()
+	)
+
+
+	if uid.is_empty():
+		return
+
+
+	equipment_item_unequip_requested.emit(
+		uid,
+		source_slot_id,
+		new_position
+	)

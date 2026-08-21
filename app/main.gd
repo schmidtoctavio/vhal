@@ -1456,6 +1456,21 @@ func _show_gameplay(
 			_on_gameplay_item_container_transfer_requested
 		)
 
+	if not gameplay_screen.equipment_item_equip_requested.is_connected(
+		_on_gameplay_equipment_item_equip_requested
+	):
+		gameplay_screen.equipment_item_equip_requested.connect(
+			_on_gameplay_equipment_item_equip_requested
+		)
+
+
+	if not gameplay_screen.equipment_item_unequip_requested.is_connected(
+		_on_gameplay_equipment_item_unequip_requested
+	):
+		gameplay_screen.equipment_item_unequip_requested.connect(
+			_on_gameplay_equipment_item_unequip_requested
+		)
+
 	gameplay_screen.setup(
 		player_state,
 		ClientSession.account_state
@@ -2400,6 +2415,75 @@ func _on_gameplay_item_container_transfer_requested(
 		" | Hacia: ",
 		target_container,
 		" ",
+		new_position,
+		" | Error: ",
+		result
+	)
+
+# =========================================================
+# INVENTORY -> EQUIPMENT → GAME SERVER
+# =========================================================
+
+func _on_gameplay_equipment_item_equip_requested(
+	uid: String,
+	current_position: Vector2i,
+	target_slot_id: StringName
+) -> void:
+	var result := (
+		game_server_client.send_equipment_equip_request(
+			uid,
+			current_position,
+			target_slot_id
+		)
+	)
+
+
+	if result == OK:
+		return
+
+
+	print(
+		"Main | No se pudo enviar Equip",
+		" | UID: ",
+		uid,
+		" | Desde: ",
+		current_position,
+		" | Slot: ",
+		target_slot_id,
+		" | Error: ",
+		result
+	)
+
+
+# =========================================================
+# EQUIPMENT -> INVENTORY → GAME SERVER
+# =========================================================
+
+func _on_gameplay_equipment_item_unequip_requested(
+	uid: String,
+	source_slot_id: StringName,
+	new_position: Vector2i
+) -> void:
+	var result := (
+		game_server_client.send_equipment_unequip_request(
+			uid,
+			source_slot_id,
+			new_position
+		)
+	)
+
+
+	if result == OK:
+		return
+
+
+	print(
+		"Main | No se pudo enviar Unequip",
+		" | UID: ",
+		uid,
+		" | Slot: ",
+		source_slot_id,
+		" | Hacia: ",
 		new_position,
 		" | Error: ",
 		result
