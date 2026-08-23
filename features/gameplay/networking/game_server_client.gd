@@ -3,7 +3,7 @@ extends Node
 
 
 # =========================================================
-# SIGNALS
+# SIGNALS PÚBLICAS
 # =========================================================
 
 signal game_server_connected(
@@ -82,8 +82,9 @@ signal character_equipment_snapshot_received(
 	snapshot: Dictionary
 )
 
+
 # =========================================================
-# CONFIGURACIÓN
+# CONFIGURACIÓN DE TRANSPORTE
 # =========================================================
 
 const DEFAULT_HOST: String = "127.0.0.1"
@@ -96,85 +97,9 @@ const AUTH_TIMEOUT_SECONDS: float = 10.0
 
 const NETWORK_PROTOCOL_VERSION: int = 1
 
-const MESSAGE_WORLD_SNAPSHOT: String = (
-	"world_snapshot"
-)
-
-const MESSAGE_MOVE_REQUEST: String = (
-	"move_request"
-)
-
-const MESSAGE_NPC_INTERACTION_REQUEST: String = (
-	"npc_interaction_request"
-)
-
-const MESSAGE_MOVEMENT_STATE: String = (
-	"movement_state"
-)
-
-const MESSAGE_MOVEMENT_DECISION: String = (
-	"movement_decision"
-)
-
-const MESSAGE_WORLD_PRESENCE_SNAPSHOT: String = (
-	"world_presence_snapshot"
-)
-
-const MESSAGE_PLAYER_PRESENCE_JOINED: String = (
-	"player_presence_joined"
-)
-
-const MESSAGE_PLAYER_PRESENCE_LEFT: String = (
-	"player_presence_left"
-)
-
-const MESSAGE_NPC_INTERACTION_DECISION: String = (
-	"npc_interaction_decision"
-)
-
-const MESSAGE_NPC_SERVICE_END_REQUEST: String = (
-	"npc_service_end_request"
-)
-
-const MESSAGE_NPC_SERVICE_ENDED: String = (
-	"npc_service_ended"
-)
-
-const MESSAGE_VAULT_SNAPSHOT: String = (
-	"vault_snapshot"
-)
-
-const MESSAGE_VAULT_ITEM_MOVE_REQUEST: String = (
-	"vault_item_move_request"
-)
-
-const MESSAGE_CHARACTER_INVENTORY_SNAPSHOT: String = (
-	"character_inventory_snapshot"
-)
-
-const MESSAGE_CHARACTER_EQUIPMENT_SNAPSHOT: String = (
-	"character_equipment_snapshot"
-)
-
-const MESSAGE_INVENTORY_ITEM_MOVE_REQUEST: String = (
-	"inventory_item_move_request"
-)
-
-const MESSAGE_ITEM_CONTAINER_TRANSFER_REQUEST: String = (
-	"item_container_transfer_request"
-)
-
-const MESSAGE_EQUIPMENT_EQUIP_REQUEST: String = (
-	"equipment_equip_request"
-)
-
-
-const MESSAGE_EQUIPMENT_UNEQUIP_REQUEST: String = (
-	"equipment_unequip_request"
-)
 
 # =========================================================
-# ESTADO
+# ESTADO DE TRANSPORTE
 # =========================================================
 
 var network_peer: ENetMultiplayerPeer = null
@@ -187,60 +112,259 @@ var pending_ticket: String = ""
 
 var _failure_emitted: bool = false
 
-var latest_world_snapshot: Dictionary = {}
 
-var latest_movement_sequence: int = 0
+# =========================================================
+# PROTOCOLOS
+# =========================================================
 
-var latest_authoritative_position: Vector3 = (
-	Vector3.ZERO
-)
+var world_protocol: GameServerWorldProtocol = null
 
-var latest_authoritative_rotation_y: float = 0.0
+var presence_protocol: GameServerPresenceProtocol = null
 
-var latest_authoritative_moving: bool = false
+var movement_protocol: GameServerMovementProtocol = null
 
-var next_move_request_id: int = 1
+var npc_protocol: GameServerNpcProtocol = null
 
-var latest_move_request_id: int = 0
+var item_protocol: GameServerItemProtocol = null
 
-var next_npc_interaction_request_id: int = 1
 
-var latest_npc_interaction_request_id: int = 0
+# =========================================================
+# COMPATIBILIDAD DE ESTADO PÚBLICO
+# =========================================================
 
-var remote_players: Dictionary = {}
+var latest_world_snapshot: Dictionary:
+	get:
+		if world_protocol == null:
+			return {}
 
-var remote_movement_sequences: Dictionary = {}
 
-var next_vault_item_move_request_id: int = 1
+		return world_protocol.latest_world_snapshot
 
-var vault_item_move_request_pending: bool = false
 
-var next_inventory_item_move_request_id: int = 1
+var latest_movement_sequence: int:
+	get:
+		if movement_protocol == null:
+			return 0
 
-var inventory_item_move_request_pending: bool = false
 
-var next_item_container_transfer_request_id: int = 1
+		return movement_protocol.latest_movement_sequence
 
-var item_container_transfer_request_pending: bool = false
 
-var item_container_transfer_inventory_synced: bool = false
+var latest_authoritative_position: Vector3:
+	get:
+		if movement_protocol == null:
+			return Vector3.ZERO
 
-var item_container_transfer_vault_synced: bool = false
 
-var next_equipment_transfer_request_id: int = 1
+		return movement_protocol.latest_authoritative_position
 
-var equipment_transfer_request_pending: bool = false
 
-var equipment_transfer_inventory_synced: bool = false
+var latest_authoritative_rotation_y: float:
+	get:
+		if movement_protocol == null:
+			return 0.0
 
-var equipment_transfer_equipment_synced: bool = false
+
+		return movement_protocol.latest_authoritative_rotation_y
+
+
+var latest_authoritative_moving: bool:
+	get:
+		if movement_protocol == null:
+			return false
+
+
+		return movement_protocol.latest_authoritative_moving
+
+
+var remote_players: Dictionary:
+	get:
+		if presence_protocol == null:
+			return {}
+
+
+		return presence_protocol.remote_players
+
 
 # =========================================================
 # CICLO DE VIDA
 # =========================================================
 
 func _ready() -> void:
+	if not _setup_protocols():
+		push_error(
+			"GameServerClient | No se pudieron inicializar los protocolos."
+		)
+
+
+		return
+
+
 	_connect_multiplayer_signals()
+
+
+# =========================================================
+# SETUP DE PROTOCOLOS
+# =========================================================
+
+func _setup_protocols() -> bool:
+	world_protocol = GameServerWorldProtocol.new()
+
+	presence_protocol = GameServerPresenceProtocol.new()
+
+	movement_protocol = GameServerMovementProtocol.new()
+
+	npc_protocol = GameServerNpcProtocol.new()
+
+	item_protocol = GameServerItemProtocol.new()
+
+
+	if not world_protocol.setup(
+		_get_local_peer_id,
+		_fail_connection
+	):
+		return false
+
+
+	if not presence_protocol.setup(
+		_get_local_peer_id
+	):
+		return false
+
+
+	if not movement_protocol.setup(
+		_send_protocol_message,
+		_get_local_peer_id,
+		presence_protocol
+	):
+		return false
+
+
+	if not npc_protocol.setup(
+		_send_protocol_message,
+		_get_local_peer_id
+	):
+		return false
+
+
+	if not item_protocol.setup(
+		_send_protocol_message,
+		_get_latest_world_snapshot,
+		_fail_connection
+	):
+		return false
+
+
+	_bind_protocol_signals()
+
+
+	print(
+		"GameServerClient | Protocolos inicializados."
+	)
+
+
+	return true
+
+
+# =========================================================
+# BIND DE PROTOCOLOS
+# =========================================================
+
+func _bind_protocol_signals() -> void:
+	if not world_protocol.world_snapshot_received.is_connected(
+		_on_protocol_world_snapshot_received
+	):
+		world_protocol.world_snapshot_received.connect(
+			_on_protocol_world_snapshot_received
+		)
+
+
+	if not movement_protocol.authoritative_movement_state_received.is_connected(
+		_on_protocol_authoritative_movement_state_received
+	):
+		movement_protocol.authoritative_movement_state_received.connect(
+			_on_protocol_authoritative_movement_state_received
+		)
+
+
+	if not movement_protocol.remote_player_movement_state_received.is_connected(
+		_on_protocol_remote_player_movement_state_received
+	):
+		movement_protocol.remote_player_movement_state_received.connect(
+			_on_protocol_remote_player_movement_state_received
+		)
+
+
+	if not movement_protocol.movement_decision_received.is_connected(
+		_on_protocol_movement_decision_received
+	):
+		movement_protocol.movement_decision_received.connect(
+			_on_protocol_movement_decision_received
+		)
+
+
+	if not presence_protocol.world_presence_snapshot_received.is_connected(
+		_on_protocol_world_presence_snapshot_received
+	):
+		presence_protocol.world_presence_snapshot_received.connect(
+			_on_protocol_world_presence_snapshot_received
+		)
+
+
+	if not presence_protocol.remote_player_joined.is_connected(
+		_on_protocol_remote_player_joined
+	):
+		presence_protocol.remote_player_joined.connect(
+			_on_protocol_remote_player_joined
+		)
+
+
+	if not presence_protocol.remote_player_left.is_connected(
+		_on_protocol_remote_player_left
+	):
+		presence_protocol.remote_player_left.connect(
+			_on_protocol_remote_player_left
+		)
+
+
+	if not npc_protocol.npc_interaction_decision_received.is_connected(
+		_on_protocol_npc_interaction_decision_received
+	):
+		npc_protocol.npc_interaction_decision_received.connect(
+			_on_protocol_npc_interaction_decision_received
+		)
+
+
+	if not npc_protocol.npc_service_ended_received.is_connected(
+		_on_protocol_npc_service_ended_received
+	):
+		npc_protocol.npc_service_ended_received.connect(
+			_on_protocol_npc_service_ended_received
+		)
+
+
+	if not item_protocol.vault_snapshot_received.is_connected(
+		_on_protocol_vault_snapshot_received
+	):
+		item_protocol.vault_snapshot_received.connect(
+			_on_protocol_vault_snapshot_received
+		)
+
+
+	if not item_protocol.character_inventory_snapshot_received.is_connected(
+		_on_protocol_character_inventory_snapshot_received
+	):
+		item_protocol.character_inventory_snapshot_received.connect(
+			_on_protocol_character_inventory_snapshot_received
+		)
+
+
+	if not item_protocol.character_equipment_snapshot_received.is_connected(
+		_on_protocol_character_equipment_snapshot_received
+	):
+		item_protocol.character_equipment_snapshot_received.connect(
+			_on_protocol_character_equipment_snapshot_received
+		)
 
 
 # =========================================================
@@ -277,15 +401,17 @@ func _connect_multiplayer_signals() -> void:
 		as SceneMultiplayer
 	)
 
+
+	if scene_multiplayer == null:
+		return
+
+
 	if not scene_multiplayer.peer_packet.is_connected(
 		_on_peer_packet
 	):
 		scene_multiplayer.peer_packet.connect(
 			_on_peer_packet
 		)
-
-	if scene_multiplayer == null:
-		return
 
 
 	if not scene_multiplayer.peer_authenticating.is_connected(
@@ -348,6 +474,7 @@ func connect_to_game_server(
 	if result != OK:
 		network_peer = null
 
+
 		return result
 
 
@@ -403,6 +530,7 @@ func _on_peer_authenticating(
 			"Se recibió un peer de autenticación inválido."
 		)
 
+
 		return
 
 
@@ -410,6 +538,7 @@ func _on_peer_authenticating(
 		_fail_connection(
 			"No existe un ticket de entrada válido."
 		)
+
 
 		return
 
@@ -424,6 +553,7 @@ func _on_peer_authenticating(
 		_fail_connection(
 			"SceneMultiplayer no está disponible."
 		)
+
 
 		return
 
@@ -446,6 +576,7 @@ func _on_peer_authenticating(
 			"No se pudo enviar la credencial al Game Server."
 		)
 
+
 		return
 
 
@@ -460,6 +591,7 @@ func _on_peer_authenticating(
 		_fail_connection(
 			"No se pudo completar la autenticación local."
 		)
+
 
 		return
 
@@ -477,13 +609,6 @@ func _on_auth_payload_received(
 	_peer_id: int,
 	_payload: PackedByteArray
 ) -> void:
-	# -----------------------------------------------------
-	# El servidor no necesita enviarnos credenciales.
-	#
-	# El callback debe existir para que SceneMultiplayer
-	# habilite el estado de autenticación en este cliente.
-	# -----------------------------------------------------
-
 	pass
 
 
@@ -550,6 +675,7 @@ func _on_connection_failed() -> void:
 		"No se pudo conectar al Game Server."
 	)
 
+
 # =========================================================
 # PAQUETES DEL GAME SERVER
 # =========================================================
@@ -562,6 +688,7 @@ func _on_peer_packet(
 		_fail_connection(
 			"Se recibió información desde un peer inválido."
 		)
+
 
 		return
 
@@ -581,6 +708,7 @@ func _on_peer_packet(
 		_fail_connection(
 			"El Game Server envió un paquete inválido."
 		)
+
 
 		return
 
@@ -603,6 +731,7 @@ func _on_peer_packet(
 			"Versión de protocolo incompatible."
 		)
 
+
 		return
 
 
@@ -614,688 +743,100 @@ func _on_peer_packet(
 	)
 
 
-	if message_type == MESSAGE_WORLD_SNAPSHOT:
-		var data_value: Variant = (
-			message.get(
-				"data",
-				null
-			)
-		)
-
-
-		if typeof(data_value) != TYPE_DICTIONARY:
-			_fail_connection(
-				"El snapshot de mundo es inválido."
-			)
-
-			return
-
-
-		var snapshot: Dictionary = (
-			data_value
-		)
-
-
-		_process_world_snapshot(
-			snapshot
-		)
-
-
-		return
-
-
-	if message_type == MESSAGE_MOVEMENT_STATE:
-		var movement_value: Variant = (
-			message.get(
-				"data",
-				null
-			)
-		)
-
-
-		if typeof(movement_value) != TYPE_DICTIONARY:
-			return
-
-
-		_process_movement_state(
-			movement_value
-		)
-
-
-		return
-
-
-	if message_type == MESSAGE_MOVEMENT_DECISION:
-		var decision_value: Variant = (
-			message.get(
-				"data",
-				null
-			)
-		)
-
-
-		if typeof(decision_value) != TYPE_DICTIONARY:
-			return
-
-
-		_process_movement_decision(
-			decision_value
-		)
-
-
-		return
-
-	if message_type == MESSAGE_WORLD_PRESENCE_SNAPSHOT:
-		var presence_value: Variant = (
-			message.get(
-				"data",
-				null
-			)
-		)
-
-
-		if typeof(presence_value) != TYPE_DICTIONARY:
-			return
-
-
-		_process_world_presence_snapshot(
-			presence_value
-		)
-
-
-		return
-
-
-	if message_type == MESSAGE_PLAYER_PRESENCE_JOINED:
-		var joined_value: Variant = (
-			message.get(
-				"data",
-				null
-			)
-		)
-
-
-		if typeof(joined_value) != TYPE_DICTIONARY:
-			return
-
-
-		_process_player_presence_joined(
-			joined_value
-		)
-
-
-		return
-
-
-	if message_type == MESSAGE_PLAYER_PRESENCE_LEFT:
-		var left_value: Variant = (
-			message.get(
-				"data",
-				null
-			)
-		)
-
-
-		if typeof(left_value) != TYPE_DICTIONARY:
-			return
-
-
-		_process_player_presence_left(
-			left_value
-		)
-
-
-		return
-
-	if message_type == MESSAGE_NPC_INTERACTION_DECISION:
-		var decision_value: Variant = (
-			message.get(
-				"data",
-				null
-			)
-		)
-
-
-		if typeof(decision_value) != TYPE_DICTIONARY:
-			return
-
-
-		_process_npc_interaction_decision(
-			decision_value
-		)
-
-
-		return
-
-	if message_type == MESSAGE_NPC_SERVICE_ENDED:
-		var service_end_value: Variant = (
-			message.get(
-				"data",
-				null
-			)
-		)
-
-
-		if typeof(service_end_value) != TYPE_DICTIONARY:
-			return
-
-
-		_process_npc_service_ended(
-			service_end_value
-		)
-
-
-		return
-
-	if message_type == MESSAGE_CHARACTER_INVENTORY_SNAPSHOT:
-		var inventory_value: Variant = (
-			message.get(
-				"data",
-				null
-			)
-		)
-
-
-		if typeof(inventory_value) != TYPE_DICTIONARY:
-			_fail_connection(
-				"El snapshot de Inventory es inválido."
-			)
-
-
-			return
-
-
-		_process_character_inventory_snapshot(
-			inventory_value
-		)
-
-
-		return
-
-	if message_type == MESSAGE_CHARACTER_EQUIPMENT_SNAPSHOT:
-		var equipment_value: Variant = (
-			message.get(
-				"data",
-				null
-			)
-		)
-
-
-		if typeof(equipment_value) != TYPE_DICTIONARY:
-			_fail_connection(
-				"El snapshot de Equipment es inválido."
-			)
-
-
-			return
-
-
-		_process_character_equipment_snapshot(
-			equipment_value
-		)
-
-
-		return
-
-	if message_type == MESSAGE_VAULT_SNAPSHOT:
-		var vault_value: Variant = (
-			message.get(
-				"data",
-				null
-			)
-		)
-
-
-		if typeof(vault_value) != TYPE_DICTIONARY:
-			return
-
-
-		_process_vault_snapshot(
-			vault_value
-		)
-
-
-		return
-
-# =========================================================
-# SNAPSHOT DE MUNDO
-# =========================================================
-
-func _process_world_snapshot(
-	snapshot: Dictionary
-) -> void:
-	var snapshot_peer_id := int(
-		snapshot.get(
-			"peer_id",
-			-1
-		)
-	)
-
-
-	var local_peer_id := (
-		multiplayer.get_unique_id()
-	)
-
-
-	if snapshot_peer_id != local_peer_id:
-		_fail_connection(
-			"El snapshot pertenece a otro peer."
-		)
-
-		return
-
-
-	var account_id := int(
-		snapshot.get(
-			"account_id",
-			-1
-		)
-	)
-
-
-	if account_id <= 0:
-		_fail_connection(
-			"El snapshot no posee una cuenta válida."
-		)
-
-		return
-
-
-	var character_value: Variant = (
-		snapshot.get(
-			"character",
+	var data_value: Variant = (
+		message.get(
+			"data",
 			null
 		)
 	)
 
 
-	if typeof(character_value) != TYPE_DICTIONARY:
-		_fail_connection(
-			"El snapshot no posee un personaje válido."
-		)
-
-		return
-
-
-	var character_data: Dictionary = (
-		character_value
-	)
-
-
-	var character_id := int(
-		character_data.get(
-			"id",
-			-1
-		)
-	)
-
-
-	if character_id <= 0:
-		_fail_connection(
-			"El snapshot posee un Character ID inválido."
-		)
-
-		return
-
-
-	var world_value: Variant = (
-		snapshot.get(
-			"world",
-			null
-		)
-	)
-
-
-	if typeof(world_value) != TYPE_DICTIONARY:
-		_fail_connection(
-			"El snapshot no posee datos de mundo."
-		)
-
-		return
-
-
-	var world_data: Dictionary = (
-		world_value
-	)
-
-
-	var map_id := String(
-		world_data.get(
-			"map_id",
-			""
-		)
-	).strip_edges()
-
-
-	if map_id.is_empty():
-		_fail_connection(
-			"El snapshot no posee un mapa válido."
-		)
-
-		return
-
-
-	var position_value: Variant = (
-		world_data.get(
-			"position",
-			null
-		)
-	)
-
-
-	if typeof(position_value) != TYPE_DICTIONARY:
-		_fail_connection(
-			"El snapshot no posee una posición válida."
-		)
-
-		return
-
-
-	var position_data: Dictionary = (
-		position_value
-	)
-
-
-	if (
-		not position_data.has("x")
-		or
-		not position_data.has("y")
-		or
-		not position_data.has("z")
+	if world_protocol.process_message(
+		message_type,
+		data_value
 	):
-		_fail_connection(
-			"La posición del snapshot está incompleta."
-		)
-
 		return
 
 
-	var position := Vector3(
-		float(
-			position_data["x"]
-		),
-		float(
-			position_data["y"]
-		),
-		float(
-			position_data["z"]
-		)
+	if movement_protocol.process_message(
+		message_type,
+		data_value
+	):
+		return
+
+
+	if presence_protocol.process_message(
+		message_type,
+		data_value
+	):
+		return
+
+
+	if npc_protocol.process_message(
+		message_type,
+		data_value
+	):
+		return
+
+
+	item_protocol.process_message(
+		message_type,
+		data_value
 	)
 
 
-	var rotation_y := float(
-		world_data.get(
-			"rotation_y",
-			0.0
-		)
+# =========================================================
+# ENVIAR MENSAJE DE PROTOCOLO
+# =========================================================
+
+func _send_protocol_message(
+	message_type: String,
+	data: Dictionary
+) -> Error:
+	if not connected:
+		return ERR_UNAVAILABLE
+
+
+	var normalized_type := (
+		message_type.strip_edges()
 	)
 
 
-	latest_world_snapshot = {
-		"peer_id": snapshot_peer_id,
+	if normalized_type.is_empty():
+		return ERR_INVALID_PARAMETER
 
-		"account_id": account_id,
 
-		"character": character_data.duplicate(
-			true
-		),
+	var scene_multiplayer := (
+		multiplayer
+		as SceneMultiplayer
+	)
 
-		"world": {
-			"map_id": map_id,
 
-			"position": {
-				"x": position.x,
-				"y": position.y,
-				"z": position.z,
-			},
+	if scene_multiplayer == null:
+		return ERR_UNAVAILABLE
 
-			"rotation_y": rotation_y,
-		},
+
+	var message := {
+		"version": NETWORK_PROTOCOL_VERSION,
+		"type": normalized_type,
+		"data": data,
 	}
 
 
-	print(
-		"GameServerClient | Snapshot autoritativo recibido",
-		" | Character ID: ",
-		character_id,
-		" | Mapa: ",
-		map_id,
-		" | Posición: ",
-		position
+	var packet := (
+		JSON.stringify(
+			message
+		).to_utf8_buffer()
 	)
 
 
-	world_snapshot_received.emit(
-		latest_world_snapshot.duplicate(
-			true
-		)
+	return scene_multiplayer.send_bytes(
+		packet,
+		SERVER_PEER_ID,
+		MultiplayerPeer.TRANSFER_MODE_RELIABLE,
+		0
 	)
 
-# =========================================================
-# ESTADO AUTORITATIVO DE MOVIMIENTO
-# =========================================================
-
-func _process_movement_state(
-	data: Dictionary
-) -> void:
-	var state_peer_id := int(
-		data.get(
-			"peer_id",
-			-1
-		)
-	)
-
-
-	if state_peer_id <= 1:
-		return
-
-
-	var sequence := int(
-		data.get(
-			"sequence",
-			0
-		)
-	)
-
-
-	if sequence <= 0:
-		return
-
-
-	var position_value: Variant = (
-		data.get(
-			"position",
-			null
-		)
-	)
-
-
-	if typeof(position_value) != TYPE_DICTIONARY:
-		return
-
-
-	var position_data: Dictionary = (
-		position_value
-	)
-
-
-	if (
-		not position_data.has("x")
-		or
-		not position_data.has("y")
-		or
-		not position_data.has("z")
-	):
-		return
-
-
-	var authoritative_position := Vector3(
-		float(
-			position_data["x"]
-		),
-		float(
-			position_data["y"]
-		),
-		float(
-			position_data["z"]
-		)
-	)
-
-
-	var authoritative_rotation_y := float(
-		data.get(
-			"rotation_y",
-			0.0
-		)
-	)
-
-
-	var moving := bool(
-		data.get(
-			"moving",
-			false
-		)
-	)
-
-
-	var local_peer_id := (
-		multiplayer.get_unique_id()
-	)
-
-
-	# -----------------------------------------------------
-	# PLAYER LOCAL
-	# -----------------------------------------------------
-
-	if state_peer_id == local_peer_id:
-		if sequence <= latest_movement_sequence:
-			return
-
-
-		latest_movement_sequence = sequence
-
-		latest_authoritative_position = (
-			authoritative_position
-		)
-
-		latest_authoritative_rotation_y = (
-			authoritative_rotation_y
-		)
-
-		latest_authoritative_moving = moving
-
-
-		print(
-			"GameServerClient | Movimiento autoritativo recibido",
-			" | Seq: ",
-			sequence,
-			" | Posición: ",
-			authoritative_position,
-			" | Moving: ",
-			moving
-		)
-
-
-		authoritative_movement_state_received.emit(
-			authoritative_position,
-			authoritative_rotation_y,
-			moving,
-			sequence
-		)
-
-
-		return
-
-
-	# -----------------------------------------------------
-	# PLAYER REMOTO
-	# -----------------------------------------------------
-
-	if not remote_players.has(
-		state_peer_id
-	):
-		return
-
-
-	var previous_sequence := int(
-		remote_movement_sequences.get(
-			state_peer_id,
-			0
-		)
-	)
-
-
-	if sequence <= previous_sequence:
-		return
-
-
-	remote_movement_sequences[
-		state_peer_id
-	] = sequence
-
-
-	# -----------------------------------------------------
-	# ACTUALIZAR TAMBIÉN EL CACHE DE PRESENCIA
-	# -----------------------------------------------------
-	#
-	# Si GameplayScreen se recrea, remote_players conserva
-	# la posición remota más reciente conocida.
-	# -----------------------------------------------------
-
-	var remote_player_value: Variant = (
-		remote_players[
-			state_peer_id
-		]
-	)
-
-
-	if typeof(remote_player_value) == TYPE_DICTIONARY:
-		var remote_player: Dictionary = (
-			remote_player_value
-		)
-
-
-		var world_value: Variant = (
-			remote_player.get(
-				"world",
-				null
-			)
-		)
-
-
-		if typeof(world_value) == TYPE_DICTIONARY:
-			var world: Dictionary = (
-				world_value
-			)
-
-
-			world[
-				"position"
-			] = authoritative_position
-
-
-			world[
-				"rotation_y"
-			] = authoritative_rotation_y
-
-
-			remote_player[
-				"world"
-			] = world
-
-
-			remote_players[
-				state_peer_id
-			] = remote_player
-
-
-	remote_player_movement_state_received.emit(
-		state_peer_id,
-		authoritative_position,
-		authoritative_rotation_y,
-		moving,
-		sequence
-	)
 
 # =========================================================
 # SERVIDOR DESCONECTADO
@@ -1378,49 +919,22 @@ func _reset_connection_state() -> void:
 
 	pending_ticket = ""
 
-	latest_movement_sequence = 0
 
-	latest_authoritative_position = Vector3.ZERO
+	if movement_protocol != null:
+		movement_protocol.reset()
 
-	latest_authoritative_rotation_y = 0.0
 
-	latest_authoritative_moving = false
-	
-	next_move_request_id = 1
+	if presence_protocol != null:
+		presence_protocol.reset()
 
-	latest_move_request_id = 0
 
-	next_npc_interaction_request_id = 1
+	if npc_protocol != null:
+		npc_protocol.reset()
 
-	latest_npc_interaction_request_id = 0
 
-	remote_players.clear()
+	if item_protocol != null:
+		item_protocol.reset()
 
-	remote_movement_sequences.clear()
-
-	next_vault_item_move_request_id = 1
-
-	vault_item_move_request_pending = false
-
-	next_inventory_item_move_request_id = 1
-
-	inventory_item_move_request_pending = false
-
-	next_item_container_transfer_request_id = 1
-
-	item_container_transfer_request_pending = false
-
-	item_container_transfer_inventory_synced = false
-
-	item_container_transfer_vault_synced = false
-
-	next_equipment_transfer_request_id = 1
-
-	equipment_transfer_request_pending = false
-
-	equipment_transfer_inventory_synced = false
-
-	equipment_transfer_equipment_synced = false
 
 	var scene_multiplayer := (
 		multiplayer
@@ -1445,8 +959,9 @@ func _reset_connection_state() -> void:
 		OfflineMultiplayerPeer.new()
 	)
 
+
 # =========================================================
-# INTENCIÓN DE MOVIMIENTO
+# API PÚBLICA — MOVEMENT
 # =========================================================
 
 func send_move_request(
@@ -1456,84 +971,13 @@ func send_move_request(
 		return ERR_UNAVAILABLE
 
 
-	var scene_multiplayer := (
-		multiplayer
-		as SceneMultiplayer
-	)
-
-
-	if scene_multiplayer == null:
-		return ERR_UNAVAILABLE
-
-
-	var request_id := (
-		next_move_request_id
-	)
-
-
-	var message := {
-		"version": NETWORK_PROTOCOL_VERSION,
-
-		"type": MESSAGE_MOVE_REQUEST,
-
-		"data": {
-			"request_id": request_id,
-
-			"target": {
-				"x": target.x,
-				"y": target.y,
-				"z": target.z,
-			},
-		},
-	}
-
-
-	var packet := (
-		JSON.stringify(
-			message
-		).to_utf8_buffer()
-	)
-
-
-	var result := (
-		scene_multiplayer.send_bytes(
-			packet,
-			SERVER_PEER_ID,
-			MultiplayerPeer.TRANSFER_MODE_RELIABLE,
-			0
-		)
-	)
-
-
-	if result != OK:
-		return result
-
-
-	# -----------------------------------------------------
-	# EL REQUEST YA FUE ACEPTADO POR LA CAPA DE TRANSPORTE
-	# -----------------------------------------------------
-
-	latest_move_request_id = (
-		request_id
-	)
-
-
-	next_move_request_id += 1
-
-
-	print(
-		"GameServerClient | Intención de movimiento enviada",
-		" | Request: ",
-		request_id,
-		" | Destino: ",
+	return movement_protocol.send_move_request(
 		target
 	)
 
 
-	return OK
-
 # =========================================================
-# INTERACCIÓN NPC
+# API PÚBLICA — NPC
 # =========================================================
 
 func send_npc_interaction_request(
@@ -1543,922 +987,21 @@ func send_npc_interaction_request(
 		return ERR_UNAVAILABLE
 
 
-	var normalized_npc_id := (
-		npc_id.strip_edges()
+	return npc_protocol.send_npc_interaction_request(
+		npc_id
 	)
 
-
-	if normalized_npc_id.is_empty():
-		return ERR_INVALID_PARAMETER
-
-
-	if normalized_npc_id.length() > 64:
-		return ERR_INVALID_PARAMETER
-
-
-	var scene_multiplayer := (
-		multiplayer
-		as SceneMultiplayer
-	)
-
-
-	if scene_multiplayer == null:
-		return ERR_UNAVAILABLE
-
-
-	var request_id := (
-		next_npc_interaction_request_id
-	)
-
-
-	var message := {
-		"version": NETWORK_PROTOCOL_VERSION,
-
-		"type": MESSAGE_NPC_INTERACTION_REQUEST,
-
-		"data": {
-			"request_id": request_id,
-
-			"npc_id": normalized_npc_id,
-		},
-	}
-
-
-	var packet := (
-		JSON.stringify(
-			message
-		).to_utf8_buffer()
-	)
-
-
-	var result := (
-		scene_multiplayer.send_bytes(
-			packet,
-			SERVER_PEER_ID,
-			MultiplayerPeer.TRANSFER_MODE_RELIABLE,
-			0
-		)
-	)
-
-
-	if result != OK:
-		return result
-
-
-	latest_npc_interaction_request_id = (
-		request_id
-	)
-
-
-	next_npc_interaction_request_id += 1
-
-
-	print(
-		"GameServerClient | Solicitud de interacción NPC enviada",
-		" | Request: ",
-		request_id,
-		" | NPC: ",
-		normalized_npc_id
-	)
-
-
-	return OK
-
-# =========================================================
-# DECISIÓN AUTORITATIVA DE MOVIMIENTO
-# =========================================================
-
-func _process_movement_decision(
-	data: Dictionary
-) -> void:
-	var decision_peer_id := int(
-		data.get(
-			"peer_id",
-			-1
-		)
-	)
-
-
-	if (
-		decision_peer_id
-		!=
-		multiplayer.get_unique_id()
-	):
-		return
-
-
-	var request_id := int(
-		data.get(
-			"request_id",
-			0
-		)
-	)
-
-
-	# -----------------------------------------------------
-	# Sólo nos importa la decisión del click más reciente.
-	# Una decisión anterior no debe detener una predicción
-	# más nueva.
-	# -----------------------------------------------------
-
-	if request_id != latest_move_request_id:
-		return
-
-
-	var accepted := bool(
-		data.get(
-			"accepted",
-			false
-		)
-	)
-
-
-	var position_value: Variant = (
-		data.get(
-			"authoritative_position",
-			null
-		)
-	)
-
-
-	if typeof(position_value) != TYPE_DICTIONARY:
-		return
-
-
-	var position_data: Dictionary = (
-		position_value
-	)
-
-
-	if (
-		not position_data.has("x")
-		or
-		not position_data.has("y")
-		or
-		not position_data.has("z")
-	):
-		return
-
-
-	var authoritative_position := Vector3(
-		float(position_data["x"]),
-		float(position_data["y"]),
-		float(position_data["z"])
-	)
-
-
-	var authoritative_rotation_y := float(
-		data.get(
-			"authoritative_rotation_y",
-			0.0
-		)
-	)
-
-
-	var authorized_target := Vector3.ZERO
-
-
-	if accepted:
-		var target_value: Variant = (
-			data.get(
-				"authorized_target",
-				null
-			)
-		)
-
-
-		if typeof(target_value) != TYPE_DICTIONARY:
-			return
-
-
-		var target_data: Dictionary = (
-			target_value
-		)
-
-
-		if (
-			not target_data.has("x")
-			or
-			not target_data.has("y")
-			or
-			not target_data.has("z")
-		):
-			return
-
-
-		authorized_target = Vector3(
-			float(target_data["x"]),
-			float(target_data["y"]),
-			float(target_data["z"])
-		)
-
-
-	var reason := String(
-		data.get(
-			"reason",
-			""
-		)
-	)
-
-
-	print(
-		"GameServerClient | Decisión de movimiento",
-		" | Request: ",
-		request_id,
-		" | Accepted: ",
-		accepted,
-		" | Target autorizado: ",
-		authorized_target
-	)
-
-
-	movement_decision_received.emit(
-		request_id,
-		accepted,
-		authoritative_position,
-		authoritative_rotation_y,
-		authorized_target,
-		reason
-	)
-
-# =========================================================
-# VALIDAR PRESENCIA REMOTA
-# =========================================================
-
-func _parse_remote_player_presence(
-	value: Variant
-) -> Dictionary:
-	if typeof(value) != TYPE_DICTIONARY:
-		return {}
-
-
-	var data: Dictionary = (
-		value
-	)
-
-
-	var peer_id := int(
-		data.get(
-			"peer_id",
-			-1
-		)
-	)
-
-
-	if peer_id <= 1:
-		return {}
-
-
-	if peer_id == multiplayer.get_unique_id():
-		return {}
-
-
-	var character_value: Variant = (
-		data.get(
-			"character",
-			null
-		)
-	)
-
-
-	if typeof(character_value) != TYPE_DICTIONARY:
-		return {}
-
-
-	var character: Dictionary = (
-		character_value
-	)
-
-
-	var character_id := int(
-		character.get(
-			"id",
-			-1
-		)
-	)
-
-
-	var character_name := String(
-		character.get(
-			"name",
-			""
-		)
-	).strip_edges()
-
-
-	var class_id := String(
-		character.get(
-			"class_id",
-			""
-		)
-	).strip_edges()
-
-
-	if (
-		character_id <= 0
-		or
-		character_name.is_empty()
-		or
-		class_id.is_empty()
-	):
-		return {}
-
-
-	var world_value: Variant = (
-		data.get(
-			"world",
-			null
-		)
-	)
-
-
-	if typeof(world_value) != TYPE_DICTIONARY:
-		return {}
-
-
-	var world: Dictionary = (
-		world_value
-	)
-
-
-	var map_id := String(
-		world.get(
-			"map_id",
-			""
-		)
-	).strip_edges()
-
-
-	if map_id.is_empty():
-		return {}
-
-
-	var position_value: Variant = (
-		world.get(
-			"position",
-			null
-		)
-	)
-
-
-	if typeof(position_value) != TYPE_DICTIONARY:
-		return {}
-
-
-	var position_data: Dictionary = (
-		position_value
-	)
-
-
-	if (
-		not position_data.has("x")
-		or
-		not position_data.has("y")
-		or
-		not position_data.has("z")
-	):
-		return {}
-
-
-	var position := Vector3(
-		float(position_data["x"]),
-		float(position_data["y"]),
-		float(position_data["z"])
-	)
-
-
-	var rotation_y := float(
-		world.get(
-			"rotation_y",
-			0.0
-		)
-	)
-
-
-	return {
-		"peer_id": peer_id,
-
-		"character": {
-			"id": character_id,
-			"name": character_name,
-			"class_id": class_id,
-			"level": int(
-				character.get(
-					"level",
-					1
-				)
-			),
-		},
-
-		"world": {
-			"map_id": map_id,
-			"position": position,
-			"rotation_y": rotation_y,
-		},
-	}
-
-# =========================================================
-# ROSTER INICIAL DEL MUNDO
-# =========================================================
-
-func _process_world_presence_snapshot(
-	data: Dictionary
-) -> void:
-	var players_value: Variant = (
-		data.get(
-			"players",
-			null
-		)
-	)
-
-
-	if typeof(players_value) != TYPE_ARRAY:
-		return
-
-
-	var players: Array = (
-		players_value
-	)
-
-
-	remote_players.clear()
-
-
-	for player_value: Variant in players:
-		var player := (
-			_parse_remote_player_presence(
-				player_value
-			)
-		)
-
-
-		if player.is_empty():
-			continue
-
-
-		var peer_id := int(
-			player.get(
-				"peer_id",
-				-1
-			)
-		)
-
-
-		remote_players[
-			peer_id
-		] = player
-
-
-	print(
-		"GameServerClient | Roster de mundo recibido",
-		" | Remotos: ",
-		remote_players.size()
-	)
-
-
-	world_presence_snapshot_received.emit(
-		remote_players.values()
-	)
-
-# =========================================================
-# PLAYER REMOTO ENTRÓ
-# =========================================================
-
-func _process_player_presence_joined(
-	data: Dictionary
-) -> void:
-	var player_value: Variant = (
-		data.get(
-			"player",
-			null
-		)
-	)
-
-
-	var player := (
-		_parse_remote_player_presence(
-			player_value
-		)
-	)
-
-
-	if player.is_empty():
-		return
-
-
-	var peer_id := int(
-		player.get(
-			"peer_id",
-			-1
-		)
-	)
-
-
-	remote_players[
-		peer_id
-	] = player
-
-
-	var character: Dictionary = (
-		player.get(
-			"character",
-			{}
-		)
-	)
-
-
-	print(
-		"GameServerClient | Player remoto entró",
-		" | Peer: ",
-		peer_id,
-		" | Personaje: ",
-		character.get(
-			"name",
-			"?"
-		)
-	)
-
-
-	remote_player_joined.emit(
-		player.duplicate(
-			true
-		)
-	)
-
-# =========================================================
-# PLAYER REMOTO SALIÓ
-# =========================================================
-
-func _process_player_presence_left(
-	data: Dictionary
-) -> void:
-	var peer_id := int(
-		data.get(
-			"peer_id",
-			-1
-		)
-	)
-
-
-	if peer_id <= 1:
-		return
-
-
-	if peer_id == multiplayer.get_unique_id():
-		return
-
-
-	if not remote_players.has(
-		peer_id
-	):
-		return
-
-
-	remote_players.erase(
-		peer_id
-	)
-
-	remote_movement_sequences.erase(
-		peer_id
-	)
-
-	print(
-		"GameServerClient | Player remoto salió",
-		" | Peer: ",
-		peer_id
-	)
-
-
-	remote_player_left.emit(
-		peer_id
-	)
-
-# =========================================================
-# DECISIÓN AUTORITATIVA DE INTERACCIÓN NPC
-# =========================================================
-
-func _process_npc_interaction_decision(
-	data: Dictionary
-) -> void:
-	var decision_peer_id := int(
-		data.get(
-			"peer_id",
-			-1
-		)
-	)
-
-
-	if (
-		decision_peer_id
-		!=
-		multiplayer.get_unique_id()
-	):
-		return
-
-
-	var request_id := int(
-		data.get(
-			"request_id",
-			0
-		)
-	)
-
-
-	if request_id <= 0:
-		return
-
-
-	# -----------------------------------------------------
-	# IGNORAR RESPUESTAS VIEJAS
-	# -----------------------------------------------------
-
-	if (
-		request_id
-		!=
-		latest_npc_interaction_request_id
-	):
-		return
-
-
-	var accepted := bool(
-		data.get(
-			"accepted",
-			false
-		)
-	)
-
-
-	var npc_id := String(
-		data.get(
-			"npc_id",
-			""
-		)
-	).strip_edges()
-
-
-	if npc_id.is_empty():
-		return
-
-
-	var service_id := String(
-		data.get(
-			"service_id",
-			""
-		)
-	).strip_edges()
-
-
-	var reason := String(
-		data.get(
-			"reason",
-			""
-		)
-	).strip_edges()
-
-
-	if (
-		accepted
-		and
-		service_id.is_empty()
-	):
-		return
-
-
-	print(
-		"GameServerClient | Decisión de interacción NPC",
-		" | Request: ",
-		request_id,
-		" | Accepted: ",
-		accepted,
-		" | NPC: ",
-		npc_id,
-		" | Servicio: ",
-		service_id,
-		" | Motivo: ",
-		reason
-	)
-
-
-	npc_interaction_decision_received.emit(
-		request_id,
-		accepted,
-		npc_id,
-		service_id,
-		reason
-	)
-
-# =========================================================
-# FINALIZAR SERVICIO NPC
-# =========================================================
 
 func send_npc_service_end_request() -> Error:
 	if not connected:
 		return ERR_UNAVAILABLE
 
 
-	var scene_multiplayer := (
-		multiplayer
-		as SceneMultiplayer
-	)
+	return npc_protocol.send_npc_service_end_request()
 
-
-	if scene_multiplayer == null:
-		return ERR_UNAVAILABLE
-
-
-	var message := {
-		"version": NETWORK_PROTOCOL_VERSION,
-
-		"type": MESSAGE_NPC_SERVICE_END_REQUEST,
-
-		"data": {},
-	}
-
-
-	var packet := (
-		JSON.stringify(
-			message
-		).to_utf8_buffer()
-	)
-
-
-	var result := (
-		scene_multiplayer.send_bytes(
-			packet,
-			SERVER_PEER_ID,
-			MultiplayerPeer.TRANSFER_MODE_RELIABLE,
-			0
-		)
-	)
-
-
-	if result != OK:
-		return result
-
-
-	print(
-		"GameServerClient | Solicitud de cierre de servicio NPC enviada."
-	)
-
-
-	return OK
 
 # =========================================================
-# SERVICIO NPC FINALIZADO POR SERVIDOR
-# =========================================================
-
-func _process_npc_service_ended(
-	data: Dictionary
-) -> void:
-	var npc_id := String(
-		data.get(
-			"npc_id",
-			""
-		)
-	).strip_edges()
-
-
-	var service_id := String(
-		data.get(
-			"service_id",
-			""
-		)
-	).strip_edges()
-
-
-	var reason := String(
-		data.get(
-			"reason",
-			""
-		)
-	).strip_edges()
-
-
-	if npc_id.is_empty():
-		return
-
-
-	if service_id.is_empty():
-		return
-
-
-	if reason.is_empty():
-		return
-
-
-	print(
-		"GameServerClient | Servicio NPC finalizado por servidor",
-		" | NPC: ",
-		npc_id,
-		" | Servicio: ",
-		service_id,
-		" | Motivo: ",
-		reason
-	)
-
-	vault_item_move_request_pending = false
-
-	item_container_transfer_request_pending = false
-
-	item_container_transfer_inventory_synced = false
-
-	item_container_transfer_vault_synced = false
-
-	npc_service_ended_received.emit(
-		npc_id,
-		service_id,
-		reason
-	)
-
-# =========================================================
-# MUTACIÓN DE ITEMS PENDIENTE
-# =========================================================
-
-func _has_item_mutation_pending() -> bool:
-	return (
-		vault_item_move_request_pending
-		or
-		inventory_item_move_request_pending
-		or
-		item_container_transfer_request_pending
-		or
-		equipment_transfer_request_pending
-	)
-
-# =========================================================
-# SNAPSHOT DE VAULT
-# =========================================================
-
-func _process_vault_snapshot(
-	snapshot: Dictionary
-) -> void:
-	var account_id := int(
-		snapshot.get(
-			"account_id",
-			0
-		)
-	)
-
-
-	var container := String(
-		snapshot.get(
-			"container",
-			""
-		)
-	).strip_edges()
-
-
-	var items_value: Variant = (
-		snapshot.get(
-			"items",
-			null
-		)
-	)
-
-
-	if account_id <= 0:
-		return
-
-
-	if container != "vault":
-		return
-
-
-	if typeof(items_value) != TYPE_ARRAY:
-		return
-
-
-	var items: Array = (
-		items_value as Array
-	)
-
-	vault_item_move_request_pending = false
-
-	print(
-		"GameServerClient | Snapshot de Vault recibido",
-		" | Cuenta: ",
-		account_id,
-		" | Items: ",
-		items.size()
-	)
-
-
-	vault_snapshot_received.emit(
-		snapshot.duplicate(
-			true
-		)
-	)
-
-
-	# -----------------------------------------------------
-	# La transferencia se considera sincronizada sólo
-	# después de que Main haya podido aplicar este snapshot.
-	# -----------------------------------------------------
-
-	_mark_item_container_transfer_vault_synced()
-
-# =========================================================
-# MOVER ITEM DE VAULT
+# API PÚBLICA — ITEMS
 # =========================================================
 
 func send_vault_item_move_request(
@@ -2470,474 +1013,12 @@ func send_vault_item_move_request(
 		return ERR_UNAVAILABLE
 
 
-	if _has_item_mutation_pending():
-		return ERR_BUSY
-
-	var normalized_uid := (
-		uid.strip_edges()
-	)
-
-
-	if normalized_uid.is_empty():
-		return ERR_INVALID_PARAMETER
-
-
-	if (
-		current_position.x < 0
-		or
-		current_position.x >= 8
-		or
-		current_position.y < 0
-		or
-		current_position.y >= 16
-	):
-		return ERR_INVALID_PARAMETER
-
-
-	if (
-		new_position.x < 0
-		or
-		new_position.x >= 8
-		or
-		new_position.y < 0
-		or
-		new_position.y >= 16
-	):
-		return ERR_INVALID_PARAMETER
-
-
-	if current_position == new_position:
-		return ERR_INVALID_PARAMETER
-
-
-	var scene_multiplayer := (
-		multiplayer
-		as SceneMultiplayer
-	)
-
-
-	if scene_multiplayer == null:
-		return ERR_UNAVAILABLE
-
-
-	var request_id := (
-		next_vault_item_move_request_id
-	)
-
-
-	var message := {
-		"version": NETWORK_PROTOCOL_VERSION,
-
-		"type": MESSAGE_VAULT_ITEM_MOVE_REQUEST,
-
-		"data": {
-			"request_id": request_id,
-
-			"uid": normalized_uid,
-
-			"current_grid_position": {
-				"x": current_position.x,
-				"y": current_position.y,
-			},
-
-			"new_grid_position": {
-				"x": new_position.x,
-				"y": new_position.y,
-			},
-		},
-	}
-
-
-	var packet := (
-		JSON.stringify(
-			message
-		).to_utf8_buffer()
-	)
-
-
-	var result := (
-		scene_multiplayer.send_bytes(
-			packet,
-			SERVER_PEER_ID,
-			MultiplayerPeer.TRANSFER_MODE_RELIABLE,
-			0
-		)
-	)
-
-
-	if result != OK:
-		return result
-
-
-	vault_item_move_request_pending = true
-
-	next_vault_item_move_request_id += 1
-
-
-	print(
-		"GameServerClient | Solicitud de movimiento Vault enviada",
-		" | Request: ",
-		request_id,
-		" | UID: ",
-		normalized_uid,
-		" | Desde: ",
+	return item_protocol.send_vault_item_move_request(
+		uid,
 		current_position,
-		" | Hacia: ",
 		new_position
 	)
 
-
-	return OK
-
-
-# =========================================================
-# SNAPSHOT DE INVENTORY DEL PERSONAJE
-# =========================================================
-
-func _process_character_inventory_snapshot(
-	snapshot: Dictionary
-) -> void:
-	var account_id := int(
-		snapshot.get(
-			"account_id",
-			0
-		)
-	)
-
-
-	var character_id := int(
-		snapshot.get(
-			"character_id",
-			0
-		)
-	)
-
-
-	var container := String(
-		snapshot.get(
-			"container",
-			""
-		)
-	).strip_edges()
-
-
-	var items_value: Variant = (
-		snapshot.get(
-			"items",
-			null
-		)
-	)
-
-
-	if account_id <= 0:
-		_fail_connection(
-			"Inventory sin cuenta válida."
-		)
-
-
-		return
-
-
-	if character_id <= 0:
-		_fail_connection(
-			"Inventory sin personaje válido."
-		)
-
-
-		return
-
-
-	if container != "inventory":
-		_fail_connection(
-			"Contenedor de Inventory inválido."
-		)
-
-
-		return
-
-
-	if typeof(items_value) != TYPE_ARRAY:
-		_fail_connection(
-			"Items de Inventory inválidos."
-		)
-
-
-		return
-
-
-	# -----------------------------------------------------
-	# También comprobamos contra el world snapshot recibido
-	# del MISMO Game Server.
-	# -----------------------------------------------------
-
-	if latest_world_snapshot.is_empty():
-		_fail_connection(
-			"Inventory recibido antes de la identidad de mundo."
-		)
-
-
-		return
-
-
-	if int(
-		latest_world_snapshot.get(
-			"account_id",
-			0
-		)
-	) != account_id:
-		_fail_connection(
-			"Inventory pertenece a otra cuenta."
-		)
-
-
-		return
-
-
-	var world_character_value: Variant = (
-		latest_world_snapshot.get(
-			"character",
-			null
-		)
-	)
-
-
-	if typeof(world_character_value) != TYPE_DICTIONARY:
-		_fail_connection(
-			"Identidad de personaje no disponible."
-		)
-
-
-		return
-
-
-	var world_character: Dictionary = (
-		world_character_value
-	)
-
-
-	if int(
-		world_character.get(
-			"id",
-			0
-		)
-	) != character_id:
-		_fail_connection(
-			"Inventory pertenece a otro personaje."
-		)
-
-
-		return
-
-
-	var items: Array = (
-		items_value as Array
-	)
-
-	inventory_item_move_request_pending = false
-
-	print(
-		"GameServerClient | Snapshot de Inventory recibido",
-		" | Cuenta: ",
-		account_id,
-		" | Character ID: ",
-		character_id,
-		" | Items: ",
-		items.size()
-	)
-
-
-	character_inventory_snapshot_received.emit(
-		snapshot.duplicate(
-			true
-		)
-	)
-
-
-	# -----------------------------------------------------
-	# El Inventory puede completar una sincronización de:
-	#
-	# Inventory <-> Vault
-	# Inventory <-> Equipment
-	#
-	# Los helpers ignoran la llamada cuando no existe
-	# una operación de ese tipo pendiente.
-	# -----------------------------------------------------
-
-	_mark_item_container_transfer_inventory_synced()
-
-	_mark_equipment_transfer_inventory_synced()
-
-# =========================================================
-# SNAPSHOT DE EQUIPMENT DEL PERSONAJE
-# =========================================================
-
-func _process_character_equipment_snapshot(
-	snapshot: Dictionary
-) -> void:
-	var account_id := int(
-		snapshot.get(
-			"account_id",
-			0
-		)
-	)
-
-
-	var character_id := int(
-		snapshot.get(
-			"character_id",
-			0
-		)
-	)
-
-
-	var container := String(
-		snapshot.get(
-			"container",
-			""
-		)
-	).strip_edges()
-
-
-	var items_value: Variant = (
-		snapshot.get(
-			"items",
-			null
-		)
-	)
-
-
-	if account_id <= 0:
-		_fail_connection(
-			"Equipment sin cuenta válida."
-		)
-
-
-		return
-
-
-	if character_id <= 0:
-		_fail_connection(
-			"Equipment sin personaje válido."
-		)
-
-
-		return
-
-
-	if container != "equipment":
-		_fail_connection(
-			"Contenedor de Equipment inválido."
-		)
-
-
-		return
-
-
-	if typeof(items_value) != TYPE_ARRAY:
-		_fail_connection(
-			"Items de Equipment inválidos."
-		)
-
-
-		return
-
-
-	# -----------------------------------------------------
-	# EQUIPMENT DEBE PERTENECER A LA IDENTIDAD ACTIVA
-	# -----------------------------------------------------
-
-	if latest_world_snapshot.is_empty():
-		_fail_connection(
-			"Equipment recibido antes de la identidad de mundo."
-		)
-
-
-		return
-
-
-	if int(
-		latest_world_snapshot.get(
-			"account_id",
-			0
-		)
-	) != account_id:
-		_fail_connection(
-			"Equipment pertenece a otra cuenta."
-		)
-
-
-		return
-
-
-	var world_character_value: Variant = (
-		latest_world_snapshot.get(
-			"character",
-			null
-		)
-	)
-
-
-	if typeof(world_character_value) != TYPE_DICTIONARY:
-		_fail_connection(
-			"Identidad de personaje no disponible."
-		)
-
-
-		return
-
-
-	var world_character: Dictionary = (
-		world_character_value
-	)
-
-
-	if int(
-		world_character.get(
-			"id",
-			0
-		)
-	) != character_id:
-		_fail_connection(
-			"Equipment pertenece a otro personaje."
-		)
-
-
-		return
-
-
-	var items: Array = (
-		items_value as Array
-	)
-
-
-	print(
-		"GameServerClient | Snapshot de Equipment recibido",
-		" | Cuenta: ",
-		account_id,
-		" | Character ID: ",
-		character_id,
-		" | Items: ",
-		items.size()
-	)
-
-
-	character_equipment_snapshot_received.emit(
-		snapshot.duplicate(
-			true
-		)
-	)
-
-
-	# -----------------------------------------------------
-	# Si había un Equip/Unequip pendiente, este snapshot
-	# representa una de las dos mitades de la convergencia.
-	# -----------------------------------------------------
-
-	_mark_equipment_transfer_equipment_synced()
-
-# =========================================================
-# MOVER ITEM DE INVENTORY
-# =========================================================
 
 func send_inventory_item_move_request(
 	uid: String,
@@ -2948,132 +1029,12 @@ func send_inventory_item_move_request(
 		return ERR_UNAVAILABLE
 
 
-	if _has_item_mutation_pending():
-		return ERR_BUSY
-
-	var normalized_uid := (
-		uid.strip_edges()
-	)
-
-
-	if normalized_uid.is_empty():
-		return ERR_INVALID_PARAMETER
-
-
-	if normalized_uid.length() > 64:
-		return ERR_INVALID_PARAMETER
-
-
-	if (
-		current_position.x < 0
-		or
-		current_position.x >= 8
-		or
-		current_position.y < 0
-		or
-		current_position.y >= 8
-	):
-		return ERR_INVALID_PARAMETER
-
-
-	if (
-		new_position.x < 0
-		or
-		new_position.x >= 8
-		or
-		new_position.y < 0
-		or
-		new_position.y >= 8
-	):
-		return ERR_INVALID_PARAMETER
-
-
-	if current_position == new_position:
-		return ERR_INVALID_PARAMETER
-
-
-	var scene_multiplayer := (
-		multiplayer
-		as SceneMultiplayer
-	)
-
-
-	if scene_multiplayer == null:
-		return ERR_UNAVAILABLE
-
-
-	var request_id := (
-		next_inventory_item_move_request_id
-	)
-
-
-	var message := {
-		"version": NETWORK_PROTOCOL_VERSION,
-
-		"type": MESSAGE_INVENTORY_ITEM_MOVE_REQUEST,
-
-		"data": {
-			"request_id": request_id,
-
-			"uid": normalized_uid,
-
-			"current_grid_position": {
-				"x": current_position.x,
-				"y": current_position.y,
-			},
-
-			"new_grid_position": {
-				"x": new_position.x,
-				"y": new_position.y,
-			},
-		},
-	}
-
-
-	var packet := (
-		JSON.stringify(
-			message
-		).to_utf8_buffer()
-	)
-
-
-	var result := (
-		scene_multiplayer.send_bytes(
-			packet,
-			SERVER_PEER_ID,
-			MultiplayerPeer.TRANSFER_MODE_RELIABLE,
-			0
-		)
-	)
-
-
-	if result != OK:
-		return result
-
-
-	inventory_item_move_request_pending = true
-
-	next_inventory_item_move_request_id += 1
-
-
-	print(
-		"GameServerClient | Solicitud de movimiento Inventory enviada",
-		" | Request: ",
-		request_id,
-		" | UID: ",
-		normalized_uid,
-		" | Desde: ",
+	return item_protocol.send_inventory_item_move_request(
+		uid,
 		current_position,
-		" | Hacia: ",
 		new_position
 	)
 
-
-	return OK
-
-# =========================================================
-# TRANSFERIR ITEM ENTRE INVENTORY Y VAULT
-# =========================================================
 
 func send_item_container_transfer_request(
 	uid: String,
@@ -3086,264 +1047,14 @@ func send_item_container_transfer_request(
 		return ERR_UNAVAILABLE
 
 
-	# -----------------------------------------------------
-	# Toda mutación de items se serializa hasta converger
-	# nuevamente con el estado autoritativo.
-	# -----------------------------------------------------
-
-	if _has_item_mutation_pending():
-		return ERR_BUSY
-
-	var normalized_uid := (
-		uid.strip_edges()
-	)
-
-
-	var normalized_source := (
-		source_container.strip_edges().to_lower()
-	)
-
-
-	var normalized_target := (
-		target_container.strip_edges().to_lower()
-	)
-
-
-	if (
-		normalized_uid.is_empty()
-		or
-		normalized_uid.length() > 64
-	):
-		return ERR_INVALID_PARAMETER
-
-
-	if not _is_transfer_container(
-		normalized_source
-	):
-		return ERR_INVALID_PARAMETER
-
-
-	if not _is_transfer_container(
-		normalized_target
-	):
-		return ERR_INVALID_PARAMETER
-
-
-	if normalized_source == normalized_target:
-		return ERR_INVALID_PARAMETER
-
-
-	if not _is_position_inside_transfer_container(
-		normalized_source,
-		current_position
-	):
-		return ERR_INVALID_PARAMETER
-
-
-	if not _is_position_inside_transfer_container(
-		normalized_target,
-		new_position
-	):
-		return ERR_INVALID_PARAMETER
-
-
-	var scene_multiplayer := (
-		multiplayer
-		as SceneMultiplayer
-	)
-
-
-	if scene_multiplayer == null:
-		return ERR_UNAVAILABLE
-
-
-	var request_id := (
-		next_item_container_transfer_request_id
-	)
-
-
-	var message := {
-		"version": NETWORK_PROTOCOL_VERSION,
-
-		"type": MESSAGE_ITEM_CONTAINER_TRANSFER_REQUEST,
-
-		"data": {
-			"request_id": request_id,
-
-			"uid": normalized_uid,
-
-			"source_container": normalized_source,
-
-			"target_container": normalized_target,
-
-			"current_grid_position": {
-				"x": current_position.x,
-				"y": current_position.y,
-			},
-
-			"new_grid_position": {
-				"x": new_position.x,
-				"y": new_position.y,
-			},
-		},
-	}
-
-
-	var packet := (
-		JSON.stringify(
-			message
-		).to_utf8_buffer()
-	)
-
-
-	var result := (
-		scene_multiplayer.send_bytes(
-			packet,
-			SERVER_PEER_ID,
-			MultiplayerPeer.TRANSFER_MODE_RELIABLE,
-			0
-		)
-	)
-
-
-	if result != OK:
-		return result
-
-
-	item_container_transfer_request_pending = true
-
-	item_container_transfer_inventory_synced = false
-
-	item_container_transfer_vault_synced = false
-
-
-	next_item_container_transfer_request_id += 1
-
-
-	print(
-		"GameServerClient | Transferencia Inventory/Vault enviada",
-		" | Request: ",
-		request_id,
-		" | UID: ",
-		normalized_uid,
-		" | Desde: ",
-		normalized_source,
-		" ",
+	return item_protocol.send_item_container_transfer_request(
+		uid,
+		source_container,
+		target_container,
 		current_position,
-		" | Hacia: ",
-		normalized_target,
-		" ",
 		new_position
 	)
 
-
-	return OK
-
-
-# =========================================================
-# CONTENEDOR SOPORTADO
-# =========================================================
-
-func _is_transfer_container(
-	container: String
-) -> bool:
-	return (
-		container == "inventory"
-		or
-		container == "vault"
-	)
-
-
-# =========================================================
-# POSICIÓN VÁLIDA POR CONTENEDOR
-# =========================================================
-
-func _is_position_inside_transfer_container(
-	container: String,
-	position: Vector2i
-) -> bool:
-	if (
-		position.x < 0
-		or
-		position.x >= 8
-		or
-		position.y < 0
-	):
-		return false
-
-
-	match container:
-		"inventory":
-			return position.y < 8
-
-		"vault":
-			return position.y < 16
-
-
-	return false
-
-
-# =========================================================
-# SNAPSHOT INVENTORY RECIBIDO DURANTE TRANSFERENCIA
-# =========================================================
-
-func _mark_item_container_transfer_inventory_synced() -> void:
-	if not item_container_transfer_request_pending:
-		return
-
-
-	item_container_transfer_inventory_synced = true
-
-
-	_try_finish_item_container_transfer_sync()
-
-
-# =========================================================
-# SNAPSHOT VAULT RECIBIDO DURANTE TRANSFERENCIA
-# =========================================================
-
-func _mark_item_container_transfer_vault_synced() -> void:
-	if not item_container_transfer_request_pending:
-		return
-
-
-	item_container_transfer_vault_synced = true
-
-
-	_try_finish_item_container_transfer_sync()
-
-
-# =========================================================
-# FINALIZAR SINCRONIZACIÓN CROSS-CONTAINER
-# =========================================================
-
-func _try_finish_item_container_transfer_sync() -> void:
-	if not item_container_transfer_request_pending:
-		return
-
-
-	if not item_container_transfer_inventory_synced:
-		return
-
-
-	if not item_container_transfer_vault_synced:
-		return
-
-
-	item_container_transfer_request_pending = false
-
-	item_container_transfer_inventory_synced = false
-
-	item_container_transfer_vault_synced = false
-
-
-	print(
-		"GameServerClient | Transferencia Inventory/Vault sincronizada."
-	)
-
-# =========================================================
-# EQUIPAR ITEM DESDE INVENTORY
-# =========================================================
 
 func send_equipment_equip_request(
 	uid: String,
@@ -3354,132 +1065,12 @@ func send_equipment_equip_request(
 		return ERR_UNAVAILABLE
 
 
-	if _has_item_mutation_pending():
-		return ERR_BUSY
-
-
-	var normalized_uid := (
-		uid.strip_edges()
-	)
-
-
-	if (
-		normalized_uid.is_empty()
-		or
-		normalized_uid.length() > 64
-	):
-		return ERR_INVALID_PARAMETER
-
-
-	if (
-		current_position.x < 0
-		or
-		current_position.x >= 8
-		or
-		current_position.y < 0
-		or
-		current_position.y >= 8
-	):
-		return ERR_INVALID_PARAMETER
-
-
-	var normalized_slot := String(
-		equipment_slot
-	).strip_edges().to_lower()
-
-
-	if (
-		normalized_slot.is_empty()
-		or
-		normalized_slot.length() > 32
-	):
-		return ERR_INVALID_PARAMETER
-
-
-	var scene_multiplayer := (
-		multiplayer
-		as SceneMultiplayer
-	)
-
-
-	if scene_multiplayer == null:
-		return ERR_UNAVAILABLE
-
-
-	var request_id := (
-		next_equipment_transfer_request_id
-	)
-
-
-	var message := {
-		"version": NETWORK_PROTOCOL_VERSION,
-
-		"type": MESSAGE_EQUIPMENT_EQUIP_REQUEST,
-
-		"data": {
-			"request_id": request_id,
-
-			"uid": normalized_uid,
-
-			"current_grid_position": {
-				"x": current_position.x,
-				"y": current_position.y,
-			},
-
-			"equipment_slot": normalized_slot,
-		},
-	}
-
-
-	var packet := (
-		JSON.stringify(
-			message
-		).to_utf8_buffer()
-	)
-
-
-	var result := (
-		scene_multiplayer.send_bytes(
-			packet,
-			SERVER_PEER_ID,
-			MultiplayerPeer.TRANSFER_MODE_RELIABLE,
-			0
-		)
-	)
-
-
-	if result != OK:
-		return result
-
-
-	equipment_transfer_request_pending = true
-
-	equipment_transfer_inventory_synced = false
-
-	equipment_transfer_equipment_synced = false
-
-
-	next_equipment_transfer_request_id += 1
-
-
-	print(
-		"GameServerClient | Solicitud Equip enviada",
-		" | Request: ",
-		request_id,
-		" | UID: ",
-		normalized_uid,
-		" | Desde: ",
+	return item_protocol.send_equipment_equip_request(
+		uid,
 		current_position,
-		" | Slot: ",
-		normalized_slot
+		equipment_slot
 	)
 
-
-	return OK
-
-# =========================================================
-# DESEQUIPAR ITEM HACIA INVENTORY
-# =========================================================
 
 func send_equipment_unequip_request(
 	uid: String,
@@ -3490,183 +1081,184 @@ func send_equipment_unequip_request(
 		return ERR_UNAVAILABLE
 
 
-	if _has_item_mutation_pending():
-		return ERR_BUSY
-
-
-	var normalized_uid := (
-		uid.strip_edges()
-	)
-
-
-	if (
-		normalized_uid.is_empty()
-		or
-		normalized_uid.length() > 64
-	):
-		return ERR_INVALID_PARAMETER
-
-
-	var normalized_slot := String(
-		current_equipment_slot
-	).strip_edges().to_lower()
-
-
-	if (
-		normalized_slot.is_empty()
-		or
-		normalized_slot.length() > 32
-	):
-		return ERR_INVALID_PARAMETER
-
-
-	if (
-		new_position.x < 0
-		or
-		new_position.x >= 8
-		or
-		new_position.y < 0
-		or
-		new_position.y >= 8
-	):
-		return ERR_INVALID_PARAMETER
-
-
-	var scene_multiplayer := (
-		multiplayer
-		as SceneMultiplayer
-	)
-
-
-	if scene_multiplayer == null:
-		return ERR_UNAVAILABLE
-
-
-	var request_id := (
-		next_equipment_transfer_request_id
-	)
-
-
-	var message := {
-		"version": NETWORK_PROTOCOL_VERSION,
-
-		"type": MESSAGE_EQUIPMENT_UNEQUIP_REQUEST,
-
-		"data": {
-			"request_id": request_id,
-
-			"uid": normalized_uid,
-
-			"current_equipment_slot": normalized_slot,
-
-			"new_grid_position": {
-				"x": new_position.x,
-				"y": new_position.y,
-			},
-		},
-	}
-
-
-	var packet := (
-		JSON.stringify(
-			message
-		).to_utf8_buffer()
-	)
-
-
-	var result := (
-		scene_multiplayer.send_bytes(
-			packet,
-			SERVER_PEER_ID,
-			MultiplayerPeer.TRANSFER_MODE_RELIABLE,
-			0
-		)
-	)
-
-
-	if result != OK:
-		return result
-
-
-	equipment_transfer_request_pending = true
-
-	equipment_transfer_inventory_synced = false
-
-	equipment_transfer_equipment_synced = false
-
-
-	next_equipment_transfer_request_id += 1
-
-
-	print(
-		"GameServerClient | Solicitud Unequip enviada",
-		" | Request: ",
-		request_id,
-		" | UID: ",
-		normalized_uid,
-		" | Slot: ",
-		normalized_slot,
-		" | Destino: ",
+	return item_protocol.send_equipment_unequip_request(
+		uid,
+		current_equipment_slot,
 		new_position
 	)
 
 
-	return OK
-
 # =========================================================
-# INVENTORY RECIBIDO DURANTE EQUIPMENT TRANSFER
+# HELPERS PARA PROTOCOLOS
 # =========================================================
 
-func _mark_equipment_transfer_inventory_synced() -> void:
-	if not equipment_transfer_request_pending:
-		return
+func _get_local_peer_id() -> int:
+	return multiplayer.get_unique_id()
 
 
-	equipment_transfer_inventory_synced = true
+func _get_latest_world_snapshot() -> Dictionary:
+	if world_protocol == null:
+		return {}
 
 
-	_try_finish_equipment_transfer_sync()
-
-
-# =========================================================
-# EQUIPMENT RECIBIDO DURANTE EQUIPMENT TRANSFER
-# =========================================================
-
-func _mark_equipment_transfer_equipment_synced() -> void:
-	if not equipment_transfer_request_pending:
-		return
-
-
-	equipment_transfer_equipment_synced = true
-
-
-	_try_finish_equipment_transfer_sync()
+	return world_protocol.get_latest_world_snapshot()
 
 
 # =========================================================
-# FINALIZAR SINCRONIZACIÓN INVENTORY / EQUIPMENT
+# FORWARD — WORLD
 # =========================================================
 
-func _try_finish_equipment_transfer_sync() -> void:
-	if not equipment_transfer_request_pending:
-		return
+func _on_protocol_world_snapshot_received(
+	snapshot: Dictionary
+) -> void:
+	world_snapshot_received.emit(
+		snapshot
+	)
 
 
-	if not equipment_transfer_inventory_synced:
-		return
+# =========================================================
+# FORWARD — MOVEMENT
+# =========================================================
+
+func _on_protocol_authoritative_movement_state_received(
+	position: Vector3,
+	rotation_y: float,
+	moving: bool,
+	sequence: int
+) -> void:
+	authoritative_movement_state_received.emit(
+		position,
+		rotation_y,
+		moving,
+		sequence
+	)
 
 
-	if not equipment_transfer_equipment_synced:
-		return
+func _on_protocol_remote_player_movement_state_received(
+	peer_id: int,
+	position: Vector3,
+	rotation_y: float,
+	moving: bool,
+	sequence: int
+) -> void:
+	remote_player_movement_state_received.emit(
+		peer_id,
+		position,
+		rotation_y,
+		moving,
+		sequence
+	)
 
 
-	equipment_transfer_request_pending = false
+func _on_protocol_movement_decision_received(
+	request_id: int,
+	accepted: bool,
+	authoritative_position: Vector3,
+	authoritative_rotation_y: float,
+	authorized_target: Vector3,
+	reason: String
+) -> void:
+	movement_decision_received.emit(
+		request_id,
+		accepted,
+		authoritative_position,
+		authoritative_rotation_y,
+		authorized_target,
+		reason
+	)
 
-	equipment_transfer_inventory_synced = false
 
-	equipment_transfer_equipment_synced = false
+# =========================================================
+# FORWARD — PRESENCE
+# =========================================================
+
+func _on_protocol_world_presence_snapshot_received(
+	players: Array
+) -> void:
+	world_presence_snapshot_received.emit(
+		players
+	)
 
 
-	print(
-		"GameServerClient | Transferencia Inventory/Equipment sincronizada."
+func _on_protocol_remote_player_joined(
+	player: Dictionary
+) -> void:
+	remote_player_joined.emit(
+		player
+	)
+
+
+func _on_protocol_remote_player_left(
+	peer_id: int
+) -> void:
+	movement_protocol.remove_remote_player(
+		peer_id
+	)
+
+
+	remote_player_left.emit(
+		peer_id
+	)
+
+
+# =========================================================
+# FORWARD — NPC
+# =========================================================
+
+func _on_protocol_npc_interaction_decision_received(
+	request_id: int,
+	accepted: bool,
+	npc_id: String,
+	service_id: String,
+	reason: String
+) -> void:
+	npc_interaction_decision_received.emit(
+		request_id,
+		accepted,
+		npc_id,
+		service_id,
+		reason
+	)
+
+
+func _on_protocol_npc_service_ended_received(
+	npc_id: String,
+	service_id: String,
+	reason: String
+) -> void:
+	item_protocol.cancel_vault_related_mutations()
+
+
+	npc_service_ended_received.emit(
+		npc_id,
+		service_id,
+		reason
+	)
+
+
+# =========================================================
+# FORWARD — ITEMS
+# =========================================================
+
+func _on_protocol_vault_snapshot_received(
+	snapshot: Dictionary
+) -> void:
+	vault_snapshot_received.emit(
+		snapshot
+	)
+
+
+func _on_protocol_character_inventory_snapshot_received(
+	snapshot: Dictionary
+) -> void:
+	character_inventory_snapshot_received.emit(
+		snapshot
+	)
+
+
+func _on_protocol_character_equipment_snapshot_received(
+	snapshot: Dictionary
+) -> void:
+	character_equipment_snapshot_received.emit(
+		snapshot
 	)
