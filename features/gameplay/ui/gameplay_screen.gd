@@ -690,7 +690,8 @@ func _on_move_target_requested(
 # =========================================================
 
 func _on_skill_cast_requested(
-	_screen_position: Vector2
+	_screen_position: Vector2,
+	target_entity_id: String
 ) -> void:
 	if player_state == null:
 		return
@@ -720,20 +721,90 @@ func _on_skill_cast_requested(
 		return
 
 
+	var target_kind := String(
+		skill.target_kind
+	).strip_edges().to_lower()
+
+
+	var target: Dictionary = {}
+
+
 	# -----------------------------------------------------
-	# F16-B
-	#
-	# Primer contrato de target soportado:
-	# self.
-	#
-	# Todavía NO resolvemos entidades ni posiciones.
+	# SELF
 	# -----------------------------------------------------
+
+	if (
+		target_kind
+		==
+		SkillDefinition.TARGET_SELF
+	):
+		target = {
+			"kind": "self",
+		}
+
+
+	# -----------------------------------------------------
+	# ENTITY
+	# -----------------------------------------------------
+
+	elif (
+		target_kind
+		==
+		SkillDefinition.TARGET_ENTITY
+	):
+		var normalized_entity_id := (
+			target_entity_id
+			.strip_edges()
+			.to_lower()
+		)
+
+
+		if normalized_entity_id.is_empty():
+			print(
+				"GameplayScreen | Cast omitido",
+				" | Skill: ",
+				skill_id,
+				" | Reason: entity_target_required"
+			)
+
+
+			return
+
+
+		target = {
+			"kind": "entity",
+
+			"entity_id": (
+				normalized_entity_id
+			),
+		}
+
+
+	# -----------------------------------------------------
+	# CONFIGURACIÓN DE SKILL INVÁLIDA
+	# -----------------------------------------------------
+
+	else:
+		push_warning(
+			(
+				"GameplayScreen | "
+				+
+				"Target kind no soportado para skill '%s': %s"
+			)
+			%
+			[
+				skill_id,
+				target_kind,
+			]
+		)
+
+
+		return
+
 
 	skill_cast_intent_requested.emit(
 		skill_id,
-		{
-			"kind": "self",
-		}
+		target
 	)
 
 # =========================================================

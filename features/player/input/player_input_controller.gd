@@ -10,7 +10,8 @@ signal move_target_requested(
 )
 
 signal skill_cast_requested(
-	screen_position: Vector2
+	screen_position: Vector2,
+	target_entity_id: String
 )
 
 signal npc_clicked(
@@ -196,8 +197,16 @@ func _input(
 			return
 
 
+		var target_entity_id := (
+			_resolve_mob_target_entity_id(
+				mouse_event.position
+			)
+		)
+
+
 		skill_cast_requested.emit(
-			mouse_event.position
+			mouse_event.position,
+			target_entity_id
 		)
 
 
@@ -453,6 +462,129 @@ func _request_move_to_screen_position(
 	get_viewport().set_input_as_handled()
 
 # =========================================================
+# RESOLVER TARGET DE MOB
+# =========================================================
+
+func _resolve_mob_target_entity_id(
+	screen_position: Vector2
+) -> String:
+	if player_actor == null:
+		return ""
+
+
+	if world_camera == null:
+		return ""
+
+
+	var ray_origin := (
+		world_camera.project_ray_origin(
+			screen_position
+		)
+	)
+
+
+	var ray_direction := (
+		world_camera.project_ray_normal(
+			screen_position
+		)
+	)
+
+
+	var ray_end := (
+		ray_origin
+		+
+		ray_direction
+		*
+		RAY_LENGTH
+	)
+
+
+	var space_state := (
+		player_actor
+		.get_world_3d()
+		.direct_space_state
+	)
+
+
+	var excluded_rids: Array[RID] = [
+		player_actor.get_rid()
+	]
+
+
+	if player_actor.interaction_area != null:
+		excluded_rids.append(
+			player_actor.interaction_area.get_rid()
+		)
+
+
+	var query := (
+		PhysicsRayQueryParameters3D.create(
+			ray_origin,
+			ray_end
+		)
+	)
+
+
+	query.collide_with_bodies = false
+
+	query.collide_with_areas = true
+
+	query.exclude = excluded_rids
+
+
+	var result := (
+		space_state.intersect_ray(
+			query
+		)
+	)
+
+
+	if result.is_empty():
+		return ""
+
+
+	var collider_value: Variant = (
+		result.get(
+			"collider",
+			null
+		)
+	)
+
+
+	var mob_actor := (
+		_find_mob_actor_from_collider(
+			collider_value
+		)
+	)
+
+
+	if mob_actor == null:
+		return ""
+
+
+	if not mob_actor.is_targetable():
+		return ""
+
+
+	var entity_id := (
+		mob_actor.get_entity_id()
+	)
+
+
+	if entity_id.is_empty():
+		return ""
+
+
+	print(
+		"PlayerInputController | Target PvE detectado",
+		" | Entity: ",
+		entity_id
+	)
+
+
+	return entity_id
+
+# =========================================================
 # RESOLVER NPC DESDE COLLIDER
 # =========================================================
 
@@ -474,6 +606,37 @@ func _find_npc_actor_from_collider(
 
 		if npc_actor != null:
 			return npc_actor
+
+
+		current_node = (
+			current_node.get_parent()
+		)
+
+
+	return null
+
+# =========================================================
+# RESOLVER MOB DESDE COLLIDER
+# =========================================================
+
+func _find_mob_actor_from_collider(
+	collider_value: Variant
+) -> MobActor:
+	var current_node := (
+		collider_value
+		as Node
+	)
+
+
+	while current_node != null:
+		var mob_actor := (
+			current_node
+			as MobActor
+		)
+
+
+		if mob_actor != null:
+			return mob_actor
 
 
 		current_node = (

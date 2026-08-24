@@ -38,6 +38,9 @@ var max_hp: int = 1
 	$VitalsLabel
 )
 
+@onready var target_area: Area3D = (
+	$TargetArea
+)
 
 # =========================================================
 # CONFIGURAR
@@ -262,3 +265,24 @@ func _refresh_labels() -> void:
 				max_hp,
 			]
 		)
+
+# =========================================================
+# TARGETING
+# =========================================================
+
+func get_entity_id() -> String:
+	return (
+		entity_id
+		.strip_edges()
+		.to_lower()
+	)
+
+
+func is_targetable() -> bool:
+	return (
+		alive
+		and
+		hp > 0
+		and
+		not get_entity_id().is_empty()
+	)

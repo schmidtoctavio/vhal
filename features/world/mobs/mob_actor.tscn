@@ -9,6 +9,9 @@ height = 1.8
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_niee7"]
 albedo_color = Color(0.07891648, 0.52801013, 0.049612507, 1)
 
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_tnipg"]
+radius = 0.65
+
 [node name="MobActor" type="Node3D" unique_id=2030075632]
 script = ExtResource("1_nmcs4")
 
@@ -17,6 +20,11 @@ script = ExtResource("1_nmcs4")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="VisualRoot" unique_id=645049472]
 mesh = SubResource("CapsuleMesh_tnipg")
 surface_material_override/0 = SubResource("StandardMaterial3D_niee7")
+
+[node name="TargetArea" type="Area3D" parent="." unique_id=80980660]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TargetArea" unique_id=1393054750]
+shape = SubResource("CapsuleShape3D_tnipg")
 
 [node name="NameLabel" type="Label3D" parent="." unique_id=1399766508]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)

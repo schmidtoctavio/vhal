@@ -143,16 +143,50 @@ func send_skill_cast_request(
 		return ERR_INVALID_PARAMETER
 
 
-	var normalized_target := (
-		target.duplicate(
-			true
+	var normalized_target: Dictionary = {}
+
+
+	if target_kind == "self":
+		normalized_target = {
+			"kind": "self",
+		}
+
+
+	elif target_kind == "entity":
+		var entity_id_value: Variant = (
+			target.get(
+				"entity_id",
+				null
+			)
 		)
-	)
 
 
-	normalized_target[
-		"kind"
-	] = target_kind
+		if typeof(entity_id_value) != TYPE_STRING:
+			return ERR_INVALID_PARAMETER
+
+
+		var entity_id := String(
+			entity_id_value
+		).strip_edges().to_lower()
+
+
+		if entity_id.is_empty():
+			return ERR_INVALID_PARAMETER
+
+
+		if entity_id.length() > 96:
+			return ERR_INVALID_PARAMETER
+
+
+		normalized_target = {
+			"kind": "entity",
+
+			"entity_id": entity_id,
+		}
+
+
+	else:
+		return ERR_INVALID_PARAMETER
 
 
 	var request_id := (

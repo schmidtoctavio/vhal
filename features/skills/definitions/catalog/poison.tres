@@ -9,6 +9,7 @@ skill_id = &"poison"
 display_name = "Poison"
 description = "Envenena al objetivo durante varios segundos."
 icon = ExtResource("1_ag85c")
+target_kind = "entity"
 mana_cost = 20
 cooldown_duration = 5.0
 metadata/_custom_type_script = "uid://bsoahwcjkolb0"
