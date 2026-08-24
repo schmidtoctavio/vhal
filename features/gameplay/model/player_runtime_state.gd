@@ -48,6 +48,7 @@ var skill_book: SkillBookData = null
 
 var skill_hotbar: SkillHotbarData = null
 
+var skill_cooldowns: SkillCooldownState = null
 
 # =========================================================
 # MONEDA
@@ -85,6 +86,9 @@ func _init(
 
 
 	skill_hotbar = SkillHotbarData.new()
+
+
+	skill_cooldowns = SkillCooldownState.new()
 
 
 	currency = CurrencyState.new()

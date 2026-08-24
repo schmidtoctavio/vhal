@@ -97,37 +97,6 @@ func _ready() -> void:
 		0.0
 	)
 
-
-# =========================================================
-# COOLDOWN
-#
-# Lo conservamos visualmente por ahora.
-# Más adelante el cooldown será estado runtime compartido
-# y no pertenecerá exclusivamente al nodo visual.
-# =========================================================
-
-func _process(
-	delta: float
-) -> void:
-	if Engine.is_editor_hint():
-		return
-
-
-	if _cooldown_remaining <= 0.0:
-		return
-
-
-	_cooldown_remaining = maxf(
-		_cooldown_remaining - delta,
-		0.0
-	)
-
-
-	_set_cooldown_visual(
-		_cooldown_remaining
-	)
-
-
 # =========================================================
 # CLICK SOBRE SLOT
 # =========================================================
@@ -262,23 +231,41 @@ func get_cooldown_duration() -> float:
 # COOLDOWN
 # =========================================================
 
-func start_cooldown() -> void:
+func set_cooldown_remaining(
+	seconds: float
+) -> void:
 	if skill_definition == null:
+		_cooldown_remaining = 0.0
+
+
+		_set_cooldown_visual(
+			0.0
+		)
+
+
 		return
 
 
-	if _cooldown_remaining > 0.0:
-		return
+	var maximum := maxf(
+		get_cooldown_duration(),
+		0.0
+	)
 
 
-	_cooldown_remaining = (
-		get_cooldown_duration()
+	_cooldown_remaining = clampf(
+		seconds,
+		0.0,
+		maximum
 	)
 
 
 	_set_cooldown_visual(
 		_cooldown_remaining
 	)
+
+
+func get_cooldown_remaining() -> float:
+	return _cooldown_remaining
 
 
 func is_on_cooldown() -> bool:

@@ -4,7 +4,7 @@
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama de desarrollo habitual:** `dev`  
-**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR cerrados y F16-C validado de punta a punta; próximo bloque F16-D para feedback visual autoritativo de cooldown.
+**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido y F16-A/F16-B/F16-BR/F16-C/F16-D cerrados y validados; próximo bloque F17 para primer mob + combate autoritativo.
 
 > Este archivo es la **fuente canónica única de contexto del proyecto VHAL**.
 >
@@ -2245,7 +2245,144 @@ No Laravel/MySQL por cada cast.
 
 ---
 
-# 41. F17 — PRIMER MOB + COMBATE
+# 41. F16-D — FEEDBACK VISUAL AUTORITATIVO DE COOLDOWN
+
+**Estado:** ✅ COMPLETADO Y VALIDADO.
+
+Objetivo:
+
+```text
+resultado autoritativo de cast
+→ cooldown_remaining_seconds
+→ runtime cliente por skill_id
+→ proyección visual
+→ SkillSlot
+→ overlay + contador
+```
+
+## Decisión arquitectónica
+
+El cooldown visual deja de ser estado autónomo del `SkillSlot`.
+
+Se incorpora:
+
+```text
+SkillCooldownState
+```
+
+dentro de:
+
+```text
+PlayerRuntimeState
+```
+
+Responsabilidades:
+
+```text
+Game Server
+= autoridad real del cooldown
+
+SkillCooldownState
+= proyección cliente del tiempo restante
+
+GameplayUI
+= proyecta el runtime sobre los slots
+
+SkillSlot
+= sólo dibuja el valor recibido
+```
+
+El cliente puede interpolar visualmente el tiempo entre respuestas, pero eso no autoriza ni rechaza casts.
+
+## Comportamiento validado
+
+Primer Heal:
+
+```text
+Request: 1
+Skill: heal
+Accepted: true
+Reason: ok
+MP: 350 → 310
+Cooldown: 4.0
+```
+
+Intento durante cooldown:
+
+```text
+Request: 2
+Skill: heal
+Accepted: false
+Reason: cooldown_active
+Cooldown remaining: 3.158
+MP permanece 310
+```
+
+Después de vencer el cooldown:
+
+```text
+Request: 3
+Skill: heal
+Accepted: true
+Reason: ok
+MP: 310 → 270
+Cooldown: 4.0
+```
+
+Nuevo intento prematuro:
+
+```text
+Request: 4
+Skill: heal
+Accepted: false
+Reason: cooldown_active
+Cooldown remaining: 3.545
+MP permanece 270
+```
+
+Fire Ball continúa sin ejecución real:
+
+```text
+Request: 5
+Skill: fire_ball
+Accepted: false
+Reason: skill_not_implemented
+Cooldown: 0.0
+MP permanece 270
+```
+
+## Test visual confirmado
+
+Se validó manualmente:
+
+```text
+1. Heal muestra aproximadamente 4.0 → ... → 0.
+2. El overlay y el número disminuyen correctamente.
+3. Un rechazo cooldown_active resincroniza el tiempo visual con el valor del servidor.
+4. Cambiar de Heal a Fire Ball y volver no reinicia ni elimina el cooldown de Heal.
+5. Al llegar a 0 desaparecen CooldownOverlay y CooldownLabel.
+6. Tras finalizar el cooldown, Heal vuelve a ser aceptado.
+```
+
+## Regresiones comprobadas
+
+```text
+click izquierdo → movimiento normal
+Inventory → sin regresión observada
+Equipment → sin regresión observada
+NPC/world session → sin regresión observada
+warnings/errors → ninguno observado
+```
+
+Resultado:
+
+> El servidor conserva la autoridad absoluta del cooldown. El cliente sólo mantiene una proyección visual por `skill_id`, capaz de resincronizarse con cada respuesta autoritativa.
+
+F16-D no modifica el Game Server.
+
+---
+
+# 43. F17 — PRIMER MOB + COMBATE
 
 Implementar **un mob completo**, no veinte incompletos.
 
@@ -2285,7 +2422,7 @@ click derecho sobre entidad
 
 ---
 
-# 42. PvP — DIRECCIÓN CANÓNICA
+# 43. PvP — DIRECCIÓN CANÓNICA
 
 PvP no debe implementarse como excepción improvisada.
 
@@ -2329,7 +2466,7 @@ Estos sistemas se implementarán sobre el combat runtime autoritativo, no como l
 
 ---
 
-# 43. F18 — DROP + PICKUP + EXP + LEVEL
+# 44. F18 — DROP + PICKUP + EXP + LEVEL
 
 Objetivo:
 
@@ -2365,7 +2502,7 @@ y entonces se reevalúa F15-C.
 
 ---
 
-# 44. F19 — VERTICAL SLICE COMPLETO
+# 45. F19 — VERTICAL SLICE COMPLETO
 
 Primer gran objetivo estratégico:
 
@@ -2419,7 +2556,7 @@ Primero demostrar el circuito completo.
 
 ---
 
-# 45. PERFORMANCE — SEPARADA DEL REFACTOR
+# 46. PERFORMANCE — SEPARADA DEL REFACTOR
 
 Regla:
 
@@ -2494,7 +2631,7 @@ measure
 
 ---
 
-# 46. QUÉ NO HACER AHORA
+# 47. QUÉ NO HACER AHORA
 
 Antes de F19 estable evitar:
 
@@ -2515,7 +2652,7 @@ contenido masivo antes de Combat/Drop/EXP
 
 ---
 
-# 47. AUTOLOADS
+# 48. AUTOLOADS
 
 No convertir cada sistema en Singleton.
 
@@ -2535,7 +2672,7 @@ sobre service locators globales.
 
 ---
 
-# 48. SIGNALS Y DEPENDENCIAS
+# 49. SIGNALS Y DEPENDENCIAS
 
 Usar signals cuando existe una relación de eventos real.
 
@@ -2553,7 +2690,7 @@ La dependencia debe ser rastreable.
 
 ---
 
-# 49. PLAYERWORLDSESSION — REGLA
+# 50. PLAYERWORLDSESSION — REGLA
 
 `PlayerWorldSession` representa el estado runtime autoritativo de una sesión/personaje conectado.
 
@@ -2583,7 +2720,7 @@ Systems ejecutan lógica runtime especializada
 
 ---
 
-# 50. VITALS — DIRECCIÓN
+# 51. VITALS — DIRECCIÓN
 
 Game Server es autoridad de:
 
@@ -2623,7 +2760,7 @@ con estados incompatibles.
 
 ---
 
-# 51. SKILL OWNERSHIP / PROGRESIÓN
+# 52. SKILL OWNERSHIP / PROGRESIÓN
 
 Actualmente las tres skills se asignan temporalmente mediante bootstrap de desarrollo.
 
@@ -2651,7 +2788,7 @@ aunque ownership/progresión sea durable.
 
 ---
 
-# 52. TARGETING — DIRECCIÓN
+# 53. TARGETING — DIRECCIÓN
 
 No definir prematuramente un mega-modelo universal.
 
@@ -2679,7 +2816,7 @@ El cliente puede usar screen position para hacer picking local, pero el intent f
 
 ---
 
-# 53. MOVEMENT VS COMBAT INPUT
+# 54. MOVEMENT VS COMBAT INPUT
 
 Contrato definitivo:
 
@@ -2702,7 +2839,7 @@ Todos los futuros controladores de input deben respetar este contrato.
 
 ---
 
-# 54. DEBUG / FIXTURES
+# 55. DEBUG / FIXTURES
 
 Los fixtures existen para acelerar Foundation.
 
@@ -2733,7 +2870,7 @@ No eliminar fixtures que aún sirven a sistemas no reemplazados sin plan de tran
 
 ---
 
-# 55. MAPAS
+# 56. MAPAS
 
 Primer mapa:
 
@@ -2757,7 +2894,7 @@ No construir mapa final gigante antes del vertical slice F19.
 
 ---
 
-# 56. NPC FRAMEWORK
+# 57. NPC FRAMEWORK
 
 Primer NPC:
 
@@ -2782,7 +2919,7 @@ Merchant y otros servicios deben reutilizar el framework, no duplicarlo.
 
 ---
 
-# 57. INVENTORY
+# 58. INVENTORY
 
 Características actuales relevantes:
 
@@ -2810,7 +2947,7 @@ Operaciones avanzadas de stack siguen diferidas.
 
 ---
 
-# 58. EQUIPMENT
+# 59. EQUIPMENT
 
 Autoritativo y persistente.
 
@@ -2830,7 +2967,7 @@ No duplicar la misma instancia para ocupar dos slots.
 
 ---
 
-# 59. VAULT
+# 60. VAULT
 
 Account-wide.
 
@@ -2848,7 +2985,7 @@ No mediante botón HUD directo.
 
 ---
 
-# 60. WORLD PRESENCE
+# 61. WORLD PRESENCE
 
 Foundation real:
 
@@ -2865,7 +3002,7 @@ No optimizar prematuramente.
 
 ---
 
-# 61. MOVEMENT
+# 62. MOVEMENT
 
 Arquitectura:
 
@@ -2887,7 +3024,7 @@ Right click no debe iniciar movement.
 
 ---
 
-# 62. NETWORK PROTOCOL VERSIONING
+# 63. NETWORK PROTOCOL VERSIONING
 
 Existe envelope versionado.
 
@@ -2901,7 +3038,7 @@ Un paquete malformado no debe llegar al gameplay como si fuese confiable.
 
 ---
 
-# 63. SEGURIDAD / TRUST BOUNDARY
+# 64. SEGURIDAD / TRUST BOUNDARY
 
 Nunca confiar en:
 
@@ -2923,7 +3060,7 @@ El servidor valida y decide.
 
 ---
 
-# 64. ROADMAP RESUMIDO ACTUAL
+# 65. ROADMAP RESUMIDO ACTUAL
 
 ```text
 F00-F14 Foundation             ✅
@@ -2936,9 +3073,9 @@ F16-A Skill runtime           ✅
 F16-B Cast protocol           ✅
 F16-BR Input MU correction    ✅
 F16-C Authoritative Heal      ✅
-F16-D Cooldown visual/UI      ⏳ SIGUIENTE
+F16-D Cooldown visual/UI      ✅
 
-F17 Mob / Combat              ⏳
+F17 Mob / Combat              ⏳ SIGUIENTE
 F18 Drop / Pickup / EXP       ⏳
 F19 Vertical Slice            ⏳
 
@@ -2947,12 +3084,12 @@ PERF-1                        ⏳ después de F19 estable
 
 ---
 
-# 65. PRÓXIMO PASO EXACTO
+# 67. PRÓXIMO PASO EXACTO
 
 Antes de comenzar una etapa nueva:
 
 ```text
-cerrar checkpoint F16-C
+cerrar checkpoint F16-D
 → git status
 → commit
 → push
@@ -2962,42 +3099,22 @@ cerrar checkpoint F16-C
 Después:
 
 ```text
-F16-D — feedback visual autoritativo de cooldown
+F17 — primer mob + combate autoritativo
 ```
 
-Objetivo:
-
-```text
-resultado autoritativo de cast
-→ cooldown_remaining_seconds
-→ runtime/UI
-→ overlay y contador visual
-```
-
-El cliente representa el cooldown informado por el servidor. No debe volver a decidir por sí mismo si un cast está disponible.
+F17 deberá comenzar desde una división pequeña y comprobable, sin intentar construir IA, daño, muerte, respawn, drops y EXP en un único cambio.
 
 ---
 
-# 66. CRITERIO DE ÉXITO DEL PRÓXIMO TEST
+# 68. CRITERIO DE ÉXITO DEL PRÓXIMO TEST
 
-F16-D deberá demostrar:
+El primer checkpoint de F17 deberá definir y validar el runtime autoritativo mínimo de una entidad hostil antes de conectar daño real de Fire Ball o Poison.
 
-```text
-1. seleccionar Heal con tecla 3;
-2. click derecho → cast aceptado por servidor;
-3. cooldown visual comienza desde el valor autoritativo recibido;
-4. contador/overlay desciende visualmente;
-5. intento durante cooldown es rechazado por servidor;
-6. rechazo puede resincronizar el cooldown visual con el tiempo restante autoritativo;
-7. al terminar cooldown el slot vuelve a disponible;
-8. cambiar de skill no destruye el estado visual de cooldown;
-9. no aparecen warnings/errors;
-10. movimiento, Inventory, Equipment y NPC no regresionan.
-```
+No implementar todavía daño de skills sobre un target inexistente o no autoritativo.
 
 ---
 
-# 67. DECISIÓN SOBRE HEAL
+# 68. DECISIÓN SOBRE HEAL
 
 Heal será la primera ejecución real porque no depende de F17.
 
@@ -3019,7 +3136,7 @@ Fire Ball y Poison continuarán después sobre el mismo backbone.
 
 ---
 
-# 68. DECISIÓN SOBRE FIRE BALL / POISON
+# 69. DECISIÓN SOBRE FIRE BALL / POISON
 
 No implementar daño real antes de tener entidad/mob autoritativo.
 
@@ -3049,7 +3166,7 @@ No crear implementaciones ficticias sólo para “hacerlas funcionar”.
 
 ---
 
-# 69. DECISIÓN SOBRE CONSUMIBLES
+# 70. DECISIÓN SOBRE CONSUMIBLES
 
 Health Potion existe como item foundation, pero su uso se difiere hasta que el pipeline autoritativo de vitals/effects esté listo.
 
@@ -3070,7 +3187,7 @@ No aplicar HP local desde UI.
 
 ---
 
-# 70. DEFINICIÓN DE “REAL” EN VHAL
+# 71. DEFINICIÓN DE “REAL” EN VHAL
 
 Un sistema se considera real cuando:
 
@@ -3088,7 +3205,7 @@ no depende de un shortcut de debug para su funcionamiento normal
 
 ---
 
-# 71. REGLA FINAL DE CONTINUIDAD
+# 72. REGLA FINAL DE CONTINUIDAD
 
 Al abrir una nueva conversación o retomar el proyecto:
 
@@ -3119,7 +3236,7 @@ El SHA definitivo de cierre de F16-C debe verificarse en `dev` después del push
 La etapa funcionalmente validada es:
 
 ```text
-F16-C — primer Heal autoritativo
+F16-D — feedback visual autoritativo de cooldown
 ```
 
 Contrato vigente:
@@ -3133,7 +3250,7 @@ CTRL + RIGHT CLICK  = PvP
 Próxima etapa después del checkpoint Git:
 
 ```text
-F16-D — feedback visual autoritativo de cooldown
+F17 — primer mob + combate autoritativo
 ```
 
-**No avanzar a F16-D hasta commitear, pushear y confirmar el cierre de F16-C.**
+**No avanzar a F17 hasta commitear, pushear y confirmar el cierre de F16-D.**

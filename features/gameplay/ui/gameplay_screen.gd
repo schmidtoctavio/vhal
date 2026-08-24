@@ -1633,6 +1633,37 @@ func apply_authoritative_skill_cast_result(
 
 		return
 
+	if player_state.skill_cooldowns == null:
+		push_warning(
+			(
+				"GameplayScreen | "
+				+
+				"No existe SkillCooldownState."
+			)
+		)
+
+
+		return
+
+
+	if not player_state.skill_cooldowns.sync_authoritative(
+		skill_id,
+		cooldown_remaining_seconds
+	):
+		push_warning(
+			(
+				"GameplayScreen | "
+				+
+				"No se pudo sincronizar el cooldown "
+				+
+				"autoritativo de '%s'."
+			)
+			%
+			skill_id
+		)
+
+
+		return
 
 	var effect_kind := String(
 		effect.get(

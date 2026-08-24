@@ -82,6 +82,7 @@ var skill_hotbar_data: SkillHotbarData = null
 
 var skill_book_data: SkillBookData = null
 
+var skill_cooldown_state: SkillCooldownState = null
 
 # =========================================================
 # INVENTARIO
@@ -282,6 +283,9 @@ func _activate_skill_state() -> void:
 		player_state.skill_hotbar
 	)
 
+	skill_cooldown_state = (
+		player_state.skill_cooldowns
+	)
 
 	# -----------------------------------------------------
 	# SKILL BOOK
@@ -461,6 +465,7 @@ func _disconnect_player_state() -> void:
 
 	skill_book_data = null
 
+	skill_cooldown_state = null
 
 # =========================================================
 # REFRESCAR VITALES
@@ -1185,3 +1190,76 @@ func _on_equipment_item_unequip_requested(
 		source_slot_id,
 		new_position
 	)
+
+# =========================================================
+# COOLDOWNS VISUALES
+# =========================================================
+
+func _refresh_skill_cooldown_visuals() -> void:
+	if skills_container == null:
+		return
+
+
+	for child in skills_container.get_children():
+		var slot := (
+			child
+			as SkillSlot
+		)
+
+
+		if slot == null:
+			continue
+
+
+		var skill := (
+			slot.skill_definition
+		)
+
+
+		if (
+			skill == null
+			or
+			skill_cooldown_state == null
+		):
+			slot.set_cooldown_remaining(
+				0.0
+			)
+
+
+			continue
+
+
+		var skill_id := String(
+			skill.skill_id
+		).strip_edges().to_lower()
+
+
+		if skill_id.is_empty():
+			slot.set_cooldown_remaining(
+				0.0
+			)
+
+
+			continue
+
+
+		var remaining := (
+			skill_cooldown_state
+			.get_remaining_seconds(
+				skill_id
+			)
+		)
+
+
+		slot.set_cooldown_remaining(
+			remaining
+		)
+
+func _process(
+	_delta: float
+) -> void:
+	if skill_cooldown_state == null:
+		return
+
+
+	_refresh_skill_cooldown_visuals()
