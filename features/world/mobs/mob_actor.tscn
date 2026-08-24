@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://cbngas3ujwmp3"]
+
+[ext_resource type="Script" uid="uid://d28s86baalcr8" path="res://features/world/mobs/mob_actor.gd" id="1_nmcs4"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_tnipg"]
+radius = 0.55
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_niee7"]
+albedo_color = Color(0.07891648, 0.52801013, 0.049612507, 1)
+
+[node name="MobActor" type="Node3D" unique_id=2030075632]
+script = ExtResource("1_nmcs4")
+
+[node name="VisualRoot" type="Node3D" parent="." unique_id=1347243385]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="VisualRoot" unique_id=645049472]
+mesh = SubResource("CapsuleMesh_tnipg")
+surface_material_override/0 = SubResource("StandardMaterial3D_niee7")
+
+[node name="NameLabel" type="Label3D" parent="." unique_id=1399766508]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
+billboard = 1
+text = "Training Goblin"
+
+[node name="VitalsLabel" type="Label3D" parent="." unique_id=668095610]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.05, 0)
+billboard = 1
+text = "50000 / 50000 HP"

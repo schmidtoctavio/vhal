@@ -1091,6 +1091,9 @@ func _show_gameplay(
 		game_server_client.remote_players.values()
 	)
 
+	gameplay_screen.sync_world_mobs(
+		game_server_client.remote_mobs.values()
+	)
 
 # =========================================================
 # MOVIMIENTO → GAME SERVER

@@ -49,6 +49,7 @@ var get_local_peer_id: Callable = Callable()
 
 var remote_players: Dictionary = {}
 
+var remote_mobs: Dictionary = {}
 
 # =========================================================
 # SETUP
@@ -300,6 +301,262 @@ func _parse_remote_player_presence(
 		},
 	}
 
+# =========================================================
+# VALIDAR MOB DE MUNDO
+# =========================================================
+
+func _parse_world_mob_snapshot(
+	value: Variant
+) -> Dictionary:
+	if typeof(value) != TYPE_DICTIONARY:
+		return {}
+
+
+	var data: Dictionary = (
+		value
+	)
+
+
+	var entity_id := String(
+		data.get(
+			"entity_id",
+			""
+		)
+	).strip_edges().to_lower()
+
+
+	if entity_id.is_empty():
+		return {}
+
+
+	var entity_kind := String(
+		data.get(
+			"entity_kind",
+			""
+		)
+	).strip_edges().to_lower()
+
+
+	if entity_kind != "mob":
+		return {}
+
+
+	var mob_type_id := String(
+		data.get(
+			"mob_type_id",
+			""
+		)
+	).strip_edges().to_lower()
+
+
+	var display_name := String(
+		data.get(
+			"display_name",
+			""
+		)
+	).strip_edges()
+
+
+	var level := int(
+		data.get(
+			"level",
+			0
+		)
+	)
+
+
+	if (
+		mob_type_id.is_empty()
+		or
+		display_name.is_empty()
+		or
+		level <= 0
+	):
+		return {}
+
+
+	# -----------------------------------------------------
+	# VITALS
+	# -----------------------------------------------------
+
+	var vitals_value: Variant = (
+		data.get(
+			"vitals",
+			null
+		)
+	)
+
+
+	if typeof(vitals_value) != TYPE_DICTIONARY:
+		return {}
+
+
+	var vitals: Dictionary = (
+		vitals_value
+	)
+
+
+	if (
+		not vitals.has("hp")
+		or
+		not vitals.has("max_hp")
+		or
+		not vitals.has("mp")
+		or
+		not vitals.has("max_mp")
+	):
+		return {}
+
+
+	var hp := int(
+		vitals["hp"]
+	)
+
+	var max_hp := int(
+		vitals["max_hp"]
+	)
+
+	var mp := int(
+		vitals["mp"]
+	)
+
+	var max_mp := int(
+		vitals["max_mp"]
+	)
+
+
+	if (
+		max_hp <= 0
+		or
+		hp < 0
+		or
+		hp > max_hp
+		or
+		max_mp < 0
+		or
+		mp < 0
+		or
+		mp > max_mp
+	):
+		return {}
+
+
+	var alive := bool(
+		data.get(
+			"alive",
+			false
+		)
+	)
+
+
+	if alive != (hp > 0):
+		return {}
+
+
+	# -----------------------------------------------------
+	# WORLD
+	# -----------------------------------------------------
+
+	var world_value: Variant = (
+		data.get(
+			"world",
+			null
+		)
+	)
+
+
+	if typeof(world_value) != TYPE_DICTIONARY:
+		return {}
+
+
+	var world: Dictionary = (
+		world_value
+	)
+
+
+	var map_id := String(
+		world.get(
+			"map_id",
+			""
+		)
+	).strip_edges()
+
+
+	if map_id.is_empty():
+		return {}
+
+
+	var position_value: Variant = (
+		world.get(
+			"position",
+			null
+		)
+	)
+
+
+	if typeof(position_value) != TYPE_DICTIONARY:
+		return {}
+
+
+	var position_data: Dictionary = (
+		position_value
+	)
+
+
+	if (
+		not position_data.has("x")
+		or
+		not position_data.has("y")
+		or
+		not position_data.has("z")
+	):
+		return {}
+
+
+	var position := Vector3(
+		float(position_data["x"]),
+		float(position_data["y"]),
+		float(position_data["z"])
+	)
+
+
+	var rotation_y := float(
+		world.get(
+			"rotation_y",
+			0.0
+		)
+	)
+
+
+	return {
+		"entity_id": entity_id,
+
+		"entity_kind": "mob",
+
+		"mob_type_id": mob_type_id,
+
+		"display_name": display_name,
+
+		"level": level,
+
+		"alive": alive,
+
+		"vitals": {
+			"hp": hp,
+			"max_hp": max_hp,
+
+			"mp": mp,
+			"max_mp": max_mp,
+		},
+
+		"world": {
+			"map_id": map_id,
+
+			"position": position,
+
+			"rotation_y": rotation_y,
+		},
+	}
 
 # =========================================================
 # ROSTER INICIAL DEL MUNDO
@@ -315,18 +572,29 @@ func _process_world_presence_snapshot(
 		)
 	)
 
+	var mobs_value: Variant = (
+		data.get(
+			"mobs",
+			null
+		)
+	)
 
 	if typeof(players_value) != TYPE_ARRAY:
 		return
 
+	if typeof(mobs_value) != TYPE_ARRAY:
+		return
 
 	var players: Array = (
 		players_value
 	)
 
+	var mobs: Array = (
+		mobs_value
+	)
 
 	remote_players.clear()
-
+	remote_mobs.clear()
 
 	for player_value: Variant in players:
 		var player := (
@@ -353,10 +621,40 @@ func _process_world_presence_snapshot(
 		] = player
 
 
+	for mob_value: Variant in mobs:
+		var mob := (
+			_parse_world_mob_snapshot(
+				mob_value
+			)
+		)
+
+
+		if mob.is_empty():
+			continue
+
+
+		var entity_id := String(
+			mob.get(
+				"entity_id",
+				""
+			)
+		)
+
+
+		if entity_id.is_empty():
+			continue
+
+
+		remote_mobs[
+			entity_id
+		] = mob
+
 	print(
 		"GameServerClient | Roster de mundo recibido",
 		" | Remotos: ",
-		remote_players.size()
+		remote_players.size(),
+		" | Mobs: ",
+		remote_mobs.size()
 	)
 
 
@@ -561,3 +859,5 @@ func update_remote_world_state(
 
 func reset() -> void:
 	remote_players.clear()
+
+	remote_mobs.clear()

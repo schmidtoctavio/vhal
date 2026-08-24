@@ -196,6 +196,13 @@ var remote_players: Dictionary:
 
 		return presence_protocol.remote_players
 
+var remote_mobs: Dictionary:
+	get:
+		if presence_protocol == null:
+			return {}
+
+
+		return presence_protocol.remote_mobs
 
 # =========================================================
 # CICLO DE VIDA

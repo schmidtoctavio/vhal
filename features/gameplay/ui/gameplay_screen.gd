@@ -15,6 +15,10 @@ const REMOTE_PLAYER_ACTOR_SCENE: PackedScene = preload(
 	"res://features/player/runtime/remote_player_actor.tscn"
 )
 
+const MOB_ACTOR_SCENE: PackedScene = preload(
+	"res://features/world/mobs/mob_actor.tscn"
+)
+
 # =========================================================
 # SEÑALES
 # =========================================================
@@ -150,6 +154,8 @@ var active_player_actor: PlayerActor = null
 # =========================================================
 
 var remote_player_actors: Dictionary = {}
+
+var mob_actors: Dictionary = {}
 
 # =========================================================
 # CONFIGURACIÓN
@@ -783,6 +789,204 @@ func apply_movement_decision(
 		authorized_target,
 		reason
 	)
+
+# =========================================================
+# SINCRONIZAR MOBS
+# =========================================================
+
+func sync_world_mobs(
+	mobs: Array
+) -> void:
+	_clear_world_mobs()
+
+
+	for mob_value: Variant in mobs:
+		if typeof(mob_value) != TYPE_DICTIONARY:
+			continue
+
+
+		var mob: Dictionary = (
+			mob_value
+		)
+
+
+		_spawn_or_update_mob(
+			mob
+		)
+
+
+	print(
+		"GameplayScreen | Mobs sincronizados",
+		" | Cantidad: ",
+		mob_actors.size()
+	)
+
+
+# =========================================================
+# CREAR / ACTUALIZAR MOB
+# =========================================================
+
+func _spawn_or_update_mob(
+	mob: Dictionary
+) -> void:
+	if actors_root == null:
+		return
+
+
+	if player_state == null:
+		return
+
+
+	if player_state.world == null:
+		return
+
+
+	var entity_id := String(
+		mob.get(
+			"entity_id",
+			""
+		)
+	).strip_edges().to_lower()
+
+
+	if entity_id.is_empty():
+		return
+
+
+	var world_value: Variant = (
+		mob.get(
+			"world",
+			null
+		)
+	)
+
+
+	if typeof(world_value) != TYPE_DICTIONARY:
+		return
+
+
+	var world: Dictionary = (
+		world_value
+	)
+
+
+	var mob_map_id := String(
+		world.get(
+			"map_id",
+			""
+		)
+	).strip_edges()
+
+
+	if (
+		mob_map_id
+		!=
+		player_state.world.map_id
+	):
+		return
+
+
+	# -----------------------------------------------------
+	# YA EXISTE
+	# -----------------------------------------------------
+
+	if mob_actors.has(
+		entity_id
+	):
+		var existing_value: Variant = (
+			mob_actors[
+				entity_id
+			]
+		)
+
+
+		var existing_actor := (
+			existing_value
+			as MobActor
+		)
+
+
+		if (
+			existing_actor != null
+			and
+			is_instance_valid(
+				existing_actor
+			)
+		):
+			existing_actor.setup(
+				mob
+			)
+
+
+		return
+
+
+	# -----------------------------------------------------
+	# CREAR
+	# -----------------------------------------------------
+
+	var actor_instance := (
+		MOB_ACTOR_SCENE.instantiate()
+	)
+
+
+	if actor_instance == null:
+		return
+
+
+	var mob_actor := (
+		actor_instance
+		as MobActor
+	)
+
+
+	if mob_actor == null:
+		actor_instance.free()
+
+		return
+
+
+	actors_root.add_child(
+		mob_actor
+	)
+
+
+	if not mob_actor.setup(
+		mob
+	):
+		mob_actor.queue_free()
+
+		return
+
+
+	mob_actors[
+		entity_id
+	] = mob_actor
+
+
+# =========================================================
+# LIMPIAR MOBS
+# =========================================================
+
+func _clear_world_mobs() -> void:
+	for actor_value: Variant in mob_actors.values():
+		var mob_actor := (
+			actor_value
+			as MobActor
+		)
+
+
+		if (
+			mob_actor != null
+			and
+			is_instance_valid(
+				mob_actor
+			)
+		):
+			mob_actor.queue_free()
+
+
+	mob_actors.clear()
 
 # =========================================================
 # SINCRONIZAR PLAYERS REMOTOS

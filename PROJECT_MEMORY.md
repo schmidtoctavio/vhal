@@ -314,24 +314,24 @@ Cuando aparece ese patrón hay que revisar la abstracción.
 │ intención + UI      │
 │ representación      │
 └──────────┬──────────┘
-           │
-           │ ENet
-           ▼
+		   │
+		   │ ENet
+		   ▼
 ┌─────────────────────┐
 │  GODOT GAME SERVER  │
 │ autoridad gameplay  │
 │ estado runtime      │
 └──────────┬──────────┘
-           │
-           │ HTTP interno
-           ▼
+		   │
+		   │ HTTP interno
+		   ▼
 ┌─────────────────────┐
 │   LARAVEL BACKEND   │
 │ identidad + API     │
 │ persistencia        │
 └──────────┬──────────┘
-           │
-           ▼
+		   │
+		   ▼
 ┌─────────────────────┐
 │        MYSQL        │
 │ almacenamiento      │
@@ -766,19 +766,19 @@ res://
 │       └── skill_cast_coordinator.gd
 │
 └── core/
-    ├── networking/
-    ├── backend/
-    ├── combat/
-    │   ├── server_vitals_state.gd
-    │   └── server_character_runtime_bootstrap.gd
-    ├── skills/
-    │   ├── server_skill_definition.gd
-    │   ├── server_skill_catalog.gd
-    │   └── server_skill_runtime_state.gd
-    └── world/
-        ├── movement/
-        ├── navigation/
-        └── npcs/
+	├── networking/
+	├── backend/
+	├── combat/
+	│   ├── server_vitals_state.gd
+	│   └── server_character_runtime_bootstrap.gd
+	├── skills/
+	│   ├── server_skill_definition.gd
+	│   ├── server_skill_catalog.gd
+	│   └── server_skill_runtime_state.gd
+	└── world/
+		├── movement/
+		├── navigation/
+		└── npcs/
 ```
 
 ## ServerMain
@@ -2504,6 +2504,40 @@ EXP
 **Siguiente checkpoint:** `F17-B — roster/snapshot de mobs + representación cliente mínima`.
 
 ---
+
+### F17-B — Authoritative Mob Replication + Client MobActor ✅
+
+Estado: completado, probado manualmente y validado.
+
+Implementado:
+
+- `WorldPresenceCoordinator` incorpora los mobs autoritativos del mapa al roster inicial.
+- `world_presence_snapshot` replica:
+  - jugadores remotos,
+  - mobs autoritativos.
+- `GameServerPresenceProtocol` valida y normaliza snapshots de mobs.
+- El cliente conserva `remote_mobs` durante el loading.
+- `GameServerClient` expone el roster autoritativo de mobs.
+- Nuevo `MobActor` cliente para representación visual de entidades mob.
+- `GameplayScreen` sincroniza e instancia los mobs recibidos por red.
+- El mapa cliente no define qué mobs existen; la existencia de mobs pertenece al Game Server.
+
+Prueba validada en `test_town`:
+
+- `mob_test_town_001`
+- tipo `training_goblin`
+- `Training Goblin`
+- nivel 1
+- HP 50000/50000
+- posición (4, 0, 4)
+- un único actor visual creado.
+- movimiento autoritativo del jugador continúa funcionando.
+
+El `MobActor` actual utiliza una representación visual placeholder.
+Todavía no existen targeting, ataque, daño, aggro, IA ni muerte de mobs.
+
+Siguiente checkpoint previsto:
+F17-C — Entity Targeting Foundation.
 
 # 44. PvP — DIRECCIÓN CANÓNICA
 
