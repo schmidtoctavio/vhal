@@ -4,7 +4,7 @@
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama de desarrollo habitual:** `dev`  
-**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido y F16-A/F16-B/F16-BR/F16-C/F16-D cerrados y validados; próximo bloque F17 para primer mob + combate autoritativo.
+**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D cerrados y F17-A validado; próximo checkpoint F17-B para replicación cliente del primer mob.
 
 > Este archivo es la **fuente canónica única de contexto del proyecto VHAL**.
 >
@@ -2382,7 +2382,7 @@ F16-D no modifica el Game Server.
 
 ---
 
-# 43. F17 — PRIMER MOB + COMBATE
+# 42. F17 — PRIMER MOB + COMBATE
 
 Implementar **un mob completo**, no veinte incompletos.
 
@@ -2420,9 +2420,92 @@ click derecho sobre entidad
 → Game Server valida
 ```
 
+## F17-A — Runtime autoritativo mínimo del primer mob
+
+**Estado:** ✅ COMPLETADO Y VALIDADO.
+
+Se incorporó en `vhal_game_server`:
+
+```text
+WorldMobDefinition
+WorldMobRuntimeState
+WorldMobRegistry
+```
+
+Decisión de dominio:
+
+```text
+WorldMobDefinition
+= describe el tipo de monstruo
+
+WorldMobRuntimeState
+= representa una instancia viva concreta del mundo
+```
+
+Esto permite reutilizar una misma definición para múltiples entidades con distinto `entity_id`, posición y HP.
+
+Primer tipo temporal:
+
+```text
+mob_type_id: training_goblin
+display_name: Training Goblin
+level: 1
+max_hp: 50000
+```
+
+Primera instancia autoritativa:
+
+```text
+entity_id: mob_test_town_001
+map_id: test_town
+position: (4.0, 0.0, 4.0)
+HP: 50000/50000
+MP: 0/0
+```
+
+`WorldMobRuntimeState` reutiliza `ServerVitalsState`, por lo que el primer mob ya posee estado vital autoritativo compatible con el backbone de combate existente.
+
+Test validado:
+
+```text
+WorldMobRegistry | Inicializado | Definiciones: 1 | Mobs: 1
+WorldMobRegistry | Mob preparado | Entity: mob_test_town_001 | Type: training_goblin | Nombre: Training Goblin | Nivel: 1 | Mapa: test_town | Posición: (4.0, 0.0, 4.0) | HP: 50000/50000
+```
+
+Además se comprobó:
+
+```text
+login → OK
+character select → OK
+entrada a test_town → OK
+Inventory/Equipment snapshots → OK
+movimiento autoritativo → OK
+warnings/errors → ninguno observado
+```
+
+El mensaje final de desconexión del cliente en el test ocurrió porque se detuvo manualmente el proceso de debugging del Game Server; no representa una regresión de red.
+
+F17-A no incluye todavía:
+
+```text
+replicación del mob al cliente
+MobActor
+IA
+aggro
+movimiento de mobs
+target PvE
+daño de Fire Ball/Poison
+muerte
+respawn
+drops
+EXP
+```
+
+**Siguiente checkpoint:** `F17-B — roster/snapshot de mobs + representación cliente mínima`.
+
 ---
 
-# 43. PvP — DIRECCIÓN CANÓNICA
+# 44. PvP — DIRECCIÓN CANÓNICA
 
 PvP no debe implementarse como excepción improvisada.
 
@@ -3075,7 +3158,8 @@ F16-BR Input MU correction    ✅
 F16-C Authoritative Heal      ✅
 F16-D Cooldown visual/UI      ✅
 
-F17 Mob / Combat              ⏳ SIGUIENTE
+F17-A Mob runtime             ✅
+F17-B Mob replication         ⏳ SIGUIENTE
 F18 Drop / Pickup / EXP       ⏳
 F19 Vertical Slice            ⏳
 
@@ -3089,7 +3173,7 @@ PERF-1                        ⏳ después de F19 estable
 Antes de comenzar una etapa nueva:
 
 ```text
-cerrar checkpoint F16-D
+cerrar checkpoint F17-A
 → git status
 → commit
 → push
@@ -3099,10 +3183,21 @@ cerrar checkpoint F16-D
 Después:
 
 ```text
-F17 — primer mob + combate autoritativo
+F17-B — roster/snapshot de mobs + representación cliente mínima
 ```
 
-F17 deberá comenzar desde una división pequeña y comprobable, sin intentar construir IA, daño, muerte, respawn, drops y EXP en un único cambio.
+Objetivo del siguiente checkpoint:
+
+```text
+WorldMobRegistry
+→ snapshot/roster autoritativo por mapa
+→ GameServer protocol
+→ cliente
+→ MobActor mínimo
+→ Training Goblin visible en test_town
+```
+
+Todavía sin IA ni daño real.
 
 ---
 
@@ -3236,7 +3331,7 @@ El SHA definitivo de cierre de F16-C debe verificarse en `dev` después del push
 La etapa funcionalmente validada es:
 
 ```text
-F16-D — feedback visual autoritativo de cooldown
+F17-A — runtime autoritativo mínimo del primer mob
 ```
 
 Contrato vigente:
@@ -3250,7 +3345,7 @@ CTRL + RIGHT CLICK  = PvP
 Próxima etapa después del checkpoint Git:
 
 ```text
-F17 — primer mob + combate autoritativo
+F17-B — roster/snapshot de mobs + representación cliente mínima
 ```
 
-**No avanzar a F17 hasta commitear, pushear y confirmar el cierre de F16-D.**
+**No avanzar a F17-B hasta commitear, pushear y confirmar el cierre de F17-A.**
