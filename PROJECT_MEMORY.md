@@ -4,17 +4,13 @@
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama de desarrollo habitual:** `dev`  
-**Estado general:** Foundation avanzada, F15-B cerrado, F15-R validado de punta a punta, vertical slice real en construcción.
+**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A completado, F16-B networking validado y F16-BR pendiente para corregir el contrato de input estilo MU antes de F16-C.
 
 > Este archivo es la **fuente canónica única de contexto del proyecto VHAL**.
 >
-> A partir de este checkpoint absorbe también las decisiones y el roadmap que antes estaban distribuidos en:
+> A partir de este checkpoint absorbe arquitectura, decisiones, roadmap, workflow, controles y estado funcional.
 >
-> - `PROJECT_MEMORY.md`
-> - `VHAL_ROADMAP_ARQUITECTURA_2026-08-21.md`
-> - revisiones anteriores del roadmap
->
-> Los roadmaps viejos pueden conservarse como historial, pero para continuar el desarrollo se debe leer **este archivo primero**.
+> Los roadmaps o memorias anteriores pueden conservarse como historial, pero para continuar el desarrollo se debe leer **este archivo primero**.
 
 ---
 
@@ -30,9 +26,9 @@ No se está construyendo solamente:
 - un clon pequeño de un juego existente;
 - un prototipo descartable.
 
-La meta es construir progresivamente la base de un **MMORPG real**, con una arquitectura que pueda crecer durante años sin transformarse en un código inmanejable.
+La meta es construir progresivamente la base de un **MMORPG real**, con una arquitectura que pueda crecer durante años sin transformarse en código inmanejable.
 
-La intención es poder incorporar con el tiempo:
+La intención es poder incorporar progresivamente:
 
 ```text
 cuentas
@@ -71,30 +67,35 @@ sin tener que reescribir el proyecto completo cada vez que aparece un sistema nu
 
 ---
 
-# 2. CONTEXTO DE APRENDIZAJE Y FORMA DE ACOMPAÑAR EL DESARROLLO
+# 2. CONTEXTO DE APRENDIZAJE
 
-Este punto es **parte oficial del proyecto**, no una nota secundaria.
+Este punto es parte oficial del proyecto.
 
-La persona que está desarrollando VHAL está **aprendiendo Godot, GDScript, networking, arquitectura de juegos y desarrollo de MMORPG de manera progresiva**.
-
-Por lo tanto el objetivo no es únicamente llegar al resultado final.
-
-También importa:
+El desarrollo de VHAL también funciona como aprendizaje progresivo de:
 
 ```text
-entender qué estamos haciendo
-entender por qué se hace
-aprender a usar Godot
-aprender a leer las escenas
-aprender a conectar nodos y signals
-aprender a separar responsabilidades
-aprender a probar sistemas
-aprender a diagnosticar errores
+Godot
+GDScript
+escenas
+Nodes
+signals
+Inspector
+UI
+networking
+arquitectura de juegos
+backend
+persistencia
+autoridad de servidor
+MMORPG architecture
+testing
+diagnóstico de errores
 ```
 
-## 2.1 Regla pedagógica
+La regla pedagógica es:
 
-Cada implementación importante debe explicar, en lenguaje claro:
+> **Arquitectura profesional, explicación progresiva.**
+
+Cada implementación importante debe explicar:
 
 ```text
 qué problema resuelve
@@ -106,23 +107,21 @@ qué flujo produce
 cómo se prueba
 ```
 
-No asumir conocimiento avanzado.
-
-Tampoco simplificar la arquitectura sólo porque el desarrollador todavía está aprendiendo.
-
-La regla es:
-
-> **Arquitectura profesional, explicación progresiva.**
+No simplificar la arquitectura sólo porque el proyecto también se utiliza para aprender.
 
 ---
 
 # 3. FORMA DE IMPLEMENTACIÓN PREFERIDA
 
-Las implementaciones nuevas deben hacerse de forma **manual, controlada y entendible**, tal como se viene trabajando.
+Las implementaciones nuevas se realizan de forma:
 
-No buscamos que una herramienta modifique silenciosamente decenas de archivos y entregue únicamente el resultado.
-
-## 3.1 Para código nuevo
+```text
+manual
+controlada
+explicada
+por etapas pequeñas
+probadas antes de avanzar
+```
 
 Flujo preferido:
 
@@ -135,70 +134,40 @@ Flujo preferido:
 6. ejecutar;
 7. revisar logs;
 8. corregir cualquier warning/error;
-9. recién después hacer commit.
+9. revisar git status;
+10. commit;
+11. push;
+12. esperar "pusheado";
+13. recién entonces avanzar.
 ```
 
-Cuando un cambio es pequeño, se puede indicar el bloque exacto.
-
-Cuando un archivo queda difícil de editar parcialmente, es preferible entregar el archivo completo para reemplazarlo y evitar errores manuales de bloques incompletos.
-
-## 3.2 Para escenas y cambios visuales
-
-Para:
+Cuando un cambio visual puede hacerse razonablemente desde Godot se prefiere:
 
 ```text
-Node tree
-Control
-Container
-anchors
-offsets
-Theme
-StyleBox
-TextureRect
-NinePatchRect
-Panel
-Button
-slots
-HUD
-ventanas
-componentes visuales
+abrir escena
+seleccionar nodo
+agregar/modificar hijos
+usar Inspector
+conectar signals
+guardar
+probar
 ```
 
-se prefiere **hacer los cambios manualmente dentro del editor de Godot** siempre que sea razonable.
+No reemplazar escenas completas automáticamente cuando el cambio manual aporta aprendizaje y tiene bajo riesgo.
 
-La explicación debería decir, por ejemplo:
+Se pueden entregar archivos completos cuando:
 
-```text
-abrí esta escena
-seleccioná este nodo
-agregá este hijo
-cambiá esta propiedad del Inspector
-asigná este recurso
-conectá esta signal
-ejecutá esta escena
-```
-
-Esto es especialmente importante porque forma parte del aprendizaje.
-
-No reemplazar una escena `.tscn` completa automáticamente cuando un cambio visual pequeño puede enseñarse claramente desde el editor.
-
-## 3.3 Excepciones
-
-Se puede entregar un archivo completo o un paquete de archivos cuando:
-
-- el archivo es muy grande;
+- son grandes;
 - hay muchas modificaciones relacionadas;
-- editar bloques manualmente tiene alto riesgo de error;
+- editar bloques manualmente tiene alto riesgo;
 - el usuario lo solicita;
-- el objetivo de esa etapa es arquitectura y no aprender un detalle del editor.
-
-Aun así se debe explicar qué cambió.
+- la etapa es principalmente arquitectónica.
 
 ---
 
-# 4. WORKFLOW OBLIGATORIO DE DESARROLLO
+# 4. WORKFLOW OBLIGATORIO
 
-VHAL usa el siguiente ciclo:
+VHAL usa este ciclo:
 
 ```text
 ETAPA
@@ -222,9 +191,7 @@ SIGUIENTE ETAPA
 
 Nunca acumular muchas etapas sin checkpoints.
 
-## 4.1 Regla de errores
-
-Si aparece:
+Una etapa NO está terminada si aparece:
 
 ```text
 Parser Error
@@ -236,10 +203,6 @@ regresión
 contrato fallido
 ```
 
-la etapa actual **no está terminada**.
-
-Se corrige antes de avanzar.
-
 Objetivo habitual:
 
 ```text
@@ -248,9 +211,7 @@ Objetivo habitual:
 0 runtime errors inesperados
 ```
 
-## 4.2 Git
-
-Cuando una etapa queda lista para checkpoint, entregar juntos:
+Cuando una etapa queda lista para checkpoint:
 
 ```bash
 git status
@@ -259,15 +220,7 @@ git commit -m "mensaje"
 git push
 ```
 
-Se utiliza deliberadamente:
-
-```bash
-git add .
-```
-
-y no una lista manual de archivos.
-
-Después del push se espera la respuesta:
+Después se espera:
 
 ```text
 pusheado
@@ -281,40 +234,47 @@ y se confirma el commit remoto antes de avanzar.
 
 Antes de indicar una modificación concreta:
 
-> **revisar el estado real actual del repositorio.**
+> **Revisar el estado real actual del repositorio.**
 
-No responder con frases ambiguas como:
+Repositorios:
 
 ```text
-si ya tenés...
-si existe...
-quizás tu archivo...
+Cliente:
+schmidtoctavio/vhal
+
+Game Server:
+schmidtoctavio/vhal_game_server
+
+Backend:
+schmidtoctavio/vhal_backend
+```
+
+Rama activa:
+
+```text
+dev
+```
+
+No responder con:
+
+```text
+si ya existe...
+si tenés...
+quizás...
 probablemente...
 ```
 
-cuando el repositorio está disponible para revisar.
+cuando el repositorio está disponible.
 
-La indicación correcta debe ser:
-
-```text
-este archivo existe
-actualmente contiene esto
-se reemplaza por esto
-se agrega este archivo
-este otro no se toca
-```
-
-Esto reduce errores y hace que el proceso sea reproducible.
+Se debe partir del código real.
 
 ---
 
-# 6. MANDATO ARQUITECTÓNICO PRINCIPAL
+# 6. MANDATO ARQUITECTÓNICO
 
-La prioridad oficial de VHAL es:
+Prioridad oficial:
 
 > **Escalabilidad, mantenibilidad, consistencia y claridad de responsabilidades antes que velocidad de implementación.**
-
-Una solución no se considera buena solamente porque funcione hoy.
 
 Antes de consolidar un sistema debemos poder responder:
 
@@ -328,10 +288,10 @@ Antes de consolidar un sistema debemos poder responder:
 ¿Cómo vuelve la confirmación?
 ¿Cómo se recupera después de reconnect/logout?
 ¿Cómo se prueba?
-¿Cómo se podrá optimizar después sin reescribir todo?
+¿Cómo se optimizará después sin reescribir todo?
 ```
 
-Si una implementación empieza a crear excepciones como:
+Evitar condicionales especiales dispersos por todo el proyecto:
 
 ```text
 if warehouse...
@@ -342,13 +302,11 @@ if this_class...
 if this_map...
 ```
 
-dispersas simultáneamente por UI, networking, dominio y persistencia, hay que detenerse y diseñar una abstracción mejor.
+Cuando aparece ese patrón hay que revisar la abstracción.
 
 ---
 
-# 7. ARQUITECTURA GENERAL ACTUAL
-
-La arquitectura real actual es:
+# 7. ARQUITECTURA GENERAL
 
 ```text
 ┌─────────────────────┐
@@ -381,30 +339,7 @@ La arquitectura real actual es:
 └─────────────────────┘
 ```
 
-Los repositorios son:
-
-```text
-Cliente:
-schmidtoctavio/vhal
-
-Game Server:
-schmidtoctavio/vhal_game_server
-
-Backend:
-schmidtoctavio/vhal_backend
-```
-
-Rama activa:
-
-```text
-dev
-```
-
----
-
-# 8. AUTORIDAD DE DATOS
-
-Regla oficial:
+Regla:
 
 ```text
 Cliente     = intención + representación
@@ -413,9 +348,13 @@ Backend     = identidad + API + persistencia durable
 MySQL       = almacenamiento durable
 ```
 
-## 8.1 Cliente
+---
 
-Puede decir:
+# 8. AUTORIDAD DE DATOS
+
+## Cliente
+
+Puede pedir:
 
 ```text
 quiero moverme aquí
@@ -423,22 +362,25 @@ quiero mover este item
 quiero equipar este UID
 quiero interactuar con este NPC
 quiero castear esta skill
+quiero atacar esta entidad
 ```
 
 No puede decidir definitivamente:
 
 ```text
 mi posición real es ésta
-el item ya quedó equipado
-el mob recibió 500 daño
-gané 1000 EXP
-me quedan 12 MP
+el item quedó equipado
+el mob recibió X daño
+gané EXP
+me quedan X MP
+el cooldown terminó
 el drop existe
+otro jugador murió
 ```
 
-## 8.2 Game Server
+## Game Server
 
-Decide:
+Decide progresivamente:
 
 ```text
 movimiento
@@ -448,9 +390,9 @@ inventory
 equipment
 vault
 skills
-combat
 mana
 cooldowns
+combat
 damage
 death
 drops
@@ -461,11 +403,9 @@ PvP
 trade
 ```
 
-según se vayan implementando.
+## Backend
 
-## 8.3 Backend
-
-Responsabilidades:
+Responsable de:
 
 ```text
 accounts
@@ -484,7 +424,7 @@ El cliente nunca habla directamente con MySQL.
 
 # 9. PRINCIPIOS DE CÓDIGO
 
-La dirección del proyecto es:
+Dirección del proyecto:
 
 ```text
 Feature-first
@@ -504,9 +444,9 @@ Orchestration explícita
 IDs lógicos estables
 ```
 
-No buscamos una arquitectura académica por nombre.
+No se busca una arquitectura académica por nombre.
 
-Buscamos patrones:
+Se buscan patrones:
 
 - claros;
 - repetibles;
@@ -518,11 +458,9 @@ Buscamos patrones:
 
 # 10. CAPAS CONCEPTUALES
 
-## 10.1 Definitions
+## Definitions
 
-Describen qué existe.
-
-Ejemplos:
+Describen qué existe:
 
 ```text
 ItemDefinition
@@ -538,9 +476,9 @@ Son datos estáticos/de diseño.
 
 Mientras el volumen sea razonable pueden vivir como Resources/catalogs.
 
-No convertir prematuramente todo el contenido en tablas o JSON sólo por “escalabilidad”.
+No convertir prematuramente todo el contenido a DB o JSON sólo por “escalabilidad”.
 
-## 10.2 Runtime State
+## Runtime State
 
 Describe qué está pasando ahora.
 
@@ -563,6 +501,8 @@ Game Server:
 
 ```text
 PlayerWorldSession
+ServerVitalsState
+ServerSkillRuntimeState
 movimiento autoritativo
 servicio NPC activo
 snapshots persistentes conocidos
@@ -570,7 +510,7 @@ futuro combat state
 futuro mob runtime state
 ```
 
-## 10.3 UI / View
+## UI / View
 
 Debe:
 
@@ -585,9 +525,9 @@ representar runtime state
 
 No debe ser fuente de verdad.
 
-## 10.4 Networking
+## Networking
 
-Debe encargarse de:
+Debe:
 
 ```text
 transport
@@ -600,11 +540,11 @@ routing de mensajes
 
 No convertirse en gameplay.
 
-## 10.5 Domain Rules / Validators
+## Domain Rules / Validators
 
-Aquí viven las reglas reutilizables.
+Aquí viven reglas reutilizables.
 
-Ejemplos actuales:
+Ejemplos:
 
 ```text
 ServerEquipmentRules
@@ -614,13 +554,12 @@ ServerCharacterInventorySnapshotValidator
 ServerVaultSnapshotValidator
 ServerItemContainerTransferValidator
 EquipmentRules
+ServerSkillCatalog
 ```
 
-## 10.6 Repositories
+## Repositories
 
-Encapsulan infraestructura HTTP/backend.
-
-Ejemplos:
+Encapsulan infraestructura HTTP/backend:
 
 ```text
 BackendTicketValidator
@@ -632,17 +571,15 @@ BackendItemTransferRepository
 
 El dominio no debe conocer rutas Laravel.
 
-## 10.7 Coordinators / Flows
+## Coordinators / Flows
 
-Coordinan casos de uso.
+Coordinan casos de uso concretos.
 
 No son “Managers para todo”.
 
-Cada uno tiene una responsabilidad concreta.
-
 ---
 
-# 11. IDs ESTABLES COMO CONTRATO
+# 11. IDs ESTABLES
 
 Nunca usar como identidad persistente:
 
@@ -662,19 +599,13 @@ item_id    = bronze_sword
 npc_id     = warehouse_keeper
 service_id = warehouse
 map_id     = test_town
-class_id   = ...
-skill_id   = ...
+class_id   = warrior
+skill_id   = heal
 ```
-
-Esto permite reorganizar escenas/código sin corromper datos persistentes.
 
 ---
 
-# 12. ESTRUCTURA ACTUAL DEL CLIENTE
-
-El cliente ya utiliza organización principalmente feature-first.
-
-Estructura conceptual actual relevante:
+# 12. ESTRUCTURA CONCEPTUAL DEL CLIENTE
 
 ```text
 res://
@@ -695,14 +626,16 @@ res://
 │   ├── characters/
 │   ├── equipment/
 │   ├── gameplay/
-│   │   └── networking/
-│   │       ├── game_server_client.gd
-│   │       └── protocols/
-│   │           ├── game_server_world_protocol.gd
-│   │           ├── game_server_presence_protocol.gd
-│   │           ├── game_server_movement_protocol.gd
-│   │           ├── game_server_npc_protocol.gd
-│   │           └── game_server_item_protocol.gd
+│   │   ├── networking/
+│   │   │   ├── game_server_client.gd
+│   │   │   └── protocols/
+│   │   │       ├── game_server_world_protocol.gd
+│   │   │       ├── game_server_presence_protocol.gd
+│   │   │       ├── game_server_movement_protocol.gd
+│   │   │       ├── game_server_npc_protocol.gd
+│   │   │       ├── game_server_item_protocol.gd
+│   │   │       └── game_server_skill_protocol.gd
+│   │   └── ui/
 │   ├── inventory/
 │   ├── items/
 │   ├── player/
@@ -712,7 +645,6 @@ res://
 │
 ├── ui/
 │   └── shared/
-│
 ├── assets/
 ├── art_source/
 ├── debug/
@@ -720,17 +652,11 @@ res://
 └── test/
 ```
 
-La estructura puede seguir evolucionando gradualmente.
-
 No crear carpetas vacías “por si acaso”.
-
-Se crea una carpeta cuando aparece una responsabilidad real que la necesita.
 
 ---
 
-# 13. CLIENTE — APPLICATION FLOW POST F15-R
-
-Después de F15-R11:
+# 13. APPLICATION FLOW DEL CLIENTE
 
 ```text
 Main
@@ -753,30 +679,23 @@ GameSessionFlowCoordinator
 ├── Gameplay wiring
 ├── movement/presence bridge
 ├── NPC/Warehouse bridge
-└── Inventory/Vault/Equipment bridge
+├── Inventory/Vault/Equipment bridge
+└── Skills/Cast bridge
 ```
 
-`app/main.gd` ya no debe volver a transformarse en un archivo donde termine toda la lógica nueva.
+`app/main.gd` no debe volver a transformarse en un monolito.
 
 ---
 
-# 14. CLIENTE — NETWORKING POST F15-R
+# 14. NETWORKING DEL CLIENTE
 
-Existe:
-
-```text
-GameServerClient
-```
-
-y sigue existiendo **una sola conexión ENet**.
-
-Arquitectura:
+Existe una sola conexión ENet:
 
 ```text
 GameServerClient
 │
 ├── ENetMultiplayerPeer único
-├── autenticación de conexión
+├── autenticación
 ├── envelope/versionado
 ├── packet dispatch
 ├── send centralizado
@@ -785,12 +704,13 @@ GameServerClient
 ├── GameServerPresenceProtocol
 ├── GameServerMovementProtocol
 ├── GameServerNpcProtocol
-└── GameServerItemProtocol
+├── GameServerItemProtocol
+└── GameServerSkillProtocol
 ```
 
-No crear un ENet peer por feature.
+No crear sockets independientes por feature sin necesidad real.
 
-No crear:
+Ejemplos incorrectos:
 
 ```text
 InventoryConnection
@@ -799,30 +719,34 @@ ChatConnection
 NpcConnection
 ```
 
-como sockets independientes sin una razón arquitectónica real.
+## ItemProtocol
 
-## 14.1 ItemProtocol
+Inventory, Vault y Equipment continúan juntos cuando comparten serialización de mutaciones.
 
-Inventory, Vault y Equipment continúan juntos internamente donde necesitan compartir la serialización de mutaciones.
+## SkillProtocol
 
-Regla:
+Responsabilidad actual:
 
 ```text
-Inventory move
-Vault move
-Inventory ↔ Vault
-Inventory ↔ Equipment
+serializar skill_cast_request
+asignar request_id
+enviar intención por el transporte central
 ```
 
-no deben iniciar simultáneamente cuando comparten estado pendiente.
+No decide:
 
-La serialización sigue siendo parte del contrato del cliente.
+```text
+mana
+cooldown
+damage
+heal
+target válido
+resultado
+```
 
 ---
 
-# 15. ESTRUCTURA ACTUAL DEL GAME SERVER
-
-Estructura conceptual:
+# 15. ESTRUCTURA CONCEPTUAL DEL GAME SERVER
 
 ```text
 res://
@@ -838,60 +762,47 @@ res://
 │       ├── item_container_transfer_coordinator.gd
 │       ├── npc_service_coordinator.gd
 │       ├── movement_coordinator.gd
-│       └── world_presence_coordinator.gd
+│       ├── world_presence_coordinator.gd
+│       └── skill_cast_coordinator.gd
 │
 └── core/
 	├── networking/
 	├── backend/
-	├── world/
-	│   ├── movement/
-	│   ├── navigation/
-	│   └── npcs/
-	└── domain / catalogs / validators
+	├── combat/
+	│   ├── server_vitals_state.gd
+	│   └── server_character_runtime_bootstrap.gd
+	├── skills/
+	│   ├── server_skill_definition.gd
+	│   ├── server_skill_catalog.gd
+	│   └── server_skill_runtime_state.gd
+	└── world/
+		├── movement/
+		├── navigation/
+		└── npcs/
 ```
 
-## 15.1 ServerMain
+## ServerMain
 
-Después de F15-R:
-
-```text
-ServerMain
-└── composition root
-```
-
-Sus responsabilidades son principalmente:
+Responsabilidad:
 
 ```text
+composition root
 resolver nodos/dependencias
 validar configuración
 ejecutar contratos/self-tests
 inicializar registries
 configurar coordinators
-conectar dependencias de alto nivel
-arrancar el servidor
+arrancar servidor
 manejar fallos de startup
 ```
 
-No debe volver a absorber:
-
-```text
-equip request
-inventory request
-NPC interaction
-movement decisions
-world presence
-authentication callbacks
-```
-
-directamente.
+No debe absorber casos de uso.
 
 ---
 
-# 16. RESPONSABILIDADES DE LOS COORDINATORS DEL GAME SERVER
+# 16. COORDINATORS DEL GAME SERVER
 
 ## CharacterItemStateCoordinator
-
-Responsable de estado compartido persistente del personaje:
 
 ```text
 Inventory snapshot
@@ -902,23 +813,17 @@ resend
 stale recovery
 ```
 
-No contiene las reglas de Equip ni las reglas de mover Inventory.
-
 ## EquipmentCoordinator
-
-Responsable de:
 
 ```text
 Equip
 Unequip
-validación de transferencia
+validación
 persistencia
 resync
 ```
 
 ## InventoryCoordinator
-
-Responsable de:
 
 ```text
 movimiento interno Inventory
@@ -928,8 +833,6 @@ resync
 ```
 
 ## VaultCoordinator
-
-Responsable de:
 
 ```text
 carga Vault
@@ -941,16 +844,12 @@ Vault es account-wide.
 
 ## ItemContainerTransferCoordinator
 
-Responsable de:
-
 ```text
 Inventory → Vault
 Vault → Inventory
 ```
 
 ## NpcServiceCoordinator
-
-Responsable de:
 
 ```text
 interaction intent
@@ -964,8 +863,6 @@ out_of_range invalidation
 
 ## MovementCoordinator
 
-Responsable de:
-
 ```text
 movement intent
 NavMesh resolution
@@ -976,15 +873,13 @@ replication
 NPC range checks durante movimiento
 ```
 
-El movimiento físico/tick permanece en:
+El tick físico vive en:
 
 ```text
 WorldMovementSystem
 ```
 
 ## WorldPresenceCoordinator
-
-Responsable de:
 
 ```text
 same-map roster
@@ -994,8 +889,6 @@ player left
 ```
 
 ## AuthenticationCoordinator
-
-Responsable de:
 
 ```text
 ticket flow
@@ -1007,25 +900,37 @@ persistent item bootstrap
 disconnect cleanup
 ```
 
+## SkillCastCoordinator
+
+Introducido en F16-B.
+
+Responsabilidad actual:
+
+```text
+recibir una intención de cast estructuralmente válida
+resolver PlayerWorldSession del peer
+coordinar el caso de uso de cast
+```
+
+En F16-B todavía NO:
+
+```text
+consume MP
+cura
+hace daño
+inicia cooldown
+replica resultado
+```
+
+En F16-C comenzará a coordinar la ejecución autoritativa real.
+
 ---
 
 # 17. BACKEND / PERSISTENCIA
 
 Backend Laravel real.
 
-Estructura Laravel estándar con responsabilidades del proyecto dentro de:
-
-```text
-app/
-database/
-routes/
-config/
-tests/
-```
-
-El Backend no es autoridad de gameplay en tiempo real.
-
-Es autoridad de:
+Responsable de:
 
 ```text
 identidad
@@ -1038,9 +943,11 @@ queries persistentes
 protección stale
 ```
 
-## 17.1 Tabla item_instances
+No es autoridad de gameplay en tiempo real.
 
-Modelo actual conceptual:
+## Item instances
+
+Modelo conceptual:
 
 ```text
 item_instances
@@ -1121,8 +1028,6 @@ serial/history
 
 # 19. ITEM DEFINITION VS ITEM INSTANCE
 
-Regla:
-
 ```text
 ItemDefinition = tipo de item
 ItemInstance   = instancia concreta
@@ -1134,9 +1039,9 @@ Ejemplo:
 bronze_sword
 ```
 
-es definición.
+es una definición.
 
-Una espada específica que posee un jugador tiene:
+Una espada específica tiene:
 
 ```text
 uid
@@ -1144,10 +1049,10 @@ quantity
 container
 position
 equipment slot
-future state
+state
 ```
 
-El campo `state` puede crecer, por ejemplo:
+El campo `state` puede crecer:
 
 ```json
 {
@@ -1159,9 +1064,7 @@ El campo `state` puede crecer, por ejemplo:
 }
 ```
 
-Pero no meter indiscriminadamente todo en JSON.
-
-Datos con query/indexación fuerte pueden merecer columnas o tablas específicas.
+No meter indiscriminadamente todo en JSON.
 
 ---
 
@@ -1185,7 +1088,7 @@ ring_right
 
 No persistir enums numéricos.
 
-## 20.1 Hand modes
+Hand modes:
 
 ```text
 none
@@ -1195,9 +1098,7 @@ two_hand
 off_hand_only
 ```
 
-## 20.2 TWO_HAND
-
-Contrato:
+## TWO_HAND
 
 ```text
 item TWO_HAND
@@ -1206,13 +1107,9 @@ item TWO_HAND
 → nunca se duplica el UID
 ```
 
-El slot lógico, la reserva de slots y el attachment visual son conceptos separados.
-
 ---
 
-# 21. ITEMS REALES DE FOUNDATION
-
-Ejemplos de contenido real actual utilizado para test:
+# 21. ITEMS FOUNDATION
 
 ## Bronze Sword
 
@@ -1246,9 +1143,9 @@ hand_mode: none
 
 ---
 
-# 22. ESTADO FUNCIONAL REAL ACTUAL
+# 22. ESTADO FUNCIONAL REAL
 
-Están probados de punta a punta:
+Probado de punta a punta:
 
 ```text
 cuenta real
@@ -1277,79 +1174,33 @@ logout/login
 persistencia
 stale-state recovery
 UID estable
+skill runtime foundation
+skill cast intent Client → Game Server
 ```
 
-VHAL ya no debe describirse como “UI Lab”.
+VHAL ya no debe describirse como un simple “UI Lab”.
 
 ---
 
 # 23. F00 → F14 — FOUNDATION
 
-## F00 — Estabilización
-
-✅ COMPLETADO / absorbido.
-
-## F01 — Organización feature-first
-
-✅ MAYORMENTE COMPLETADO.
-
-## F02 — ClientSession + ScreenRouter
-
-✅ IMPLEMENTADO.
-
-## F03 — Service Layer
-
-✅ IMPLEMENTADO en la base real.
-
-Algunos mocks transitorios pueden seguir existiendo donde todavía no se sustituyeron por gameplay definitivo.
-
-## F04 — PlayerRuntimeState
-
-✅ IMPLEMENTADO.
-
-## F05 — Debug fixtures
-
-✅/🟡 suficientes.
-
-Se retiran gradualmente conforme cada sistema se vuelve real.
-
-## F06 — UI Core
-
-✅ base funcional.
-
-## F07 — Backend / cuentas reales
-
-✅ IMPLEMENTADO.
-
-## F08 — Personajes reales
-
-✅ IMPLEMENTADO.
-
-## F09 — Loading + Game Session
-
-✅ IMPLEMENTADO.
-
-## F10 — Primer mapa
-
-✅ `test_town`.
-
-## F11 — Player Actor 3D
-
-✅ base funcional.
-
-Visual/model final pendiente.
-
-## F12 — Cámara + movimiento
-
-✅ base autoritativa funcional.
-
-## F13 — Networking autoritativo
-
-✅ FOUNDATION implementada.
-
-## F14 — NPC Framework
-
-✅ FOUNDATION implementada.
+```text
+F00 Estabilización                     ✅
+F01 Organización feature-first         ✅/mayormente
+F02 ClientSession + ScreenRouter        ✅
+F03 Service Layer                      ✅
+F04 PlayerRuntimeState                 ✅
+F05 Debug fixtures                     ✅/transitorio
+F06 UI Core                            ✅
+F07 Backend / cuentas reales           ✅
+F08 Personajes reales                  ✅
+F09 Loading + Game Session             ✅
+F10 Primer mapa test_town              ✅
+F11 Player Actor 3D                    ✅ base
+F12 Cámara + movimiento                ✅
+F13 Networking autoritativo            ✅ foundation
+F14 NPC Framework                      ✅ foundation
+```
 
 Primer NPC/servicio real:
 
@@ -1388,29 +1239,22 @@ Warehouse authorization
 
 **Estado:** ✅ COMPLETADO.
 
-## B1 / B1R
+Incluye:
 
-Contrato estable de slots + semántica de manos.
-
-## B2
-
-Backend persistente.
-
-## B3
-
-Game Server domain + snapshot + validation + persistence flow.
-
-## B4
-
-Protocolo ENet.
-
-## B5
-
-Client snapshot → runtime → UI + drag & drop.
-
-## B6
-
-Integridad y edge cases.
+```text
+contrato estable de slots
+semántica de manos
+backend persistente
+Game Server domain
+snapshot
+validation
+persistence flow
+ENet
+client runtime
+UI drag & drop
+integridad
+edge cases
+```
 
 Validado:
 
@@ -1432,11 +1276,7 @@ same UID
 two-hand domain contract
 ```
 
-## B7
-
-Cierre formal y smoke completo.
-
-Resultado:
+Smoke final:
 
 ```text
 Movement                        OK
@@ -1466,223 +1306,61 @@ same behavior
 better structure
 ```
 
-No fue una optimización de performance.
+No fue optimización de performance.
 
-No agregó gameplay nuevo.
+Se extrajeron responsabilidades desde archivos centrales hacia coordinators/protocols dedicados.
 
-## R0 — Architectural baseline
-
-✅
-
-Cliente:
+Resultado conceptual:
 
 ```text
-b16d55211603831e15f5f2cca9ede5f5f21ba93e
-docs: record architectural refactor baseline
+main.gd              → composition root
+GameServerClient     → transport facade
+protocol files       → serialización/parsing por dominio
+coordinators         → casos de uso
+domain validators    → reglas
+repositories         → infraestructura backend
+runtime states       → estado
 ```
 
-## R1 — CharacterItemStateCoordinator
-
-✅
-
-Game Server:
+Checkpoint cliente previo a F16:
 
 ```text
-719f1d1116ea250d77a08e633aacb7b128b0b193
-refactor: extract character item state coordination
-```
-
-## R2 — EquipmentCoordinator
-
-✅
-
-```text
-f82e5c37d7e48f531202f328a6da0adbe3661649
-refactor: extract equipment coordination
-```
-
-## R3 — InventoryCoordinator
-
-✅
-
-```text
-dd35175184d10e69f49841a7120ea38e0551f272
-refactor: extract inventory coordination
-```
-
-## R4 — VaultCoordinator
-
-✅
-
-```text
-547a591d5499a16e5ffbe358041d513f5483ebd4
-refactor: extract vault coordination
-```
-
-## R5 — ItemContainerTransferCoordinator
-
-✅
-
-```text
-f0287015a333f329a872c5a6d08a385c9bbbd2bd
-refactor: extract item container transfer coordination
-```
-
-## R6 — NpcServiceCoordinator
-
-✅
-
-```text
-6349ef9d592cef994e1f9fb5abd8fd91cf1a1e64
-refactor: extract npc service coordination
-```
-
-## R7 — MovementCoordinator
-
-✅
-
-```text
-1e121832aac19a1c9e624d0312285d3f5fe0e095
-refactor: extract movement coordination
-```
-
-## R8 — WorldPresenceCoordinator
-
-✅
-
-```text
-944b2be56b3f8979c6d6d4b00d8048ad458d73fc
-refactor: extract world presence coordination
-```
-
-## R9 — AuthenticationCoordinator
-
-✅
-
-```text
-c62a67f442936a29eb8c6bad37c473a5ba4e7b3c
-refactor: extract authentication coordination
-```
-
-## R10 — GameServerClient protocol split
-
-✅
-
-Cliente:
-
-```text
-e1c939fed4b6b626217ed069e0d935a36d010f12
-refactor: split game server client protocols
-```
-
-## R11 — Client application flow split
-
-✅
-
-```text
-cc12482d38c3e22b399ebda6562e0451eebfd21b
-refactor: split client application flows
-```
-
-## R12 — Cleanup + full regression
-
-✅ VALIDADO EN RUNTIME EL 23/08/2026.
-
-Validación final:
-
-```text
-Application flow                      OK
-Authentication                        OK
-World bootstrap                       OK
-Movement                              OK
-Two-player Presence                   OK
-NPC interaction                       OK
-Warehouse lifecycle                   OK
-Inventory internal move               OK
-Vault internal move                   OK
-Inventory → Vault                     OK
-Vault → Inventory                     OK
-Inventory → Equipment                 OK
-Equipment → Inventory                 OK
-Persistent relog                      OK
-Stale-state recovery                  OK
-Unexpected ERR_BUSY                   NONE
-Client warnings/errors                NONE
-Game Server warnings/errors           NONE
-Backend unexpected errors             NONE
+2f68c95a8ae812ba14d2d8fa6b72cb96034fa555
+docs: close architectural refactor and update project memory
 ```
 
 ---
 
-# 27. CHECKPOINTS IMPORTANTES PREVIOS DE F15
+# 27. CHECKPOINTS F16
 
-## Cliente
-
-```text
-1645ff315365d8125302832d163fa3f359718147
-foundation: add stable equipment slot contract
-
-9c8d49364997ddd72b0ecdfdf50b779f93a84706
-foundation: migrate equipment slots to stable semantic ids
-
-3bc5d692c93b349973ece119a3e88c531504d7c1
-foundation: add semantic equipment hand rules
-
-7614a3be009ccd0a1e1ac90fa34cebcbd025a580
-foundation: add authoritative equipment client protocol
-
-1a8cda066af11716a3617e91d47d4fec6a593b97
-foundation: apply authoritative equipment state
-
-8ba6a9a72eac1fd7a11f8e159bd19975ae1087ba
-foundation: add authoritative equipment drag and drop
-
-7921e91c5f50a90cd128b6c676b1b64c38ed2d40
-fix: serialize authoritative item mutations
-
-6dcd698c9e6c544a043952d3a3ce42357fd6761c
-docs: add canonical project memory checkpoint
-```
-
-## Game Server
+## Game Server — F16-A
 
 ```text
-df1f61855ca5eb28dd83afcba34b79b9212971fa
-foundation: add authoritative equipment snapshot
-
-a58ca5a8e6361936a02c64f92ac89f5df8091c7b
-foundation: add authoritative equipment transfer validation
-
-49ddad490a9157051640b7c03a81779f3ce8016e
-foundation: add authoritative equipment persistence flow
-
-64778af6906c0c0efa67609ddf795e36cdbf299c
-foundation: add authoritative equipment network protocol
-
-0c5d9cee1adfd8a1bbb8563e2a5cc308d5ae7642
-test: strengthen equipment transfer integrity contract
-
-13c225a5fd0c18d8143064a156fcc79fed1add57
-test: add equipment snapshot integrity contract
+53ceffe932b03f200f2e7ee3e7a43f986f9a5463
+feat: add authoritative skill runtime foundation
 ```
 
-## Backend
+## Cliente — F16-B networking/input inicial
 
 ```text
-f163645958a990a133e6cb983abee3427c94483e
-foundation: add atomic inventory vault transfers
-
-5e875cae0ac403fafb9fc9d92ce4a165c82d2243
-foundation: add persistent character equipment backend
+c8a7916be8fe3091f394611e09d89da75b398c20
+feat: add skill cast intent protocol
 ```
+
+## Game Server — F16-B recepción
+
+```text
+9d32d0e62705a916036afba97e39d21a656d4424
+feat: receive authoritative skill cast intents
+```
+
+**Importante:** el mapping de mouse introducido inicialmente en el cliente necesita corrección F16-BR antes de considerar F16-B completamente cerrado.
 
 ---
 
 # 28. STALE-STATE RECOVERY
 
-Este flujo es parte del contrato arquitectónico.
-
-Ejemplo probado:
+Contrato probado:
 
 ```text
 Client/Game Server creen:
@@ -1690,11 +1368,7 @@ Bronze Sword en posición vieja
 
 MySQL:
 posición modificada manualmente
-```
 
-Resultado:
-
-```text
 Equip request
 → Game Server valida intención runtime
 → Laravel detecta stale state
@@ -1715,8 +1389,6 @@ No aplicar optimistic mutation definitiva en cliente.
 ---
 
 # 29. PLAYER MODEL A LARGO PLAZO
-
-Dirección conceptual:
 
 ```text
 PlayerRuntimeState
@@ -1765,15 +1437,33 @@ AccountState
 └── futuros datos compartidos
 ```
 
+Game Server:
+
+```text
+PlayerWorldSession
+├── identity
+├── world state
+├── authoritative vitals
+├── authoritative skill runtime
+├── persistent item snapshots
+├── movement intent/runtime
+├── NPC service state
+└── futuro combat state
+```
+
 ---
 
 # 30. UI — DIRECCIÓN VISUAL
 
 La UI final debe tener identidad propia de VHAL.
 
-No queremos depender permanentemente de assets placeholder/Kenney.
+Referencia conceptual:
 
-La referencia conceptual para densidad y funcionalidad es un MMORPG clásico, especialmente una interfaz compacta tipo MU Online, pero **no se busca copiar visualmente MU**.
+```text
+MMORPG clásico
+densidad compacta tipo MU Online
+sin copiar visualmente MU
+```
 
 Objetivo:
 
@@ -1787,7 +1477,7 @@ reusable
 consistent
 ```
 
-## 30.1 Ventanas
+## Ventanas
 
 Regla cerrada:
 
@@ -1807,9 +1497,7 @@ Skills
 y futuras ventanas equivalentes
 ```
 
-## 30.2 Inventory
-
-Dirección:
+## Inventory
 
 ```text
 compacto
@@ -1820,9 +1508,9 @@ drag & drop claro
 tooltip consistente
 ```
 
-## 30.3 Assets
+## Assets
 
-Paquete VHAL ideal:
+Organización ideal:
 
 ```text
 assets/ui/vhal/
@@ -1837,13 +1525,7 @@ assets/ui/vhal/
 └── theme/
 ```
 
-Nombres:
-
-```text
-lowercase_snake_case.png
-```
-
-Estados visuales del mismo control deben usar:
+Estados del mismo control:
 
 ```text
 mismo canvas
@@ -1852,23 +1534,7 @@ misma posición
 misma geometría
 ```
 
-y cambiar sólo el feedback visual.
-
-## 30.4 9-slice
-
-Para paneles/ventanas:
-
-```text
-NinePatch / StyleBoxTexture
-```
-
-separar:
-
-```text
-Texture Margins
-≠
-Content Margins
-```
+cambiando sólo el feedback visual.
 
 ---
 
@@ -1876,7 +1542,7 @@ Content Margins
 
 `Window` es un concepto correcto.
 
-Lo que se evita es una carpeta global gigante como:
+Evitar una carpeta global gigante:
 
 ```text
 windows/
@@ -1886,10 +1552,10 @@ windows/
 ├── quest
 ├── crafting
 ├── merchant
-├── ...
+└── ...
 ```
 
-Preferir organización por feature:
+Preferir:
 
 ```text
 features/inventory/ui/inventory_window.*
@@ -1897,174 +1563,137 @@ features/vault/ui/vault_window.*
 features/skills/ui/skills_window.*
 ```
 
-y dejar shared únicamente para verdaderos componentes reutilizables:
-
-```text
-ui/shared/windows/base_window.*
-```
+Shared sólo para componentes genuinamente reutilizables.
 
 ---
 
-# 32. DATOS DE CONTENIDO A GRAN ESCALA
+# 32. CONTRATO DE INPUT / CONTROLES ESTILO MU
 
-No intentar resolver hoy todo el contenido futuro con una única técnica.
+Esta sección es **canónica** y debe respetarse en futuras implementaciones.
 
-Regla:
+La referencia funcional buscada es similar a MU Online.
+
+## Movimiento
 
 ```text
-static definition
-runtime state
-persistent player/account state
+CLICK IZQUIERDO
+→ movimiento / click-to-move
 ```
 
-son problemas distintos.
+El botón izquierdo **NO se utiliza para lanzar skills**.
 
-## Static definitions
-
-Pueden comenzar como:
+## Skills / combate PvE
 
 ```text
-Godot Resources
-catalogs
-configs
+CLICK DERECHO
+→ activar / lanzar la skill actualmente seleccionada
 ```
 
-con IDs estables.
+El botón derecho es la entrada principal para Skills/Combat.
 
-Ejemplos:
+La hotbar:
 
 ```text
-ItemDefinition
+1
+2
+3
+...
+```
+
+selecciona una skill.
+
+Seleccionar una skill no equivale a ejecutarla.
+
+El cast se ejecuta mediante:
+
+```text
+click derecho
+```
+
+cuando existe un target/uso válido.
+
+## PvP
+
+Contrato:
+
+```text
+CTRL + CLICK DERECHO
+→ intención de ataque / skill contra otro jugador
+```
+
+No utilizar:
+
+```text
+CTRL + CLICK IZQUIERDO
+```
+
+como contrato de PvP.
+
+## Regla de futuro
+
+La detección de input debe separar:
+
+```text
+click izquierdo        → movement intent
+click derecho          → skill/combat intent
+Ctrl + click derecho   → PvP combat intent
+```
+
+La UI no decide daño, Heal, hit, cooldown ni muerte.
+
+El Game Server mantiene autoridad.
+
+---
+
+# 33. SKILLS — ESTADO CLIENTE PRE-F16
+
+Foundation local existente:
+
+```text
 SkillDefinition
-MobDefinition
-NpcDefinition
-MapDefinition
+SkillBookData
+SkillHotbarData
+SkillSlot
+SelectedSkillSlot
+SkillsWindow
+SkillTooltip
 ```
 
-## Persistencia
-
-Datos únicos por jugador/cuenta:
+Skills actuales:
 
 ```text
-inventory
-equipment
-vault
-character progression
-quests
-currencies
+fire_ball
+poison
+heal
 ```
 
-pertenecen a persistencia durable.
-
-## Futuro
-
-Cuando el contenido crezca mucho se evaluará de forma medida qué conviene mover a:
+Recursos actuales:
 
 ```text
-DB
-data tables
-JSON/config
-admin tooling
-content pipeline
+fire_ball
+mana_cost = 30
+cooldown = 3.0
+
+poison
+mana_cost = 20
+cooldown = 5.0
+
+heal
+mana_cost = 40
+cooldown = 4.0
 ```
 
-No hacer migraciones de arquitectura de contenido anticipadas sin necesidad real.
+Debug fixture actual:
+
+```text
+slot 1 → Fire Ball
+slot 2 → Poison
+slot 3 → Heal
+```
 
 ---
 
-# 33. ESCALABILIDAD DE MMORPG
-
-“Pensar a gran escala” no significa implementar clustering hoy.
-
-Significa no tomar decisiones que lo vuelvan imposible mañana.
-
-VHAL debe permitir evolucionar hacia:
-
-```text
-muchos jugadores
-muchos NPCs
-muchos mobs
-muchos items
-muchas skills
-múltiples mapas
-interest management
-spatial partition
-varios procesos Game Server
-world/channel/shard architecture cuando sea necesaria
-observabilidad
-persistencia desacoplada del tick de combate
-```
-
-pero sólo introducir cada complejidad cuando exista una necesidad medida.
-
----
-
-# 34. MAPAS
-
-No crear un mapa final enorme antes de tener el vertical slice.
-
-La estrategia actual es:
-
-```text
-test_town
-→ validar sistemas
-→ agregar mapa/zonas reales de forma progresiva
-```
-
-Cada mapa debe tener un `map_id` estable.
-
-El Game Server mantiene autoridad de:
-
-```text
-posición
-navegación
-presencia
-entidades runtime
-```
-
-La escena visual del cliente no es la fuente de verdad persistente.
-
----
-
-# 35. NPCs
-
-No crear un script especial para cada NPC.
-
-Modelo futuro:
-
-```text
-NpcDefinition
-+
-NpcRuntimeState / registry
-+
-services
-+
-NpcActor presentation
-```
-
-Primer ejemplo real:
-
-```text
-warehouse_keeper
-→ warehouse
-```
-
-El patrón debe poder reutilizarse para:
-
-```text
-merchant
-quest giver
-teleporter
-trainer
-crafting
-etc.
-```
-
-sin agregar condicionales globales dispersos.
-
----
-
-# 36. SKILLS Y COMBAT — REGLA CRÍTICA
+# 34. SKILLS / COMBAT — REGLA CRÍTICA
 
 Skills/Combat NO deben copiar el flujo persistente lento de Inventory para cada acción.
 
@@ -2075,31 +1704,38 @@ cast
 → Laravel
 → MySQL
 → esperar
-→ daño
+→ daño/heal
 ```
 
-Correcto conceptualmente:
+Correcto:
 
 ```text
 Client intent
 → Game Server runtime authority
 → validación inmediata
+→ mutación runtime
 → resultado gameplay
 → replicación
 → persistencia con política apropiada
 ```
 
-El Game Server debe ser autoridad inmediata del combate.
+El Game Server es autoridad inmediata de combate.
+
+Laravel no está en el hot loop de cada cast.
 
 ---
 
-# 37. F15-C — OPERACIONES DE ITEMS PENDIENTES
+# 35. F15-C — OPERACIONES DE ITEMS PENDIENTES
 
-**Estado:** ⏳ EVALUAR AHORA QUE F15-R ESTÁ CERRADO.
+**Estado:** 🟡 EVALUADO / DIFERIDO.
 
-No implementar automáticamente todas.
+Después de cerrar F15-R se evaluó si F15-C era requisito para iniciar Skills/Combat.
 
-Posibles operaciones:
+Conclusión:
+
+> **F15-C no bloquea F16.**
+
+Pendientes diferidos:
 
 ```text
 stack merge autoritativo
@@ -2108,44 +1744,54 @@ partial quantity transfer
 sort autoritativo
 consumibles
 durability
-item state
+item state específico
 ```
 
-Se implementará únicamente lo que sea estrictamente necesario para el vertical slice o para evitar una deuda funcional inmediata.
+Se implementarán cuando el vertical slice los necesite realmente.
 
-No mezclar semánticas diferentes bajo un endpoint genérico.
-
-Ejemplo:
+Ejemplos:
 
 ```text
-move whole UID
+Drop/Pickup
+→ puede justificar stack merge
+
+Consumible
+→ debe reutilizar effects/vitals autoritativos
+
+Durability
+→ debe aparecer con reglas reales de combat/equipment
+
+Stack split
+→ cuando exista caso de uso/UX concreto
 ```
 
-no equivale a:
+La infraestructura `ItemInstance.state` ya permite estado específico.
 
-```text
-merge quantity UID A → UID B
-```
+No implementar features sólo para completar una lista.
 
 ---
 
-# 38. F16 — SKILLS + CAST REAL
+# 36. F16 — SKILLS + CAST REAL
 
-**Estado:** ⏳ PRÓXIMO BLOQUE GRANDE después de evaluar F15-C.
+**Estado:** 🟡 EN PROGRESO.
 
 Objetivo:
 
 ```text
 skill seleccionada/hotbar
+→ input correcto
 → cast intent
 → Game Server
 → validación
+→ runtime mutation
 → resultado autoritativo
+→ cliente representa
 ```
 
-Game Server valida:
+Game Server deberá validar progresivamente:
 
 ```text
+skill existente
 skill aprendida
 mana
 cooldown
@@ -2168,11 +1814,340 @@ cooldown visual
 
 ---
 
-# 39. F17 — PRIMER MOB + COMBATE
+# 37. F16-A — AUTHORITATIVE SKILL RUNTIME FOUNDATION
 
-Implementar **un mob completo**, no veinte mobs incompletos.
+**Estado:** ✅ COMPLETADO Y VALIDADO.
 
-Conceptos:
+Game Server incorpora:
+
+```text
+ServerSkillDefinition
+ServerSkillCatalog
+ServerSkillRuntimeState
+ServerVitalsState
+ServerCharacterRuntimeBootstrap
+```
+
+Skill catalog:
+
+```text
+fire_ball
+poison
+heal
+```
+
+Valores autoritativos actuales:
+
+```text
+fire_ball
+mana_cost = 30
+cooldown = 3.0
+
+poison
+mana_cost = 20
+cooldown = 5.0
+
+heal
+mana_cost = 40
+cooldown = 4.0
+```
+
+Vitals temporales de Foundation:
+
+```text
+max_hp = 100000
+hp     = 100000
+max_mp = 350
+mp     = 350
+```
+
+Estos valores mantienen paridad temporal con el debug del cliente.
+
+No representan balance definitivo.
+
+Todos los personajes de desarrollo reciben temporalmente las tres skills.
+
+Más adelante las skills aprendidas vendrán de progresión/persistencia real.
+
+## Cooldowns
+
+Runtime representado mediante expiración monotónica:
+
+```text
+cooldown_until_msec_by_skill
+```
+
+No mediante un Timer Node por cada skill/player.
+
+Esto evita timers innecesarios y permite tests deterministas mediante `now_msec`.
+
+## Validación real
+
+Probado:
+
+```text
+ServerMain | Skill Catalog Contract validado.
+WorldSessionRegistry | ...
+HP: 100000/100000
+MP: 350/350
+Skills: ["fire_ball", "heal", "poison"]
+```
+
+Sin warnings/errors.
+
+Checkpoint:
+
+```text
+53ceffe932b03f200f2e7ee3e7a43f986f9a5463
+feat: add authoritative skill runtime foundation
+```
+
+---
+
+# 38. F16-B — SKILL CAST INTENT PROTOCOL
+
+**Estado del protocolo:** ✅ IMPLEMENTADO Y VALIDADO.  
+**Estado de la etapa completa:** 🟡 REQUIERE F16-BR por corrección de input antes del cierre formal.
+
+Se implementó:
+
+```text
+GameServerSkillProtocol
+skill_cast_request
+request_id incremental
+skill_id
+target descriptor
+GameServer parser estructural
+client_skill_cast_requested
+SkillCastCoordinator
+PlayerWorldSession resolution
+```
+
+Contrato de target inicial:
+
+```json
+{
+  "kind": "self"
+}
+```
+
+Está pensado para evolucionar a conceptos como:
+
+```text
+self
+entity
+position
+```
+
+sin definir prematuramente el modelo de mobs/entidades de F17.
+
+## Validación realizada
+
+Cliente:
+
+```text
+Hotbar seleccionada: 3 | Heal
+GameServerClient | Intención de cast enviada | Request: 1 | Skill: heal | Target: self
+GameServerClient | Intención de cast enviada | Request: 2 | Skill: heal | Target: self
+```
+
+Game Server:
+
+```text
+SkillCastCoordinator | Intención de cast recibida
+Request: 1
+Personaje: Atilio
+Skill: heal
+Target: self
+HP: 100000/100000
+MP: 350/350
+
+SkillCastCoordinator | Intención de cast recibida
+Request: 2
+Personaje: Atilio
+Skill: heal
+Target: self
+HP: 100000/100000
+MP: 350/350
+```
+
+Confirmado:
+
+```text
+request Client → Server funciona
+PlayerWorldSession correcta
+HP no cambia
+MP no cambia
+cooldown no comienza
+Heal todavía no se ejecuta
+sin warnings/errors
+```
+
+## Corrección pendiente F16-BR
+
+La primera implementación utilizó por error:
+
+```text
+Ctrl + click izquierdo
+```
+
+para disparar el cast.
+
+Ese mapping NO es el contrato definitivo de VHAL.
+
+Debe corregirse a:
+
+```text
+click izquierdo
+→ movimiento
+
+click derecho
+→ skill seleccionada
+
+Ctrl + click derecho
+→ PvP / ataque contra otro player
+```
+
+Esta corrección es obligatoria antes de F16-C.
+
+Checkpoints ya pusheados del protocolo:
+
+Cliente:
+
+```text
+c8a7916be8fe3091f394611e09d89da75b398c20
+feat: add skill cast intent protocol
+```
+
+Game Server:
+
+```text
+9d32d0e62705a916036afba97e39d21a656d4424
+feat: receive authoritative skill cast intents
+```
+
+---
+
+# 39. F16-BR — CORRECCIÓN DE INPUT
+
+**Estado:** ⏳ SIGUIENTE CHECKPOINT INMEDIATO.
+
+Objetivo:
+
+```text
+NO tocar networking
+NO tocar Game Server
+NO tocar backend
+
+corregir únicamente la semántica de input del cliente
+```
+
+Contrato a verificar:
+
+```text
+click izquierdo
+→ mueve
+
+click derecho
+→ emite intención de cast de la skill seleccionada
+
+Ctrl + click derecho
+→ reservado para PvP y NO debe disparar Heal normal
+
+click derecho
+→ NO mueve
+
+click izquierdo
+→ NO castea
+```
+
+Una vez validado:
+
+```text
+commit
+push
+"pusheado"
+```
+
+y F16-B queda formalmente cerrado.
+
+---
+
+# 40. F16-C — PRIMER HEAL AUTORITATIVO
+
+**Estado:** ⏳ BLOQUEADO HASTA CERRAR F16-BR.
+
+Primer cast real recomendado:
+
+```text
+Heal / self
+```
+
+Razón:
+
+Permite validar todo el backbone autoritativo sin depender todavía de:
+
+```text
+MobRuntimeState
+target entity
+range contra mob
+damage
+aggro
+death
+respawn
+```
+
+Flujo objetivo:
+
+```text
+Jugador selecciona Heal
+↓
+click derecho
+↓
+Client emite intención
+↓
+GameServerSkillProtocol
+↓
+Game Server
+↓
+SkillCastCoordinator
+↓
+resolver PlayerWorldSession
+↓
+validar skill existente
+↓
+validar aprendida
+↓
+validar target self
+↓
+validar estado
+↓
+validar mana
+↓
+validar cooldown
+↓
+gastar MP
+↓
+aplicar Heal
+↓
+iniciar cooldown
+↓
+enviar resultado autoritativo
+↓
+cliente actualiza HP/MP
+↓
+cliente representa cooldown
+```
+
+No Laravel/MySQL por cada cast.
+
+---
+
+# 41. F17 — PRIMER MOB + COMBATE
+
+Implementar **un mob completo**, no veinte incompletos.
+
+Conceptos previstos:
 
 ```text
 MobDefinition
@@ -2195,9 +2170,64 @@ die
 respawn
 ```
 
+Fire Ball y Poison podrán reutilizar el backbone de F16.
+
+Target PvE:
+
+```text
+click derecho sobre entidad
+→ skill seleccionada
+→ entity target intent
+→ Game Server valida
+```
+
 ---
 
-# 40. F18 — DROP + PICKUP + EXP + LEVEL
+# 42. PvP — DIRECCIÓN CANÓNICA
+
+PvP no debe implementarse como excepción improvisada.
+
+Contrato de input:
+
+```text
+Ctrl + click derecho
+→ intención PvP contra player
+```
+
+Game Server deberá decidir:
+
+```text
+si el target es jugador
+si el mapa permite PvP
+estado PvP del atacante
+estado PvP del objetivo
+safe zone
+distancia
+line-of-sight
+skill
+mana
+cooldown
+damage
+kill
+criminal state
+```
+
+La arquitectura histórica prevista incluye estados tipo:
+
+```text
+Inocente
+Diablillo
+Delincuente
+Pecador
+```
+
+y “auto defense”.
+
+Estos sistemas se implementarán sobre el combat runtime autoritativo, no como lógica local del cliente.
+
+---
+
+# 43. F18 — DROP + PICKUP + EXP + LEVEL
 
 Objetivo:
 
@@ -2221,13 +2251,21 @@ kill
 → persistencia
 ```
 
+Aquí puede aparecer la necesidad real de:
+
+```text
+stack merge
+consumibles
+partial stack behavior
+```
+
+y entonces se reevalúa F15-C.
+
 ---
 
-# 41. F19 — VERTICAL SLICE COMPLETO
+# 44. F19 — VERTICAL SLICE COMPLETO
 
-Primer gran objetivo estratégico.
-
-Debe funcionar:
+Primer gran objetivo estratégico:
 
 ```text
 CUENTA
@@ -2277,11 +2315,9 @@ Hasta F19 estable:
 
 Primero demostrar el circuito completo.
 
-Después multiplicar contenido.
-
 ---
 
-# 42. PERFORMANCE — SEPARADA DEL REFACTOR
+# 45. PERFORMANCE — SEPARADA DEL REFACTOR
 
 Regla:
 
@@ -2289,19 +2325,11 @@ Regla:
 Refactor ≠ Optimization
 ```
 
-F15-R ya resolvió estructura/mantenibilidad.
+F15-R resolvió estructura/mantenibilidad.
 
-No fue diseñado para bajar ping.
+No fue diseñado para reducir ping.
 
-## 42.1 Estado actual
-
-Algunas mutaciones persistentes pueden tardar aproximadamente:
-
-```text
-~1 segundo o algo menos
-```
-
-porque el flujo conservador puede ser:
+Algunas mutaciones persistentes todavía pueden ser relativamente lentas porque el flujo conservador es:
 
 ```text
 Client
@@ -2316,11 +2344,13 @@ Client
 → Client
 ```
 
-Durante Foundation esto fue aceptado para priorizar corrección y convergencia.
+Esto es aceptable durante Foundation para mutaciones persistentes.
 
-## 42.2 PERF-0
+No debe copiarse a Combat.
 
-Se pueden agregar mediciones antes de optimizar:
+## PERF-0
+
+Mediciones futuras:
 
 ```text
 Client → GS RTT
@@ -2334,9 +2364,9 @@ packet size
 packet frequency
 ```
 
-## 42.3 PERF-1
+## PERF-1
 
-Optimización agresiva después de F19 estable, salvo blocker real medido.
+Optimización agresiva después de F19 estable salvo blocker real medido.
 
 Posibles herramientas:
 
@@ -2362,7 +2392,7 @@ measure
 
 ---
 
-# 43. QUÉ NO HACER AHORA
+# 46. QUÉ NO HACER AHORA
 
 Antes de F19 estable evitar:
 
@@ -2383,11 +2413,11 @@ contenido masivo antes de Combat/Drop/EXP
 
 ---
 
-# 44. AUTOLOADS
+# 47. AUTOLOADS
 
 No convertir cada sistema en Singleton.
 
-Un Autoload sólo debe existir cuando realmente representa una responsabilidad global de aplicación.
+Un Autoload sólo debe existir cuando representa una responsabilidad verdaderamente global.
 
 Preferir:
 
@@ -2403,13 +2433,13 @@ sobre service locators globales.
 
 ---
 
-# 45. SIGNALS Y DEPENDENCIAS
+# 48. SIGNALS Y DEPENDENCIAS
 
-Usar signals para desacoplar cuando existe una relación de eventos real.
+Usar signals cuando existe una relación de eventos real.
 
-No usar signals únicamente para ocultar dependencias.
+No usarlas sólo para ocultar dependencias.
 
-Los sistemas importantes deben recibir explícitamente lo que necesitan mediante:
+Los sistemas importantes reciben dependencias mediante:
 
 ```text
 setup(...)
@@ -2421,169 +2451,584 @@ La dependencia debe ser rastreable.
 
 ---
 
-# 46. TESTING
+# 49. PLAYERWORLDSESSION — REGLA
 
-Cada nueva feature debe tener una estrategia de prueba.
+`PlayerWorldSession` representa el estado runtime autoritativo de una sesión/personaje conectado.
 
-Según el caso:
+Puede componer:
 
 ```text
-self-test domain contract
-unit/integration backend tests
-manual Godot smoke
-two-client test
-stale-state test
-relogin test
-DB integrity check
+identity
+world
+vitals
+skills
+inventory/equipment snapshots
+movement state
+NPC service state
+combat state futuro
 ```
 
-No esperar al final del proyecto para descubrir que dos sistemas no conviven.
+Pero no debe convertirse en un “God object” con toda la lógica.
+
+Regla:
+
+```text
+Session almacena/compone estado
+Coordinators orquestan casos de uso
+Domain classes validan reglas
+Systems ejecutan lógica runtime especializada
+```
 
 ---
 
-# 47. REGLA PARA DOS CLIENTES
+# 50. VITALS — DIRECCIÓN
 
-Todo sistema relacionado con:
+Game Server es autoridad de:
 
 ```text
-presence
-movement replication
-combat multiplayer
-party
-trade
+HP
+MP
+max HP
+max MP
+```
+
+El cliente representa esos valores.
+
+Consumidores futuros:
+
+```text
+Heal
+damage
+potions
+regen
+mob attacks
 PvP
-drops visibles
+death
+respawn
 ```
 
-debe probarse con dos clientes reales cuando corresponda.
+Todos deben reutilizar el mismo pipeline autoritativo.
 
-Un solo cliente no valida multiplayer.
-
----
-
-# 48. ESTRATEGIA DE CRECIMIENTO
-
-Orden estratégico:
+No crear:
 
 ```text
-BASE CORRECTA
-↓
-VERTICAL SLICE COMPLETO
-↓
-MEDIR
-↓
-OPTIMIZAR
-↓
-ESCALAR CONTENIDO
-↓
-AMPLIAR SISTEMAS SOCIALES / ECONOMÍA / ENDGAME
+PotionHPSystem local
+HealHPSystem separado
+CombatHPSystem separado
 ```
 
-No:
+con estados incompatibles.
+
+---
+
+# 51. SKILL OWNERSHIP / PROGRESIÓN
+
+Actualmente las tres skills se asignan temporalmente mediante bootstrap de desarrollo.
+
+No es el modelo final.
+
+Futuro:
 
 ```text
-100 features incompletas
-↓
-intentar arreglar arquitectura al final
+Backend
+→ skills aprendidas persistentes
+→ bootstrap de sesión
+→ ServerSkillRuntimeState
 ```
 
----
-
-# 49. ESTILO DE DECISIONES
-
-Cuando existan dos alternativas, priorizar la que:
+Game Server sigue siendo autoridad de:
 
 ```text
-mantenga IDs estables
-mantenga una autoridad clara
-reduzca acoplamiento
-evite duplicar estado
-permita tests
-permita reemplazar implementación interna
-permita agregar contenido sin editar lógica central
+cast availability
+cooldown
+mana
+execution
 ```
 
-No elegir por “es menos código” solamente.
+aunque ownership/progresión sea durable.
 
 ---
 
-# 50. CÓMO CONTINUAR UNA NUEVA CONVERSACIÓN
+# 52. TARGETING — DIRECCIÓN
 
-Antes de proponer código:
+No definir prematuramente un mega-modelo universal.
 
-1. leer este `PROJECT_MEMORY.md`;
-2. revisar commits actuales de `dev`;
-3. inspeccionar archivos reales involucrados;
-4. identificar exactamente el checkpoint actual;
-5. respetar workflow etapa → test → commit → push;
-6. explicar la implementación pensando que el desarrollador está aprendiendo;
-7. mantener arquitectura de MMORPG real y escalable;
-8. no avanzar si hay warnings/errors;
-9. preferir integración manual y educativa;
-10. conservar `PROJECT_MEMORY.md` actualizado en cierres arquitectónicos importantes.
+Tipos conceptuales previstos:
+
+```text
+self
+entity
+position
+```
+
+F16 comienza con:
+
+```text
+self
+```
+
+F17 incorporará target de entidades reales.
+
+PvP reutilizará target de entidad/player con reglas específicas del servidor.
+
+No enviar coordenadas de pantalla como autoridad gameplay.
+
+El cliente puede usar screen position para hacer picking local, pero el intent final debe referirse a una identidad/posición del mundo validable por servidor.
 
 ---
 
-# 51. CHECKPOINT ACTUAL
+# 53. MOVEMENT VS COMBAT INPUT
 
-Al 23/08/2026:
+Contrato definitivo:
+
+```text
+MOUSE LEFT
+→ navegar/mover
+
+MOUSE RIGHT
+→ skill/combat
+
+CTRL + MOUSE RIGHT
+→ PvP
+```
+
+No volver a asignar cast a click izquierdo.
+
+No introducir una segunda semántica incompatible en otra escena.
+
+Todos los futuros controladores de input deben respetar este contrato.
+
+---
+
+# 54. DEBUG / FIXTURES
+
+Los fixtures existen para acelerar Foundation.
+
+Regla:
+
+```text
+mientras un sistema no sea real
+→ fixture permitido
+
+cuando aparece autoridad real
+→ retirar gradualmente el fixture correspondiente
+```
+
+Ejemplos:
+
+```text
+Inventory persistente
+→ ya no debe depender de inventario demo
+
+Equipment persistente
+→ ya no debe depender de equipment demo
+
+Skills
+→ todavía tienen ownership/bootstrap temporal
+```
+
+No eliminar fixtures que aún sirven a sistemas no reemplazados sin plan de transición.
+
+---
+
+# 55. MAPAS
+
+Primer mapa:
+
+```text
+test_town
+```
+
+Utilizado para:
+
+```text
+spawn
+movimiento
+NavMesh
+NPC
+Warehouse
+presencia
+skills foundation
+```
+
+No construir mapa final gigante antes del vertical slice F19.
+
+---
+
+# 56. NPC FRAMEWORK
+
+Primer NPC:
+
+```text
+npc_id = warehouse_keeper
+service_id = warehouse
+```
+
+Reglas probadas:
+
+```text
+click
+range
+authorization
+open service
+move away
+out_of_range
+close/revoke
+```
+
+Merchant y otros servicios deben reutilizar el framework, no duplicarlo.
+
+---
+
+# 57. INVENTORY
+
+Características actuales relevantes:
+
+```text
+multicelda
+posición persistente
+collision validation
+bounds validation
+stack quantity
+stable UID
+authoritative server/backend
+```
+
+Dirección visual:
+
+```text
+compacta
+MU-like footprint
+fixed window
+draggable
+viewport constrained
+```
+
+Operaciones avanzadas de stack siguen diferidas.
+
+---
+
+# 58. EQUIPMENT
+
+Autoritativo y persistente.
+
+Reglas importantes:
+
+```text
+slot compatibility
+slot occupancy
+hand modes
+two-hand reservation
+stable UID
+Inventory ↔ Equipment
+stale recovery
+```
+
+No duplicar la misma instancia para ocupar dos slots.
+
+---
+
+# 59. VAULT
+
+Account-wide.
+
+Contrato:
+
+```text
+Vault item
+→ account_id
+→ character_id NULL
+```
+
+Sólo puede abrirse mediante servicio NPC autorizado.
+
+No mediante botón HUD directo.
+
+---
+
+# 60. WORLD PRESENCE
+
+Foundation real:
+
+```text
+same-map roster
+remote joined
+remote left
+movement replication
+```
+
+Se deberá extender más adelante con interés espacial si profiling/concurrencia lo requiere.
+
+No optimizar prematuramente.
+
+---
+
+# 61. MOVEMENT
+
+Arquitectura:
+
+```text
+Client click izquierdo
+→ local prediction
+→ move intent
+→ Game Server
+→ NavMesh resolution
+→ authorization
+→ WorldMovementSystem
+→ authoritative movement state
+→ clients
+```
+
+El movimiento sigue siendo independiente de Skills/Combat.
+
+Right click no debe iniciar movement.
+
+---
+
+# 62. NETWORK PROTOCOL VERSIONING
+
+Existe envelope versionado.
+
+Agregar nuevos tipos de mensaje compatibles no obliga automáticamente a cambiar la versión.
+
+Cambiar `NETWORK_PROTOCOL_VERSION` cuando exista una incompatibilidad real de contrato.
+
+Mantener límites de paquete y validación estructural.
+
+Un paquete malformado no debe llegar al gameplay como si fuese confiable.
+
+---
+
+# 63. SEGURIDAD / TRUST BOUNDARY
+
+Nunca confiar en:
+
+```text
+client HP
+client MP
+client damage
+client cooldown
+client item position definitiva
+client target permitido
+client range
+client EXP
+client level-up result
+```
+
+El cliente solicita.
+
+El servidor valida y decide.
+
+---
+
+# 64. ROADMAP RESUMIDO ACTUAL
 
 ```text
 F00-F14 Foundation             ✅
 F15-A Inventory ↔ Vault       ✅
 F15-B Equipment               ✅
-F15-R Architectural Refactor  ✅ VALIDADO
-F15-C Item operations         ⏳ EVALUAR SÓLO SI SON NECESARIAS
-F16 Skills / Cast             ⏳
+F15-R Architectural Refactor  ✅
+F15-C Item operations         🟡 evaluado / diferido
+
+F16-A Skill runtime           ✅
+F16-B Cast protocol           ✅ networking validado
+F16-BR Input MU correction    ⏳ SIGUIENTE
+F16-C Authoritative Heal      ⏳
+F16-D Cast result/UI          ⏳ según partición final de etapas
+
 F17 Mob / Combat              ⏳
 F18 Drop / Pickup / EXP       ⏳
 F19 Vertical Slice            ⏳
+
 PERF-1                        ⏳ después de F19 estable
 ```
 
-Últimos checkpoints remotos previos al commit documental de cierre:
+---
+
+# 65. PRÓXIMO PASO EXACTO
+
+No comenzar todavía F16-C.
+
+Primero:
 
 ```text
-CLIENT
-cc12482d38c3e22b399ebda6562e0451eebfd21b
-refactor: split client application flows
+F16-BR
+```
 
-GAME SERVER
-c62a67f442936a29eb8c6bad37c473a5ba4e7b3c
-refactor: extract authentication coordination
+Corregir cliente:
 
-BACKEND
-5e875cae0ac403fafb9fc9d92ce4a165c82d2243
-foundation: add persistent character equipment backend
+```text
+click izquierdo → movimiento
+click derecho → skill
+Ctrl + click derecho → reservado/intención PvP
+```
+
+Luego:
+
+```text
+test
+0 warnings/errors
+git status
+commit
+push
+confirmar "pusheado"
+```
+
+Después:
+
+```text
+F16-C — Heal autoritativo
 ```
 
 ---
 
-# 52. CHECKPOINT EN UNA FRASE
+# 66. CRITERIO DE ÉXITO DEL PRÓXIMO TEST
 
-> **VHAL ya posee una Foundation real de MMORPG con cuentas y personajes persistentes, entrada autenticada al mundo, movimiento y presencia server-authoritative, NPC Warehouse, Inventory/Vault/Equipment persistentes, recuperación stale, UID estable y una arquitectura post-refactor donde Game Server, networking cliente y application flow tienen responsabilidades separadas; el siguiente objetivo es evaluar si F15-C necesita alguna operación mínima de items y luego construir Skills/Cast, el primer Mob/Combat, Drops/Pickup/EXP/Level y cerrar el primer vertical slice real antes de escalar contenido u optimizar agresivamente.**
+F16-BR debe demostrar:
+
+```text
+1. seleccionar Heal con tecla 3;
+2. click derecho → sale skill_cast_request de Heal;
+3. el Game Server recibe Heal/self;
+4. HP y MP todavía no cambian;
+5. click izquierdo → mueve normalmente;
+6. click derecho NO mueve;
+7. Ctrl + click derecho NO ejecuta Heal normal;
+8. no aparecen warnings/errors;
+9. Inventory/Equipment/NPC no regresionan.
+```
 
 ---
 
-# 53. PRINCIPIO FINAL
+# 67. DECISIÓN SOBRE HEAL
 
-VHAL no busca crecer rápido a costa de quedar inmantenible.
+Heal será la primera ejecución real porque no depende de F17.
 
-Busca aprender y construir al mismo tiempo.
-
-La regla permanente es:
-
-> **Cada sistema nuevo debe ser entendible, autoritativo donde corresponda, testeable, extensible y fácil de modificar sin romper sistemas no relacionados.**
-
-Y la forma de trabajo permanente es:
+Permite validar:
 
 ```text
-entender
-→ diseñar
-→ implementar manualmente
-→ probar
-→ corregir
-→ commit
-→ push
-→ continuar
+skill lookup
+ownership
+mana
+cooldown
+target self
+runtime mutation
+authoritative result
+HUD sync
+cooldown feedback
 ```
+
+Fire Ball y Poison continuarán después sobre el mismo backbone.
+
+---
+
+# 68. DECISIÓN SOBRE FIRE BALL / POISON
+
+No implementar daño real antes de tener entidad/mob autoritativo.
+
+Fire Ball necesitará:
+
+```text
+entity target
+range
+damage
+combat state
+aggro
+death
+replication
+```
+
+Poison necesitará además:
+
+```text
+status effect runtime
+duration
+tick policy
+stack/refresh policy
+death interaction
+```
+
+No crear implementaciones ficticias sólo para “hacerlas funcionar”.
+
+---
+
+# 69. DECISIÓN SOBRE CONSUMIBLES
+
+Health Potion existe como item foundation, pero su uso se difiere hasta que el pipeline autoritativo de vitals/effects esté listo.
+
+Cuando se implemente:
+
+```text
+use item intent
+→ Game Server
+→ validate item
+→ validate quantity
+→ apply effect through vitals/effects pipeline
+→ consume quantity
+→ persist item mutation
+→ replicate vitals + inventory result
+```
+
+No aplicar HP local desde UI.
+
+---
+
+# 70. DEFINICIÓN DE “REAL” EN VHAL
+
+Un sistema se considera real cuando:
+
+```text
+la intención nace en cliente
+la autoridad está bien definida
+el Game Server valida
+el runtime muta correctamente
+la persistencia ocurre donde corresponde
+el resultado vuelve al cliente
+hay recuperación/reconnect cuando aplica
+los edge cases principales están probados
+no depende de un shortcut de debug para su funcionamiento normal
+```
+
+---
+
+# 71. REGLA FINAL DE CONTINUIDAD
+
+Al abrir una nueva conversación o retomar el proyecto:
+
+```text
+1. leer PROJECT_MEMORY.md;
+2. revisar repositorios reales en dev;
+3. confirmar último checkpoint;
+4. no confiar en recuerdos viejos por encima del repositorio;
+5. identificar la etapa activa;
+6. continuar sólo esa etapa;
+7. respetar test → commit → push → "pusheado".
+```
+
+En el checkpoint de este archivo:
+
+```text
+Cliente dev:
+c8a7916be8fe3091f394611e09d89da75b398c20
+feat: add skill cast intent protocol
+
+Game Server dev:
+9d32d0e62705a916036afba97e39d21a656d4424
+feat: receive authoritative skill cast intents
+```
+
+La etapa activa es:
+
+```text
+F16-BR — corregir input estilo MU
+```
+
+Contrato obligatorio:
+
+```text
+LEFT CLICK          = MOVE
+RIGHT CLICK         = SKILL
+CTRL + RIGHT CLICK  = PvP
+```
+
+**No avanzar a F16-C hasta corregir, testear, commitear, pushear y confirmar este checkpoint.**

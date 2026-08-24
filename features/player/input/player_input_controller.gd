@@ -166,24 +166,33 @@ func _input(
 
 
 	# -----------------------------------------------------
-	# CLICK IZQUIERDO
+	# CLICK DERECHO
+	# → ejecutar la skill seleccionada.
 	# -----------------------------------------------------
 
 	if (
 		mouse_event.button_index
-		!=
-		MOUSE_BUTTON_LEFT
+		==
+		MOUSE_BUTTON_RIGHT
 	):
-		return
-
-
-	# -----------------------------------------------------
-	# CTRL + CLICK
-	# → intención de combate / cast.
-	# -----------------------------------------------------
-
-	if mouse_event.ctrl_pressed:
 		if _is_pointer_over_blocking_ui():
+			return
+
+
+		# -------------------------------------------------
+		# CTRL + CLICK DERECHO
+		#
+		# Queda reservado para PvP.
+		#
+		# Todavía NO existe el targeting autoritativo de
+		# players, por lo tanto no enviamos un cast normal
+		# de F16 mientras Ctrl esté presionado.
+		# -------------------------------------------------
+
+		if mouse_event.ctrl_pressed:
+			get_viewport().set_input_as_handled()
+
+
 			return
 
 
@@ -195,6 +204,19 @@ func _input(
 		get_viewport().set_input_as_handled()
 
 
+		return
+
+
+	# -----------------------------------------------------
+	# CLICK IZQUIERDO
+	# → movimiento.
+	# -----------------------------------------------------
+
+	if (
+		mouse_event.button_index
+		!=
+		MOUSE_BUTTON_LEFT
+	):
 		return
 
 
