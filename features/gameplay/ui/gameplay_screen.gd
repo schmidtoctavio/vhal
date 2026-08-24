@@ -31,6 +31,11 @@ signal movement_intent_requested(
 	target: Vector3
 )
 
+signal skill_cast_intent_requested(
+	skill_id: String,
+	target: Dictionary
+)
+
 signal npc_interaction_requested(
 	npc_id: String,
 	service_id: String
@@ -563,6 +568,13 @@ func _spawn_player_from_state() -> bool:
 			_on_move_target_requested
 		)
 
+	if not player_input_controller.skill_cast_requested.is_connected(
+		_on_skill_cast_requested
+	):
+		player_input_controller.skill_cast_requested.connect(
+			_on_skill_cast_requested
+		)
+
 
 	if not player_input_controller.npc_clicked.is_connected(
 		_on_npc_clicked
@@ -665,6 +677,57 @@ func _on_move_target_requested(
 ) -> void:
 	movement_intent_requested.emit(
 		target
+	)
+
+# =========================================================
+# INTENCIÓN DE CAST
+# =========================================================
+
+func _on_skill_cast_requested(
+	_screen_position: Vector2
+) -> void:
+	if player_state == null:
+		return
+
+
+	if player_state.skill_hotbar == null:
+		return
+
+
+	var skill := (
+		player_state
+		.skill_hotbar
+		.get_selected_skill()
+	)
+
+
+	if skill == null:
+		return
+
+
+	var skill_id := String(
+		skill.skill_id
+	).strip_edges().to_lower()
+
+
+	if skill_id.is_empty():
+		return
+
+
+	# -----------------------------------------------------
+	# F16-B
+	#
+	# Primer contrato de target soportado:
+	# self.
+	#
+	# Todavía NO resolvemos entidades ni posiciones.
+	# -----------------------------------------------------
+
+	skill_cast_intent_requested.emit(
+		skill_id,
+		{
+			"kind": "self",
+		}
 	)
 
 # =========================================================

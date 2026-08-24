@@ -990,6 +990,12 @@ func _show_gameplay(
 			_on_gameplay_movement_intent_requested
 		)
 
+	if not gameplay_screen.skill_cast_intent_requested.is_connected(
+		_on_gameplay_skill_cast_intent_requested
+	):
+		gameplay_screen.skill_cast_intent_requested.connect(
+			_on_gameplay_skill_cast_intent_requested
+		)
 
 	if not gameplay_screen.npc_interaction_requested.is_connected(
 		_on_gameplay_npc_interaction_requested
@@ -1087,6 +1093,37 @@ func _on_gameplay_movement_intent_requested(
 
 	game_session_service.end_session()
 
+
+# =========================================================
+# SKILL CAST → GAME SERVER
+# =========================================================
+
+func _on_gameplay_skill_cast_intent_requested(
+	skill_id: String,
+	target: Dictionary
+) -> void:
+	var result := (
+		game_server_client.send_skill_cast_request(
+			skill_id,
+			target
+		)
+	)
+
+
+	if result == OK:
+		return
+
+
+	print(
+		"GameSessionFlowCoordinator | "
+		+
+		"No se pudo enviar la intención de cast.",
+		" Error: ",
+		result
+	)
+
+
+	game_session_service.end_session()
 
 # =========================================================
 # INTERACCIÓN NPC → GAME SERVER

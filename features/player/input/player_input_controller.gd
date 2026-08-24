@@ -9,6 +9,10 @@ signal move_target_requested(
 	target: Vector3
 )
 
+signal skill_cast_requested(
+	screen_position: Vector2
+)
+
 signal npc_clicked(
 	npc_actor: NpcActor
 )
@@ -173,8 +177,24 @@ func _input(
 		return
 
 
-	# Ctrl + click queda reservado para combate.
+	# -----------------------------------------------------
+	# CTRL + CLICK
+	# → intención de combate / cast.
+	# -----------------------------------------------------
+
 	if mouse_event.ctrl_pressed:
+		if _is_pointer_over_blocking_ui():
+			return
+
+
+		skill_cast_requested.emit(
+			mouse_event.position
+		)
+
+
+		get_viewport().set_input_as_handled()
+
+
 		return
 
 

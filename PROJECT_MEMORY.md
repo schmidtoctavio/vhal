@@ -356,24 +356,24 @@ La arquitectura real actual es:
 │ intención + UI      │
 │ representación      │
 └──────────┬──────────┘
-           │
-           │ ENet
-           ▼
+		   │
+		   │ ENet
+		   ▼
 ┌─────────────────────┐
 │  GODOT GAME SERVER  │
 │ autoridad gameplay  │
 │ estado runtime      │
 └──────────┬──────────┘
-           │
-           │ HTTP interno
-           ▼
+		   │
+		   │ HTTP interno
+		   ▼
 ┌─────────────────────┐
 │   LARAVEL BACKEND   │
 │ identidad + API     │
 │ persistencia        │
 └──────────┬──────────┘
-           │
-           ▼
+		   │
+		   ▼
 ┌─────────────────────┐
 │        MYSQL        │
 │ almacenamiento      │
@@ -841,13 +841,13 @@ res://
 │       └── world_presence_coordinator.gd
 │
 └── core/
-    ├── networking/
-    ├── backend/
-    ├── world/
-    │   ├── movement/
-    │   ├── navigation/
-    │   └── npcs/
-    └── domain / catalogs / validators
+	├── networking/
+	├── backend/
+	├── world/
+	│   ├── movement/
+	│   ├── navigation/
+	│   └── npcs/
+	└── domain / catalogs / validators
 ```
 
 ## 15.1 ServerMain
@@ -2587,4 +2587,3 @@ entender
 → push
 → continuar
 ```
-

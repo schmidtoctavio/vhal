@@ -123,6 +123,8 @@ var presence_protocol: GameServerPresenceProtocol = null
 
 var movement_protocol: GameServerMovementProtocol = null
 
+var skill_protocol: GameServerSkillProtocol = null
+
 var npc_protocol: GameServerNpcProtocol = null
 
 var item_protocol: GameServerItemProtocol = null
@@ -214,6 +216,8 @@ func _setup_protocols() -> bool:
 
 	movement_protocol = GameServerMovementProtocol.new()
 
+	skill_protocol = GameServerSkillProtocol.new()
+
 	npc_protocol = GameServerNpcProtocol.new()
 
 	item_protocol = GameServerItemProtocol.new()
@@ -239,6 +243,10 @@ func _setup_protocols() -> bool:
 	):
 		return false
 
+	if not skill_protocol.setup(
+		_send_protocol_message
+	):
+		return false
 
 	if not npc_protocol.setup(
 		_send_protocol_message,
@@ -923,6 +931,8 @@ func _reset_connection_state() -> void:
 	if movement_protocol != null:
 		movement_protocol.reset()
 
+	if skill_protocol != null:
+		skill_protocol.reset()
 
 	if presence_protocol != null:
 		presence_protocol.reset()
@@ -975,6 +985,26 @@ func send_move_request(
 		target
 	)
 
+# =========================================================
+# API PÚBLICA — SKILLS
+# =========================================================
+
+func send_skill_cast_request(
+	skill_id: String,
+	target: Dictionary
+) -> Error:
+	if not connected:
+		return ERR_UNAVAILABLE
+
+
+	if skill_protocol == null:
+		return ERR_UNAVAILABLE
+
+
+	return skill_protocol.send_skill_cast_request(
+		skill_id,
+		target
+	)
 
 # =========================================================
 # API PÚBLICA — NPC
