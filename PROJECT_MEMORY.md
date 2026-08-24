@@ -4,7 +4,7 @@
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama de desarrollo habitual:** `dev`  
-**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B cerrados y validados; próximo checkpoint F17-C para targeting autoritativo de entidades.
+**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B/F17-C cerrados y validados; próximo checkpoint F17-D para ataque básico autoritativo PvE.
 
 > Este archivo es la **fuente canónica única de contexto del proyecto VHAL**.
 >
@@ -314,24 +314,24 @@ Cuando aparece ese patrón hay que revisar la abstracción.
 │ intención + UI      │
 │ representación      │
 └──────────┬──────────┘
-		   │
-		   │ ENet
-		   ▼
+           │
+           │ ENet
+           ▼
 ┌─────────────────────┐
 │  GODOT GAME SERVER  │
 │ autoridad gameplay  │
 │ estado runtime      │
 └──────────┬──────────┘
-		   │
-		   │ HTTP interno
-		   ▼
+           │
+           │ HTTP interno
+           ▼
 ┌─────────────────────┐
 │   LARAVEL BACKEND   │
 │ identidad + API     │
 │ persistencia        │
 └──────────┬──────────┘
-		   │
-		   ▼
+           │
+           ▼
 ┌─────────────────────┐
 │        MYSQL        │
 │ almacenamiento      │
@@ -766,19 +766,19 @@ res://
 │       └── skill_cast_coordinator.gd
 │
 └── core/
-	├── networking/
-	├── backend/
-	├── combat/
-	│   ├── server_vitals_state.gd
-	│   └── server_character_runtime_bootstrap.gd
-	├── skills/
-	│   ├── server_skill_definition.gd
-	│   ├── server_skill_catalog.gd
-	│   └── server_skill_runtime_state.gd
-	└── world/
-		├── movement/
-		├── navigation/
-		└── npcs/
+    ├── networking/
+    ├── backend/
+    ├── combat/
+    │   ├── server_vitals_state.gd
+    │   └── server_character_runtime_bootstrap.gd
+    ├── skills/
+    │   ├── server_skill_definition.gd
+    │   ├── server_skill_catalog.gd
+    │   └── server_skill_runtime_state.gd
+    └── world/
+        ├── movement/
+        ├── navigation/
+        └── npcs/
 ```
 
 ## ServerMain
@@ -1586,77 +1586,80 @@ Shared sólo para componentes genuinamente reutilizables.
 
 Esta sección es **canónica** y debe respetarse en futuras implementaciones.
 
-La referencia funcional buscada es similar a MU Online.
+La referencia funcional buscada es similar a MU Online, pero con identidad visual y arquitectura propias de VHAL.
 
-## Movimiento
-
-```text
-CLICK IZQUIERDO
-→ movimiento / click-to-move
-```
-
-El botón izquierdo **NO se utiliza para lanzar skills**.
-
-## Skills / combate PvE
+## Contrato resumido definitivo
 
 ```text
-CLICK DERECHO
-→ activar / lanzar la skill actualmente seleccionada
+LEFT CLICK sobre terreno
+→ MOVE
+
+LEFT CLICK sobre NPC interactuable
+→ NPC INTERACTION
+
+LEFT CLICK sobre mob hostil
+→ BASIC ATTACK PvE
+
+RIGHT CLICK
+→ SELECTED SKILL PvE / uso según target_kind
+
+CTRL + LEFT CLICK sobre player
+→ BASIC ATTACK PvP
+
+CTRL + RIGHT CLICK sobre player
+→ SELECTED SKILL PvP
 ```
 
-El botón derecho es la entrada principal para Skills/Combat.
+El click izquierdo es contextual. Si existe una entidad aplicable bajo el cursor, se resuelve primero esa entidad; si no, el click se interpreta como movimiento.
 
-La hotbar:
+Basic Attack PvE:
 
 ```text
-1
-2
-3
-...
+LEFT CLICK sobre mob hostil
+→ basic_attack_intent
+→ Game Server
+→ resolver target autoritativo
+→ resolver Equipment/arma autoritativa
+→ validar mapa/rango/estado
+→ ejecutar ataque básico
 ```
 
-selecciona una skill.
-
-Seleccionar una skill no equivale a ejecutarla.
-
-El cast se ejecuta mediante:
+Modalidades previstas:
 
 ```text
-click derecho
+sin arma → puños / unarmed melee
+arma melee → ataque básico melee
+arma ranged → ataque básico ranged
 ```
 
-cuando existe un target/uso válido.
+El cliente no decide arma real, damage, range, hit ni muerte.
 
-## PvP
-
-Contrato:
+Skills PvE:
 
 ```text
-CTRL + CLICK DERECHO
-→ intención de ataque / skill contra otro jugador
+RIGHT CLICK
+→ ejecutar selected skill
 ```
 
-No utilizar:
+Targets actuales:
 
 ```text
-CTRL + CLICK IZQUIERDO
+Heal       → self
+Fire Ball  → entity
+Poison     → entity
 ```
 
-como contrato de PvP.
-
-## Regla de futuro
-
-La detección de input debe separar:
+PvP futuro:
 
 ```text
-click izquierdo        → movement intent
-click derecho          → skill/combat intent
-Ctrl + click derecho   → PvP combat intent
+CTRL + LEFT CLICK sobre player
+→ BASIC ATTACK PvP
+
+CTRL + RIGHT CLICK sobre player
+→ SELECTED SKILL PvP
 ```
 
-La UI no decide daño, Heal, hit, cooldown ni muerte.
-
-El Game Server mantiene autoridad.
+El Game Server mantiene autoridad sobre target, mapa, safe zone, estado PvP, range, equipment, mana, cooldown, damage, kill y criminal state.
 
 ---
 
@@ -2676,6 +2679,110 @@ EXP
 
 **Siguiente checkpoint:** `F17-C — Entity Targeting Foundation`.
 
+
+## F17-C — ENTITY TARGETING FOUNDATION
+
+**Estado:** ✅ COMPLETADO Y VALIDADO.
+
+Flujo validado:
+
+```text
+RIGHT CLICK sobre mob
+→ raycast cliente
+→ MobActor
+→ entity_id estable
+→ skill_cast_request target=entity
+→ Game Server
+→ WorldMobRegistry
+→ resolver entidad autoritativa
+→ validar mismo mapa
+→ validar alive
+```
+
+`SkillDefinition` y `ServerSkillDefinition` incorporan `target_kind`.
+
+```text
+Heal       → self
+Fire Ball  → entity
+Poison     → entity
+```
+
+`MobActor` incorpora `TargetArea` únicamente para picking local.
+
+El intent enviado es:
+
+```json
+{
+  "kind": "entity",
+  "entity_id": "mob_test_town_001"
+}
+```
+
+El Game Server vuelve a resolver el `entity_id` mediante `WorldMobRegistry.get_mob()` y valida existencia, mismo mapa, estado alive y compatibilidad de target.
+
+Fire Ball todavía no ejecuta daño. En F17-C el resultado correcto después de validar el target sigue siendo:
+
+```text
+Accepted: false
+Reason: skill_not_implemented
+MP permanece 350/350
+```
+
+Test validado:
+
+```text
+RIGHT CLICK en piso con Fire Ball
+→ entity_target_required
+→ no se envía request
+
+RIGHT CLICK sobre Training Goblin
+→ mob_test_town_001 detectado
+→ target entity enviado
+→ Game Server valida target autoritativo
+→ skill_not_implemented
+```
+
+Heal continúa funcionando:
+
+```text
+Target: self
+Accepted: true
+MP: 350 → 310
+Cooldown: 4.0
+```
+
+No se observaron parser errors, warnings nuevos ni runtime errors inesperados.
+
+Checkpoints:
+
+```text
+Cliente:
+b8341bb1d226dd933a4532405ca32eabc39c2428
+feat: add authoritative entity targeting foundation
+
+Game Server:
+0323d39861801caf5cb56bbad30c5b94d9c702c5
+feat: validate authoritative skill entity targets
+```
+
+F17-C todavía NO incluye:
+
+```text
+basic attack
+weapon attack
+attack range
+damage
+Fire Ball damage
+aggro
+IA
+muerte
+respawn
+drops
+EXP
+```
+
+**Siguiente checkpoint:** `F17-D — Basic Attack PvE Foundation`.
+
 ---
 
 # 43. PvP — DIRECCIÓN CANÓNICA
@@ -2685,8 +2792,11 @@ PvP no debe implementarse como excepción improvisada.
 Contrato de input:
 
 ```text
-Ctrl + click derecho
-→ intención PvP contra player
+CTRL + LEFT CLICK sobre player
+→ ataque básico PvP
+
+CTRL + RIGHT CLICK sobre player
+→ selected skill PvP
 ```
 
 Game Server deberá decidir:
@@ -3333,7 +3443,8 @@ F16-D Cooldown visual/UI      ✅
 
 F17-A Mob runtime             ✅
 F17-B Mob replication         ✅
-F17-C Entity targeting        ⏳ SIGUIENTE
+F17-C Entity targeting        ✅
+F17-D Basic Attack PvE        ⏳ SIGUIENTE
 F18 Drop / Pickup / EXP       ⏳
 F19 Vertical Slice            ⏳
 
@@ -3347,7 +3458,8 @@ PERF-1                        ⏳ después de F19 estable
 Antes de comenzar una etapa nueva:
 
 ```text
-cerrar documentación/checkpoint F17-B
+cerrar documentación/checkpoint F17-C
+→ reemplazar PROJECT_MEMORY.md
 → git status
 → commit
 → push
@@ -3357,41 +3469,41 @@ cerrar documentación/checkpoint F17-B
 Después:
 
 ```text
-F17-C — Entity Targeting Foundation
+F17-D — Basic Attack PvE Foundation
 ```
 
-Objetivo del siguiente checkpoint:
+Objetivo:
 
 ```text
-click/picking local sobre MobActor
-→ obtener entity_id estable
-→ construir target descriptor kind=entity
-→ enviar intención sin daño todavía
-→ Game Server resuelve entity_id contra WorldMobRegistry
-→ valida que la entidad exista y pertenezca al mapa
-→ resultado/log autoritativo de resolución
+LEFT CLICK sobre mob hostil
+→ resolver entity_id
+→ basic_attack_intent
+→ Game Server
+→ resolver PlayerWorldSession
+→ resolver WorldMobRuntimeState
+→ validar identidad/mapa/alive
+→ identificar modalidad de ataque desde Equipment autoritativo
 ```
 
-F17-C debe resolver identidad de target antes de conectar Fire Ball real.
+Todavía sin mezclar damage completo, auto-chase, animaciones, aggro, muerte, respawn, drops o EXP.
 
 ---
 
 # 67. CRITERIO DE ÉXITO DEL PRÓXIMO TEST
 
-F17-C deberá demostrar como mínimo:
+F17-D deberá demostrar:
 
 ```text
-1. el cliente puede seleccionar/pickear el Training Goblin real;
-2. el intent usa entity_id estable y no NodePath ni coordenadas de pantalla;
-3. el Game Server resuelve `mob_test_town_001` en WorldMobRegistry;
-4. se valida que target y jugador estén en el mismo mapa;
-5. un entity_id inexistente se rechaza de forma segura;
-6. todavía no se aplica damage;
-7. movimiento, NPC, Inventory, Equipment y roster no regresionan;
-8. no aparecen warnings/errors nuevos.
+1. LEFT CLICK sobre terreno sigue moviendo;
+2. LEFT CLICK sobre NPC sigue interactuando;
+3. LEFT CLICK sobre Training Goblin produce basic_attack_intent;
+4. el intent usa entity_id estable;
+5. el Game Server resuelve el mob autoritativo;
+6. el Game Server resuelve el estado/equipment autoritativo del atacante;
+7. el cliente no envía damage confiable;
+8. RIGHT CLICK mantiene Skills;
+9. no aparecen warnings/errors nuevos.
 ```
-
-No conectar daño de Fire Ball antes de cerrar este contrato de identidad/targeting.
 
 ---
 
@@ -3417,7 +3529,22 @@ Fire Ball y Poison continuarán después sobre el mismo backbone.
 
 ---
 
-# 69. DECISIÓN SOBRE FIRE BALL / POISON
+# 69. DECISIÓN SOBRE BASIC ATTACK / FIRE BALL / POISON
+
+Basic Attack es parte central del combate y no será reemplazado por Skills.
+
+```text
+LEFT CLICK sobre mob hostil
+→ BASIC ATTACK PvE
+
+CTRL + LEFT CLICK sobre player
+→ BASIC ATTACK PvP
+
+CTRL + RIGHT CLICK sobre player
+→ SELECTED SKILL PvP
+```
+
+El Game Server resolverá el ataque según Equipment autoritativo.
 
 No implementar daño real antes de tener entidad/mob autoritativo.
 
@@ -3517,21 +3644,24 @@ El SHA definitivo de cierre de F16-C debe verificarse en `dev` después del push
 La etapa funcionalmente validada es:
 
 ```text
-F17-B — replicación autoritativa de mobs + MobActor cliente
+F17-C — Entity Targeting Foundation
 ```
 
 Contrato vigente:
 
 ```text
-LEFT CLICK          = MOVE
-RIGHT CLICK         = SKILL
-CTRL + RIGHT CLICK  = PvP
+LEFT CLICK terreno        = MOVE
+LEFT CLICK NPC            = INTERACT
+LEFT CLICK mob hostil     = BASIC ATTACK PvE
+RIGHT CLICK               = SELECTED SKILL PvE
+CTRL + LEFT CLICK player  = BASIC ATTACK PvP
+CTRL + RIGHT CLICK player = SELECTED SKILL PvP
 ```
 
 Próxima etapa después del checkpoint Git:
 
 ```text
-F17-C — Entity Targeting Foundation
+F17-D — Basic Attack PvE Foundation
 ```
 
-**No avanzar a F17-C hasta commitear, pushear y confirmar la actualización canónica de F17-B.**
+**No avanzar a F17-D hasta commitear, pushear y confirmar la actualización canónica de F17-C.**
