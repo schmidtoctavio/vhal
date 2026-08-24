@@ -1,10 +1,10 @@
 # VHAL — PROJECT MEMORY / ARQUITECTURA / ROADMAP CANÓNICO
 
-**Última actualización:** 23/08/2026  
+**Última actualización:** 24/08/2026  
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama de desarrollo habitual:** `dev`  
-**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D cerrados y F17-A validado; próximo checkpoint F17-B para replicación cliente del primer mob.
+**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B cerrados y validados; próximo checkpoint F17-C para targeting autoritativo de entidades.
 
 > Este archivo es la **fuente canónica única de contexto del proyecto VHAL**.
 >
@@ -314,24 +314,24 @@ Cuando aparece ese patrón hay que revisar la abstracción.
 │ intención + UI      │
 │ representación      │
 └──────────┬──────────┘
-		   │
-		   │ ENet
-		   ▼
+           │
+           │ ENet
+           ▼
 ┌─────────────────────┐
 │  GODOT GAME SERVER  │
 │ autoridad gameplay  │
 │ estado runtime      │
 └──────────┬──────────┘
-		   │
-		   │ HTTP interno
-		   ▼
+           │
+           │ HTTP interno
+           ▼
 ┌─────────────────────┐
 │   LARAVEL BACKEND   │
 │ identidad + API     │
 │ persistencia        │
 └──────────┬──────────┘
-		   │
-		   ▼
+           │
+           ▼
 ┌─────────────────────┐
 │        MYSQL        │
 │ almacenamiento      │
@@ -766,19 +766,19 @@ res://
 │       └── skill_cast_coordinator.gd
 │
 └── core/
-	├── networking/
-	├── backend/
-	├── combat/
-	│   ├── server_vitals_state.gd
-	│   └── server_character_runtime_bootstrap.gd
-	├── skills/
-	│   ├── server_skill_definition.gd
-	│   ├── server_skill_catalog.gd
-	│   └── server_skill_runtime_state.gd
-	└── world/
-		├── movement/
-		├── navigation/
-		└── npcs/
+    ├── networking/
+    ├── backend/
+    ├── combat/
+    │   ├── server_vitals_state.gd
+    │   └── server_character_runtime_bootstrap.gd
+    ├── skills/
+    │   ├── server_skill_definition.gd
+    │   ├── server_skill_catalog.gd
+    │   └── server_skill_runtime_state.gd
+    └── world/
+        ├── movement/
+        ├── navigation/
+        └── npcs/
 ```
 
 ## ServerMain
@@ -886,6 +886,8 @@ same-map roster
 initial presence
 player joined
 player left
+authoritative mob roster por mapa
+bootstrap de entidades de mundo replicadas
 ```
 
 ## AuthenticationCoordinator
@@ -902,27 +904,34 @@ disconnect cleanup
 
 ## SkillCastCoordinator
 
-Introducido en F16-B.
+Introducido en F16-B y llevado a ejecución autoritativa real en F16-C.
 
 Responsabilidad actual:
 
 ```text
 recibir una intención de cast estructuralmente válida
 resolver PlayerWorldSession del peer
-coordinar el caso de uso de cast
+validar request_id monotónico
+resolver skill autoritativa
+validar skill aprendida
+validar target soportado
+validar estado del personaje
+validar mana
+validar cooldown
+mutar runtime autoritativo
+aplicar effects soportados
+replicar skill_cast_result
 ```
 
-En F16-B todavía NO:
+Estado actual de ejecución:
 
 ```text
-consume MP
-cura
-hace daño
-inicia cooldown
-replica resultado
+Heal / self      → implementado y autoritativo
+Fire Ball        → todavía skill_not_implemented
+Poison           → todavía skill_not_implemented
 ```
 
-En F16-C comenzará a coordinar la ejecución autoritativa real.
+Targeting de entidades, range y daño real se incorporan progresivamente en F17.
 
 ---
 
@@ -1176,6 +1185,12 @@ stale-state recovery
 UID estable
 skill runtime foundation
 skill cast intent Client → Game Server
+Heal autoritativo
+MP autoritativo
+cooldown autoritativo + feedback visual
+runtime autoritativo de mobs
+replicación de mobs por roster de mundo
+MobActor cliente originado desde snapshot del Game Server
 ```
 
 VHAL ya no debe describirse como un simple “UI Lab”.
@@ -1773,7 +1788,9 @@ No implementar features sólo para completar una lista.
 
 # 36. F16 — SKILLS + CAST REAL
 
-**Estado:** 🟡 EN PROGRESO.
+**Estado:** ✅ FOUNDATION DE CAST/HEAL/COOLDOWN COMPLETADA Y VALIDADA.
+
+El backbone de cast real quedó cerrado en F16-A/B/BR/C/D. El targeting de entidades y el daño de skills ofensivas continúa en F17.
 
 Objetivo:
 
@@ -2501,45 +2518,167 @@ drops
 EXP
 ```
 
-**Siguiente checkpoint:** `F17-B — roster/snapshot de mobs + representación cliente mínima`.
+**Checkpoint siguiente realizado:** `F17-B — roster/snapshot de mobs + representación cliente mínima`.
 
 ---
 
-### F17-B — Authoritative Mob Replication + Client MobActor ✅
+## F17-B — REPLICACIÓN AUTORITATIVA DE MOBS + MOB ACTOR
 
-Estado: completado, probado manualmente y validado.
+**Estado:** ✅ COMPLETADO, PROBADO Y VALIDADO.
 
-Implementado:
+Objetivo:
 
-- `WorldPresenceCoordinator` incorpora los mobs autoritativos del mapa al roster inicial.
-- `world_presence_snapshot` replica:
-  - jugadores remotos,
-  - mobs autoritativos.
-- `GameServerPresenceProtocol` valida y normaliza snapshots de mobs.
-- El cliente conserva `remote_mobs` durante el loading.
-- `GameServerClient` expone el roster autoritativo de mobs.
-- Nuevo `MobActor` cliente para representación visual de entidades mob.
-- `GameplayScreen` sincroniza e instancia los mobs recibidos por red.
-- El mapa cliente no define qué mobs existen; la existencia de mobs pertenece al Game Server.
+```text
+WorldMobRegistry
+→ mobs autoritativos del mapa
+→ WorldPresenceCoordinator
+→ world_presence_snapshot
+→ GameServerPresenceProtocol
+→ remote_mobs
+→ GameSessionFlowCoordinator
+→ GameplayScreen
+→ MobActor
+```
 
-Prueba validada en `test_town`:
+## Decisión arquitectónica
 
-- `mob_test_town_001`
-- tipo `training_goblin`
-- `Training Goblin`
-- nivel 1
-- HP 50000/50000
-- posición (4, 0, 4)
-- un único actor visual creado.
-- movimiento autoritativo del jugador continúa funcionando.
+El mapa cliente NO define qué mobs existen.
 
-El `MobActor` actual utiliza una representación visual placeholder.
-Todavía no existen targeting, ataque, daño, aggro, IA ni muerte de mobs.
+La autoridad es:
 
-Siguiente checkpoint previsto:
-F17-C — Entity Targeting Foundation.
+```text
+Game Server
+→ determina qué mob existe
+→ entity_id
+→ mob_type_id
+→ mapa
+→ posición
+→ HP
+→ alive
+```
 
-# 44. PvP — DIRECCIÓN CANÓNICA
+El cliente:
+
+```text
+valida snapshot
+normaliza tipos
+conserva remote_mobs durante loading
+instancia representación visual
+```
+
+No se coloca manualmente el mob dentro de `test_town.tscn` como fuente de verdad.
+
+## Networking
+
+El roster inicial de mundo ahora transporta:
+
+```text
+players
+mobs
+```
+
+`WorldPresenceCoordinator` obtiene los mobs autoritativos mediante:
+
+```text
+WorldMobRegistry.get_mobs_in_map(map_id)
+```
+
+y los envía en:
+
+```text
+world_presence_snapshot
+```
+
+El cliente mantiene:
+
+```text
+GameServerPresenceProtocol.remote_players
+GameServerPresenceProtocol.remote_mobs
+```
+
+El patrón de loading se reutiliza:
+
+```text
+roster llega antes de GameplayScreen
+→ protocolo conserva estado normalizado
+→ GameplayScreen se crea
+→ GameSessionFlowCoordinator sincroniza players
+→ sincroniza mobs
+```
+
+## Representación cliente
+
+Se incorporó:
+
+```text
+features/world/mobs/mob_actor.gd
+features/world/mobs/mob_actor.tscn
+```
+
+El `MobActor` actual es una representación técnica placeholder.
+
+Muestra temporalmente:
+
+```text
+Training Goblin [Lv. 1]
+50000 / 50000 HP
+```
+
+No representa el modelado final del mob.
+
+## Test validado
+
+Servidor:
+
+```text
+WorldMobRegistry | Inicializado | Definiciones: 1 | Mobs: 1
+WorldMobRegistry | Mob preparado | Entity: mob_test_town_001 | Type: training_goblin | Nombre: Training Goblin | Nivel: 1 | Mapa: test_town | Posición: (4.0, 0.0, 4.0) | HP: 50000/50000
+WorldPresenceCoordinator | Presencia de mundo preparada | Mapa: test_town | Mobs: 1 | Remotos existentes: 0
+```
+
+Cliente:
+
+```text
+GameServerClient | Roster de mundo recibido | Remotos: 0 | Mobs: 1
+MobActor | Preparado | Entity: mob_test_town_001 | Type: training_goblin | Nombre: Training Goblin | Nivel: 1 | HP: 50000/50000 | Posición: (4.0, 0.0, 4.0)
+GameplayScreen | Mobs sincronizados | Cantidad: 1
+```
+
+Validación visual:
+
+```text
+1. aparece un único Training Goblin;
+2. aparece aproximadamente en (4, 0, 4);
+3. muestra Training Goblin [Lv. 1];
+4. muestra 50000 / 50000 HP;
+5. el jugador continúa moviéndose normalmente;
+6. no aparecen warnings/errors nuevos.
+```
+
+La desconexión observada al final del test ocurrió después de detener manualmente el proceso de debugging del Game Server y no representa una regresión.
+
+F17-B todavía NO incluye:
+
+```text
+target selection
+entity target intent
+click/hitbox de mob
+Fire Ball contra mob
+damage
+aggro
+IA
+movimiento del mob
+muerte
+respawn
+drops
+EXP
+```
+
+**Siguiente checkpoint:** `F17-C — Entity Targeting Foundation`.
+
+---
+
+# 43. PvP — DIRECCIÓN CANÓNICA
 
 PvP no debe implementarse como excepción improvisada.
 
@@ -3193,7 +3332,8 @@ F16-C Authoritative Heal      ✅
 F16-D Cooldown visual/UI      ✅
 
 F17-A Mob runtime             ✅
-F17-B Mob replication         ⏳ SIGUIENTE
+F17-B Mob replication         ✅
+F17-C Entity targeting        ⏳ SIGUIENTE
 F18 Drop / Pickup / EXP       ⏳
 F19 Vertical Slice            ⏳
 
@@ -3202,12 +3342,12 @@ PERF-1                        ⏳ después de F19 estable
 
 ---
 
-# 67. PRÓXIMO PASO EXACTO
+# 66. PRÓXIMO PASO EXACTO
 
 Antes de comenzar una etapa nueva:
 
 ```text
-cerrar checkpoint F17-A
+cerrar documentación/checkpoint F17-B
 → git status
 → commit
 → push
@@ -3217,29 +3357,41 @@ cerrar checkpoint F17-A
 Después:
 
 ```text
-F17-B — roster/snapshot de mobs + representación cliente mínima
+F17-C — Entity Targeting Foundation
 ```
 
 Objetivo del siguiente checkpoint:
 
 ```text
-WorldMobRegistry
-→ snapshot/roster autoritativo por mapa
-→ GameServer protocol
-→ cliente
-→ MobActor mínimo
-→ Training Goblin visible en test_town
+click/picking local sobre MobActor
+→ obtener entity_id estable
+→ construir target descriptor kind=entity
+→ enviar intención sin daño todavía
+→ Game Server resuelve entity_id contra WorldMobRegistry
+→ valida que la entidad exista y pertenezca al mapa
+→ resultado/log autoritativo de resolución
 ```
 
-Todavía sin IA ni daño real.
+F17-C debe resolver identidad de target antes de conectar Fire Ball real.
 
 ---
 
-# 68. CRITERIO DE ÉXITO DEL PRÓXIMO TEST
+# 67. CRITERIO DE ÉXITO DEL PRÓXIMO TEST
 
-El primer checkpoint de F17 deberá definir y validar el runtime autoritativo mínimo de una entidad hostil antes de conectar daño real de Fire Ball o Poison.
+F17-C deberá demostrar como mínimo:
 
-No implementar todavía daño de skills sobre un target inexistente o no autoritativo.
+```text
+1. el cliente puede seleccionar/pickear el Training Goblin real;
+2. el intent usa entity_id estable y no NodePath ni coordenadas de pantalla;
+3. el Game Server resuelve `mob_test_town_001` en WorldMobRegistry;
+4. se valida que target y jugador estén en el mismo mapa;
+5. un entity_id inexistente se rechaza de forma segura;
+6. todavía no se aplica damage;
+7. movimiento, NPC, Inventory, Equipment y roster no regresionan;
+8. no aparecen warnings/errors nuevos.
+```
+
+No conectar daño de Fire Ball antes de cerrar este contrato de identidad/targeting.
 
 ---
 
@@ -3365,7 +3517,7 @@ El SHA definitivo de cierre de F16-C debe verificarse en `dev` después del push
 La etapa funcionalmente validada es:
 
 ```text
-F17-A — runtime autoritativo mínimo del primer mob
+F17-B — replicación autoritativa de mobs + MobActor cliente
 ```
 
 Contrato vigente:
@@ -3379,7 +3531,7 @@ CTRL + RIGHT CLICK  = PvP
 Próxima etapa después del checkpoint Git:
 
 ```text
-F17-B — roster/snapshot de mobs + representación cliente mínima
+F17-C — Entity Targeting Foundation
 ```
 
-**No avanzar a F17-B hasta commitear, pushear y confirmar el cierre de F17-A.**
+**No avanzar a F17-C hasta commitear, pushear y confirmar la actualización canónica de F17-B.**
