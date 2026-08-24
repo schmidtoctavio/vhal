@@ -4,7 +4,7 @@
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama de desarrollo habitual:** `dev`  
-**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A completado, F16-B networking validado y F16-BR pendiente para corregir el contrato de input estilo MU antes de F16-C.
+**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR cerrados y F16-C validado de punta a punta; próximo bloque F16-D para feedback visual autoritativo de cooldown.
 
 > Este archivo es la **fuente canónica única de contexto del proyecto VHAL**.
 >
@@ -314,24 +314,24 @@ Cuando aparece ese patrón hay que revisar la abstracción.
 │ intención + UI      │
 │ representación      │
 └──────────┬──────────┘
-		   │
-		   │ ENet
-		   ▼
+           │
+           │ ENet
+           ▼
 ┌─────────────────────┐
 │  GODOT GAME SERVER  │
 │ autoridad gameplay  │
 │ estado runtime      │
 └──────────┬──────────┘
-		   │
-		   │ HTTP interno
-		   ▼
+           │
+           │ HTTP interno
+           ▼
 ┌─────────────────────┐
 │   LARAVEL BACKEND   │
 │ identidad + API     │
 │ persistencia        │
 └──────────┬──────────┘
-		   │
-		   ▼
+           │
+           ▼
 ┌─────────────────────┐
 │        MYSQL        │
 │ almacenamiento      │
@@ -766,19 +766,19 @@ res://
 │       └── skill_cast_coordinator.gd
 │
 └── core/
-	├── networking/
-	├── backend/
-	├── combat/
-	│   ├── server_vitals_state.gd
-	│   └── server_character_runtime_bootstrap.gd
-	├── skills/
-	│   ├── server_skill_definition.gd
-	│   ├── server_skill_catalog.gd
-	│   └── server_skill_runtime_state.gd
-	└── world/
-		├── movement/
-		├── navigation/
-		└── npcs/
+    ├── networking/
+    ├── backend/
+    ├── combat/
+    │   ├── server_vitals_state.gd
+    │   └── server_character_runtime_bootstrap.gd
+    ├── skills/
+    │   ├── server_skill_definition.gd
+    │   ├── server_skill_catalog.gd
+    │   └── server_skill_runtime_state.gd
+    └── world/
+        ├── movement/
+        ├── navigation/
+        └── npcs/
 ```
 
 ## ServerMain
@@ -1354,7 +1354,7 @@ feat: add skill cast intent protocol
 feat: receive authoritative skill cast intents
 ```
 
-**Importante:** el mapping de mouse introducido inicialmente en el cliente necesita corrección F16-BR antes de considerar F16-B completamente cerrado.
+**Importante:** el mapping de mouse introducido inicialmente en F16-B fue corregido y validado en F16-BR. El contrato vigente es LEFT CLICK = MOVE, RIGHT CLICK = SKILL y CTRL + RIGHT CLICK = PvP.
 
 ---
 
@@ -1907,7 +1907,7 @@ feat: add authoritative skill runtime foundation
 # 38. F16-B — SKILL CAST INTENT PROTOCOL
 
 **Estado del protocolo:** ✅ IMPLEMENTADO Y VALIDADO.  
-**Estado de la etapa completa:** 🟡 REQUIERE F16-BR por corrección de input antes del cierre formal.
+**Estado de la etapa completa:** ✅ CERRADO después de la corrección F16-BR.
 
 Se implementó:
 
@@ -1983,7 +1983,7 @@ Heal todavía no se ejecuta
 sin warnings/errors
 ```
 
-## Corrección pendiente F16-BR
+## Corrección realizada en F16-BR
 
 La primera implementación utilizó por error:
 
@@ -1995,7 +1995,7 @@ para disparar el cast.
 
 Ese mapping NO es el contrato definitivo de VHAL.
 
-Debe corregirse a:
+Se corrigió a:
 
 ```text
 click izquierdo
@@ -2008,7 +2008,7 @@ Ctrl + click derecho
 → PvP / ataque contra otro player
 ```
 
-Esta corrección es obligatoria antes de F16-C.
+Esta corrección fue validada antes de iniciar F16-C.
 
 Checkpoints ya pusheados del protocolo:
 
@@ -2030,7 +2030,7 @@ feat: receive authoritative skill cast intents
 
 # 39. F16-BR — CORRECCIÓN DE INPUT
 
-**Estado:** ⏳ SIGUIENTE CHECKPOINT INMEDIATO.
+**Estado:** ✅ COMPLETADO Y VALIDADO.
 
 Objetivo:
 
@@ -2061,21 +2061,21 @@ click izquierdo
 → NO castea
 ```
 
-Una vez validado:
+Validado:
 
 ```text
-commit
-push
-"pusheado"
+click izquierdo → movimiento
+click derecho → skill seleccionada
+Ctrl + click derecho → reservado para PvP
 ```
 
-y F16-B queda formalmente cerrado.
+F16-B quedó formalmente cerrado después de esta corrección.
 
 ---
 
 # 40. F16-C — PRIMER HEAL AUTORITATIVO
 
-**Estado:** ⏳ BLOQUEADO HASTA CERRAR F16-BR.
+**Estado:** ✅ COMPLETADO Y VALIDADO.
 
 Primer cast real recomendado:
 
@@ -2136,8 +2136,110 @@ enviar resultado autoritativo
 ↓
 cliente actualiza HP/MP
 ↓
-cliente representa cooldown
+cliente recibe cooldown autoritativo
 ```
+
+La representación visual del cooldown queda para F16-D.
+
+No Laravel/MySQL por cada cast.
+
+## Implementación validada
+
+Se incorporó:
+
+```text
+ServerHealEffect
+skill_cast_result
+vitals dentro del world snapshot
+request_id autoritativo por sesión
+validación de skill existente
+validación de skill aprendida
+validación de target self
+validación de personaje vivo
+validación de cooldown
+validación de mana
+gasto de MP
+inicio de cooldown
+resultado autoritativo Server → Client
+aplicación de HP/MP en PlayerRuntimeState
+actualización automática del HUD mediante signals
+rechazo de skills todavía no implementadas
+```
+
+## Bug detectado durante integración
+
+El Game Server enviaba correctamente `vitals` dentro de `PlayerWorldSession.to_snapshot()`, pero `GameServerWorldProtocol` los validaba y luego los omitía al reconstruir `latest_world_snapshot`.
+
+Eso provocaba:
+
+```text
+snapshot válido recibido
+→ vitals descartados
+→ GameSessionFlowCoordinator no encuentra vitals
+→ _apply_authoritative_world_snapshot() = false
+→ sesión termina
+→ vuelta a selección de personaje
+```
+
+Se corrigió manteniendo `vitals` en el snapshot normalizado.
+
+## Test final F16-C
+
+Estado inicial autoritativo:
+
+```text
+HP: 100000/100000
+MP: 350/350
+```
+
+Heal aceptado:
+
+```text
+Request: 1
+Skill: heal
+Accepted: true
+Reason: ok
+MP: 310/350
+Cooldown: 4.0
+```
+
+Segundo Heal ejecutado después de expirar el cooldown:
+
+```text
+Request: 2
+Accepted: true
+Reason: ok
+MP: 270/350
+Cooldown: 4.0
+```
+
+Intento inmediato posterior:
+
+```text
+Request: 3
+Accepted: false
+Reason: cooldown_active
+Cooldown remaining: 3.527
+MP permanece 270/350
+```
+
+Fire Ball:
+
+```text
+Request: 4
+Skill: fire_ball
+Accepted: false
+Reason: skill_not_implemented
+MP permanece 270/350
+```
+
+Heal reportó `Heal: 0` porque HP ya estaba en el máximo. Esto es correcto: el cast fue válido, consumió mana e inició cooldown, pero no había HP faltante que restaurar.
+
+Resultado:
+
+> El cliente puede pedir un cast, pero sólo el Game Server decide si ocurre y cuál es el estado final de HP/MP/cooldown.
+
+F16-C no incluye todavía el overlay visual autoritativo del cooldown.
 
 No Laravel/MySQL por cada cast.
 
@@ -2831,10 +2933,10 @@ F15-R Architectural Refactor  ✅
 F15-C Item operations         🟡 evaluado / diferido
 
 F16-A Skill runtime           ✅
-F16-B Cast protocol           ✅ networking validado
-F16-BR Input MU correction    ⏳ SIGUIENTE
-F16-C Authoritative Heal      ⏳
-F16-D Cast result/UI          ⏳ según partición final de etapas
+F16-B Cast protocol           ✅
+F16-BR Input MU correction    ✅
+F16-C Authoritative Heal      ✅
+F16-D Cooldown visual/UI      ⏳ SIGUIENTE
 
 F17 Mob / Combat              ⏳
 F18 Drop / Pickup / EXP       ⏳
@@ -2847,55 +2949,50 @@ PERF-1                        ⏳ después de F19 estable
 
 # 65. PRÓXIMO PASO EXACTO
 
-No comenzar todavía F16-C.
-
-Primero:
+Antes de comenzar una etapa nueva:
 
 ```text
-F16-BR
-```
-
-Corregir cliente:
-
-```text
-click izquierdo → movimiento
-click derecho → skill
-Ctrl + click derecho → reservado/intención PvP
-```
-
-Luego:
-
-```text
-test
-0 warnings/errors
-git status
-commit
-push
-confirmar "pusheado"
+cerrar checkpoint F16-C
+→ git status
+→ commit
+→ push
+→ confirmar "pusheado"
 ```
 
 Después:
 
 ```text
-F16-C — Heal autoritativo
+F16-D — feedback visual autoritativo de cooldown
 ```
+
+Objetivo:
+
+```text
+resultado autoritativo de cast
+→ cooldown_remaining_seconds
+→ runtime/UI
+→ overlay y contador visual
+```
+
+El cliente representa el cooldown informado por el servidor. No debe volver a decidir por sí mismo si un cast está disponible.
 
 ---
 
 # 66. CRITERIO DE ÉXITO DEL PRÓXIMO TEST
 
-F16-BR debe demostrar:
+F16-D deberá demostrar:
 
 ```text
 1. seleccionar Heal con tecla 3;
-2. click derecho → sale skill_cast_request de Heal;
-3. el Game Server recibe Heal/self;
-4. HP y MP todavía no cambian;
-5. click izquierdo → mueve normalmente;
-6. click derecho NO mueve;
-7. Ctrl + click derecho NO ejecuta Heal normal;
-8. no aparecen warnings/errors;
-9. Inventory/Equipment/NPC no regresionan.
+2. click derecho → cast aceptado por servidor;
+3. cooldown visual comienza desde el valor autoritativo recibido;
+4. contador/overlay desciende visualmente;
+5. intento durante cooldown es rechazado por servidor;
+6. rechazo puede resincronizar el cooldown visual con el tiempo restante autoritativo;
+7. al terminar cooldown el slot vuelve a disponible;
+8. cambiar de skill no destruye el estado visual de cooldown;
+9. no aparecen warnings/errors;
+10. movimiento, Inventory, Equipment y NPC no regresionan.
 ```
 
 ---
@@ -3005,25 +3102,27 @@ Al abrir una nueva conversación o retomar el proyecto:
 7. respetar test → commit → push → "pusheado".
 ```
 
-En el checkpoint de este archivo:
+Referencias históricas de F16 antes del cierre de F16-C:
 
 ```text
-Cliente dev:
+Cliente F16-B:
 c8a7916be8fe3091f394611e09d89da75b398c20
 feat: add skill cast intent protocol
 
-Game Server dev:
+Game Server F16-B:
 9d32d0e62705a916036afba97e39d21a656d4424
 feat: receive authoritative skill cast intents
 ```
 
-La etapa activa es:
+El SHA definitivo de cierre de F16-C debe verificarse en `dev` después del push del checkpoint, porque este mismo archivo forma parte de ese commit.
+
+La etapa funcionalmente validada es:
 
 ```text
-F16-BR — corregir input estilo MU
+F16-C — primer Heal autoritativo
 ```
 
-Contrato obligatorio:
+Contrato vigente:
 
 ```text
 LEFT CLICK          = MOVE
@@ -3031,4 +3130,10 @@ RIGHT CLICK         = SKILL
 CTRL + RIGHT CLICK  = PvP
 ```
 
-**No avanzar a F16-C hasta corregir, testear, commitear, pushear y confirmar este checkpoint.**
+Próxima etapa después del checkpoint Git:
+
+```text
+F16-D — feedback visual autoritativo de cooldown
+```
+
+**No avanzar a F16-D hasta commitear, pushear y confirmar el cierre de F16-C.**

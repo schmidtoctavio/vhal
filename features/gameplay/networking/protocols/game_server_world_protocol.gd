@@ -368,6 +368,14 @@ func _process_world_snapshot(
 			true
 		),
 
+		"vitals": {
+			"hp": hp,
+			"max_hp": max_hp,
+
+			"mp": mp,
+			"max_mp": max_mp,
+		},
+
 		"world": {
 			"map_id": map_id,
 
@@ -389,7 +397,15 @@ func _process_world_snapshot(
 		" | Mapa: ",
 		map_id,
 		" | Posición: ",
-		position
+		position,
+		" | HP: ",
+		hp,
+		"/",
+		max_hp,
+		" | MP: ",
+		mp,
+		"/",
+		max_mp
 	)
 
 
