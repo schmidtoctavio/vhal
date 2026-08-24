@@ -178,6 +178,89 @@ func _process_world_snapshot(
 
 		return
 
+	# =========================================================
+	# VITALES AUTORITATIVOS
+	# =========================================================
+
+	var vitals_value: Variant = (
+		snapshot.get(
+			"vitals",
+			null
+		)
+	)
+
+
+	if typeof(vitals_value) != TYPE_DICTIONARY:
+		_fail_connection(
+			"El snapshot no posee vitals válidos."
+		)
+
+
+		return
+
+
+	var vitals_data: Dictionary = (
+		vitals_value
+	)
+
+
+	if (
+		not vitals_data.has("hp")
+		or
+		not vitals_data.has("max_hp")
+		or
+		not vitals_data.has("mp")
+		or
+		not vitals_data.has("max_mp")
+	):
+		_fail_connection(
+			"Los vitals del snapshot están incompletos."
+		)
+
+
+		return
+
+
+	var hp := int(
+		vitals_data["hp"]
+	)
+
+
+	var max_hp := int(
+		vitals_data["max_hp"]
+	)
+
+
+	var mp := int(
+		vitals_data["mp"]
+	)
+
+
+	var max_mp := int(
+		vitals_data["max_mp"]
+	)
+
+
+	if (
+		max_hp <= 0
+		or
+		hp < 0
+		or
+		hp > max_hp
+		or
+		max_mp <= 0
+		or
+		mp < 0
+		or
+		mp > max_mp
+	):
+		_fail_connection(
+			"Los vitals del snapshot son inválidos."
+		)
+
+
+		return
+
 
 	var world_value: Variant = (
 		snapshot.get(

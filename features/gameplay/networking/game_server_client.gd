@@ -82,6 +82,15 @@ signal character_equipment_snapshot_received(
 	snapshot: Dictionary
 )
 
+signal skill_cast_result_received(
+	request_id: int,
+	accepted: bool,
+	skill_id: String,
+	reason: String,
+	vitals_snapshot: Dictionary,
+	cooldown_remaining_seconds: float,
+	effect: Dictionary
+)
 
 # =========================================================
 # CONFIGURACIÓN DE TRANSPORTE
@@ -244,7 +253,8 @@ func _setup_protocols() -> bool:
 		return false
 
 	if not skill_protocol.setup(
-		_send_protocol_message
+		_send_protocol_message,
+		_fail_connection
 	):
 		return false
 
@@ -310,6 +320,12 @@ func _bind_protocol_signals() -> void:
 			_on_protocol_movement_decision_received
 		)
 
+	if not skill_protocol.skill_cast_result_received.is_connected(
+		_on_protocol_skill_cast_result_received
+	):
+		skill_protocol.skill_cast_result_received.connect(
+			_on_protocol_skill_cast_result_received
+		)
 
 	if not presence_protocol.world_presence_snapshot_received.is_connected(
 		_on_protocol_world_presence_snapshot_received
@@ -772,6 +788,11 @@ func _on_peer_packet(
 	):
 		return
 
+	if skill_protocol.process_message(
+		message_type,
+		data_value
+	):
+		return
 
 	if presence_protocol.process_message(
 		message_type,
@@ -1145,6 +1166,28 @@ func _on_protocol_world_snapshot_received(
 		snapshot
 	)
 
+# =========================================================
+# FORWARD — SKILLS
+# =========================================================
+
+func _on_protocol_skill_cast_result_received(
+	request_id: int,
+	accepted: bool,
+	skill_id: String,
+	reason: String,
+	vitals_snapshot: Dictionary,
+	cooldown_remaining_seconds: float,
+	effect: Dictionary
+) -> void:
+	skill_cast_result_received.emit(
+		request_id,
+		accepted,
+		skill_id,
+		reason,
+		vitals_snapshot,
+		cooldown_remaining_seconds,
+		effect
+	)
 
 # =========================================================
 # FORWARD — MOVEMENT

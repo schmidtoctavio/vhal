@@ -1605,3 +1605,73 @@ func _on_item_container_transfer_requested(
 		current_position,
 		new_position
 	)
+
+# =========================================================
+# RESULTADO AUTORITATIVO DE SKILL
+# =========================================================
+
+func apply_authoritative_skill_cast_result(
+	request_id: int,
+	accepted: bool,
+	skill_id: String,
+	reason: String,
+	vitals_snapshot: Dictionary,
+	cooldown_remaining_seconds: float,
+	effect: Dictionary
+) -> void:
+	if player_state == null:
+		return
+
+
+	if not player_state.apply_vitals_snapshot(
+		vitals_snapshot
+	):
+		world_load_failed.emit(
+			"No se pudieron aplicar los vitals autoritativos del cast."
+		)
+
+
+		return
+
+
+	var effect_kind := String(
+		effect.get(
+			"kind",
+			""
+		)
+	)
+
+
+	var effect_amount := int(
+		effect.get(
+			"amount",
+			0
+		)
+	)
+
+
+	print(
+		"GameplayScreen | Resultado autoritativo aplicado",
+		" | Request: ",
+		request_id,
+		" | Skill: ",
+		skill_id,
+		" | Accepted: ",
+		accepted,
+		" | Reason: ",
+		reason,
+		" | Effect: ",
+		effect_kind,
+		" | Amount: ",
+		effect_amount,
+		" | Cooldown: ",
+		cooldown_remaining_seconds,
+		" | HP: ",
+		player_state.vitals.hp,
+		"/",
+		player_state.vitals.max_hp,
+		" | MP: ",
+		player_state.vitals.mp,
+		"/",
+		player_state.vitals.max_mp
+	)

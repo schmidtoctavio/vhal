@@ -151,6 +151,12 @@ func _bind_services() -> void:
 			_on_game_session_ticket_failed
 		)
 
+	if not game_server_client.skill_cast_result_received.is_connected(
+		_on_skill_cast_result_received
+	):
+		game_server_client.skill_cast_result_received.connect(
+			_on_skill_cast_result_received
+		)
 
 	if not game_server_client.game_server_connected.is_connected(
 		_on_game_server_connected
@@ -579,6 +585,28 @@ func _apply_authoritative_world_snapshot(
 			null
 		)
 	)
+
+	var vitals_value: Variant = (
+		pending_world_snapshot.get(
+			"vitals",
+			null
+		)
+	)
+
+
+	if typeof(vitals_value) != TYPE_DICTIONARY:
+		return false
+
+
+	var vitals_snapshot: Dictionary = (
+		vitals_value
+	)
+
+
+	if not player_state.apply_vitals_snapshot(
+		vitals_snapshot
+	):
+		return false
 
 
 	if typeof(world_value) != TYPE_DICTIONARY:
@@ -1974,3 +2002,35 @@ func _reset_pending_snapshots() -> void:
 	pending_character_equipment_snapshot = {}
 
 	game_session_start_requested = false
+
+# =========================================================
+# SKILL RESULT → GAMEPLAY
+# =========================================================
+
+func _on_skill_cast_result_received(
+	request_id: int,
+	accepted: bool,
+	skill_id: String,
+	reason: String,
+	vitals_snapshot: Dictionary,
+	cooldown_remaining_seconds: float,
+	effect: Dictionary
+) -> void:
+	var gameplay_screen := (
+		_get_gameplay_screen()
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	gameplay_screen.apply_authoritative_skill_cast_result(
+		request_id,
+		accepted,
+		skill_id,
+		reason,
+		vitals_snapshot,
+		cooldown_remaining_seconds,
+		effect
+	)

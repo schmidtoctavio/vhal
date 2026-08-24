@@ -89,6 +89,100 @@ func _init(
 
 	currency = CurrencyState.new()
 
+# =========================================================
+# VITALES AUTORITATIVOS
+# =========================================================
+
+func apply_vitals_snapshot(
+	snapshot: Dictionary
+) -> bool:
+	if vitals == null:
+		return false
+
+
+	if (
+		not snapshot.has("hp")
+		or
+		not snapshot.has("max_hp")
+		or
+		not snapshot.has("mp")
+		or
+		not snapshot.has("max_mp")
+	):
+		return false
+
+
+	var hp := int(
+		snapshot["hp"]
+	)
+
+
+	var max_hp := int(
+		snapshot["max_hp"]
+	)
+
+
+	var mp := int(
+		snapshot["mp"]
+	)
+
+
+	var max_mp := int(
+		snapshot["max_mp"]
+	)
+
+
+	if max_hp <= 0:
+		return false
+
+
+	if hp < 0 or hp > max_hp:
+		return false
+
+
+	if max_mp <= 0:
+		return false
+
+
+	if mp < 0 or mp > max_mp:
+		return false
+
+
+	vitals.set_max_hp(
+		max_hp
+	)
+
+
+	vitals.set_hp(
+		hp
+	)
+
+
+	vitals.set_max_mp(
+		max_mp
+	)
+
+
+	vitals.set_mp(
+		mp
+	)
+
+
+	print(
+		"PlayerRuntimeState | Vitals autoritativos aplicados",
+		" | HP: ",
+		hp,
+		"/",
+		max_hp,
+		" | MP: ",
+		mp,
+		"/",
+		max_mp
+	)
+
+
+	return true
+
 
 # =========================================================
 # INVENTORY PERSISTENTE
