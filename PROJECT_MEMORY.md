@@ -4,7 +4,7 @@
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama de desarrollo habitual:** `dev`  
-**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B/F17-C/F17-D/F17-E cerrados y validados; próximo checkpoint F17-F para transición autoritativa de muerte del mob.
+**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B/F17-C/F17-D/F17-E/F17-F cerrados y validados; siguiente paso: decision gate para definir si F17 continúa con Respawn Foundation antes de abrir F18 Drop/Pickup/EXP.
 
 > Este archivo es la **fuente canónica única de contexto del proyecto VHAL**.
 >
@@ -314,24 +314,24 @@ Cuando aparece ese patrón hay que revisar la abstracción.
 │ intención + UI      │
 │ representación      │
 └──────────┬──────────┘
-		   │
-		   │ ENet
-		   ▼
+           │
+           │ ENet
+           ▼
 ┌─────────────────────┐
 │  GODOT GAME SERVER  │
 │ autoridad gameplay  │
 │ estado runtime      │
 └──────────┬──────────┘
-		   │
-		   │ HTTP interno
-		   ▼
+           │
+           │ HTTP interno
+           ▼
 ┌─────────────────────┐
 │   LARAVEL BACKEND   │
 │ identidad + API     │
 │ persistencia        │
 └──────────┬──────────┘
-		   │
-		   ▼
+           │
+           ▼
 ┌─────────────────────┐
 │        MYSQL        │
 │ almacenamiento      │
@@ -797,22 +797,22 @@ res://
 │       └── basic_attack_coordinator.gd
 │
 └── core/
-	├── networking/
-	├── backend/
-	├── combat/
-	│   ├── server_vitals_state.gd
-	│   ├── server_character_runtime_bootstrap.gd
-	│   ├── server_basic_attack_profile_resolver.gd
-	│   └── server_basic_attack_runtime_state.gd
-	├── skills/
-	│   ├── server_skill_definition.gd
-	│   ├── server_skill_catalog.gd
-	│   └── server_skill_runtime_state.gd
-	└── world/
-		├── movement/
-		├── navigation/
-		├── npcs/
-		└── mobs/
+    ├── networking/
+    ├── backend/
+    ├── combat/
+    │   ├── server_vitals_state.gd
+    │   ├── server_character_runtime_bootstrap.gd
+    │   ├── server_basic_attack_profile_resolver.gd
+    │   └── server_basic_attack_runtime_state.gd
+    ├── skills/
+    │   ├── server_skill_definition.gd
+    │   ├── server_skill_catalog.gd
+    │   └── server_skill_runtime_state.gd
+    └── world/
+        ├── movement/
+        ├── navigation/
+        ├── npcs/
+        └── mobs/
 ```
 
 ## ServerMain
@@ -2896,8 +2896,8 @@ El cliente sólo envía:
 {
   "request_id": 1,
   "target": {
-	"kind": "entity",
-	"entity_id": "mob_test_town_001"
+    "kind": "entity",
+    "entity_id": "mob_test_town_001"
   }
 }
 ```
@@ -3503,6 +3503,318 @@ EXP
 ```
 
 **Siguiente checkpoint:** `F17-F — Authoritative Mob Death Transition`.
+
+
+## F17-F — AUTHORITATIVE MOB DEATH TRANSITION
+
+**Estado:** ✅ COMPLETADO, PROBADO Y VALIDADO.
+
+F17-F formaliza la transición de vida a muerte de una entidad mob sin introducir todavía drops, EXP ni respawn.
+
+Flujo cerrado:
+
+```text
+mob HP > 0
+→ damage autoritativo
+→ HP llega a 0
+→ transición alive → dead
+→ evento interno mob_died
+→ snapshot HP=0 / alive=false
+→ mob_state_updated
+→ clientes del mapa
+→ MobActor representa muerte
+→ targetability/picking desactivado
+```
+
+### Fuente única de la transición de muerte
+
+La transición de muerte se centraliza en:
+
+```text
+WorldMobRegistry.apply_damage_to_mob()
+```
+
+El Registry:
+
+```text
+resuelve entity_id
+valida amount
+valida mob existente
+valida mob vivo
+aplica damage mediante WorldMobRuntimeState
+detecta was_alive && !is_alive()
+emite mob_died exactamente al ocurrir la transición
+```
+
+Esto evita duplicar lógica de muerte en:
+
+```text
+BasicAttackCoordinator
+futuro Fire Ball
+futuro Poison
+otras fuentes de damage
+```
+
+El objetivo es que cualquier fuente futura de damage pueda converger en el mismo lifecycle autoritativo.
+
+### Evento autoritativo interno
+
+`WorldMobRegistry` expone:
+
+```text
+mob_died(
+    entity_id,
+    map_id,
+    source,
+    mob_snapshot
+)
+```
+
+El `source` conserva metadata suficiente para futuras capas.
+
+En el test real:
+
+```text
+kind = player_basic_attack
+```
+
+y también se preservan datos del atacante/request/attack profile relevantes.
+
+Este signal es el hook previsto para que F18 pueda reaccionar a una muerte sin acoplar Drop/EXP directamente al BasicAttackCoordinator.
+
+### Kill real validado
+
+Golpe letal:
+
+```text
+WorldMobRegistry | Muerte autoritativa confirmada
+| Entity: mob_test_town_001
+| Type: training_goblin
+| Mapa: test_town
+| Source: player_basic_attack
+| HP: 0/50000
+```
+
+Después, el mismo ataque concluyó:
+
+```text
+BasicAttackCoordinator | Resultado enviado
+| Request: 66
+| Accepted: true
+| Reason: ok
+| Mode: melee
+```
+
+El estado final fue replicado:
+
+```text
+BasicAttackCoordinator | Estado de mob replicado
+| Entity: mob_test_town_001
+| Recipients: 1
+| HP: 0/50000
+```
+
+y el log de ejecución confirmó:
+
+```text
+Damage: 1000
+HP restante: 0/50000
+Killed: true
+```
+
+### Exactly-once durante una vida
+
+Durante la prueba existió una sola transición:
+
+```text
+WorldMobRegistry | Muerte autoritativa confirmada
+```
+
+para `mob_test_town_001`.
+
+Una vez que el mob queda con:
+
+```text
+HP = 0
+alive = false
+```
+
+`WorldMobRuntimeState.is_alive()` impide que el mismo lifecycle vuelva a transicionar a dead.
+
+No confundir esto con persistencia durable exactly-once entre reinicios del proceso; todavía estamos hablando del runtime de una vida concreta del mob.
+
+### Snapshot dead
+
+El snapshot autoritativo derivado queda coherente:
+
+```text
+hp = 0
+alive = false
+```
+
+La presencia cliente ya valida la relación:
+
+```text
+alive == (hp > 0)
+```
+
+por lo que un snapshot inconsistente no debe aceptarse como representación válida.
+
+### Representación cliente del cadáver
+
+`MobActor` continúa representando el snapshot autoritativo.
+
+Cuando recibe:
+
+```text
+HP: 0/50000
+alive: false
+```
+
+actualiza temporalmente:
+
+```text
+NameLabel → [DEAD]
+VitalsLabel → 0 / 50000 HP
+VisualRoot → placeholder acostado
+TargetArea / CollisionShape3D → deshabilitados para targeting
+```
+
+La cápsula acostada es únicamente una representación placeholder.
+
+Una futura animación de muerte reemplazará esta presentación sin cambiar el contrato gameplay.
+
+### Targetability después de morir
+
+`MobActor.is_targetable()` exige:
+
+```text
+alive
+hp > 0
+entity_id válido
+```
+
+Luego de la muerte el collider/picking de target queda deshabilitado.
+
+Test real con LEFT CLICK sobre el cadáver:
+
+```text
+NO:
+GameplayScreen | Basic Attack solicitado
+
+NO:
+GameServerClient | Intención de Basic Attack enviada
+```
+
+El click terminó resolviéndose como terreno y produjo:
+
+```text
+move_request
+→ movimiento hacia la zona del cadáver
+```
+
+Eso es correcto.
+
+### Skills contra cadáver
+
+Con Fire Ball seleccionado y RIGHT CLICK sobre el cadáver:
+
+```text
+GameplayScreen | Cast omitido
+| Skill: fire_ball
+| Reason: entity_target_required
+```
+
+El cadáver deja de resolverse como entity target en el cliente.
+
+### Defensa server-side adicional
+
+`BasicAttackCoordinator` conserva la validación:
+
+```text
+if not mob.is_alive()
+→ target_not_alive
+```
+
+Por lo tanto, aunque un cliente modificado fabricara manualmente un request estructuralmente válido contra un entity_id muerto, el Game Server no debería aplicar damage.
+
+Esa rama no fue disparada desde el cliente normal en F17-F porque el picking deja correctamente de producir el intent. Debe cubrirse más adelante con tests específicos de protocolo/servidor, no reactivando targetability del cadáver sólo para probarla.
+
+### No se introdujo un mensaje de red de muerte separado
+
+No existe:
+
+```text
+mob_death_message
+```
+
+porque no es necesario.
+
+Se reutiliza:
+
+```text
+mob_state_updated
+```
+
+con:
+
+```text
+HP = 0
+alive = false
+```
+
+La muerte es un cambio de estado autoritativo de la entidad, mientras `mob_died` queda como evento interno de dominio para sistemas server-side futuros.
+
+### Checkpoints remotos
+
+Cliente:
+
+```text
+a339b1cb6b3de4eb6fb549e6ee6644aa5a7e6af5
+feat: represent authoritative mob death state
+```
+
+Game Server:
+
+```text
+8373b0583f988e6703a0e5bc8264ddb651161688
+feat: emit authoritative mob death transitions
+```
+
+### Límite de F17-F
+
+F17-F NO implementa:
+
+```text
+drops
+EXP
+pickup
+loot tables
+respawn
+spawn timers
+aggro
+IA
+retaliación
+animación final
+damage numbers
+auto-chase
+```
+
+La muerte autoritativa ya posee el hook que esos sistemas podrán consumir.
+
+**Siguiente paso:** decision gate de roadmap para decidir entre:
+
+```text
+F17-G — Authoritative Mob Respawn Foundation
+```
+
+o abrir directamente:
+
+```text
+F18 — Drop / Pickup / EXP
+```
+
+La decisión debe priorizar un vertical slice repetible y evitar scope creep.
 
 ---
 
@@ -4167,7 +4479,8 @@ F17-B Mob replication         ✅
 F17-C Entity targeting        ✅
 F17-D Basic Attack PvE        ✅
 F17-E Basic Attack execution  ✅
-F17-F Mob death transition    ⏳ SIGUIENTE
+F17-F Mob death transition    ✅
+F17-G Mob respawn foundation  🟡 DECISION GATE
 F18 Drop / Pickup / EXP       ⏳
 F19 Vertical Slice            ⏳
 
@@ -4178,10 +4491,10 @@ PERF-1                        ⏳ después de F19 estable
 
 # 66. PRÓXIMO PASO EXACTO
 
-Antes de comenzar una etapa nueva:
+Antes de implementar gameplay nuevo:
 
 ```text
-cerrar documentación/checkpoint F17-E
+cerrar documentación/checkpoint F17-F
 → reemplazar PROJECT_MEMORY.md
 → git status
 → commit
@@ -4189,63 +4502,70 @@ cerrar documentación/checkpoint F17-E
 → confirmar "pusheado"
 ```
 
-Después:
+Después realizar un **decision gate corto** sobre el roadmap.
+
+Opciones:
 
 ```text
-F17-F — Authoritative Mob Death Transition
+A) F17-G — Authoritative Mob Respawn Foundation
+
+B) abrir F18 — Drop / Pickup / EXP
 ```
 
-Dirección del checkpoint:
+Criterio de decisión:
 
 ```text
-damage autoritativo ya existente
-→ HP llega a 0
-→ detectar transición alive → dead exactamente una vez
-→ consolidar death state del WorldMobRuntimeState
-→ replicar alive=false + HP=0
-→ cliente representa mob muerto
-→ desactivar targetability/picking de combate
-→ rechazar ataques/skills posteriores
-→ exponer una señal/evento autoritativo de muerte
+¿necesitamos primero que el ciclo del mob sea repetible
+sin reiniciar el Game Server para poder probar muchas muertes,
+drops y EXP con fluidez?
 ```
 
-Ese evento de muerte será el hook que F18 podrá reutilizar para:
+La recomendación arquitectónica preliminar es favorecer un checkpoint pequeño de respawn antes de F18 si puede mantenerse limitado a:
 
 ```text
-drop
+dead
+→ timer autoritativo
+→ reset HP
+→ reset transform al spawn
+→ alive=true
+→ mob_state_updated
+```
+
+sin meter todavía:
+
+```text
+IA
+patrulla
+aggro
+loot
 EXP
-pickup
-```
-
-Todavía no mezclar en F17-F:
-
-```text
-drops
-EXP
-loot tables
-respawn completo
-aggro/IA completa
 animaciones finales
 ```
 
+La decisión definitiva se toma después del push documental de F17-F y de revisar el estado real de los repositorios.
+
 ---
 
-# 67. CRITERIO DE ÉXITO DEL PRÓXIMO TEST
+# 67. CRITERIO DEL SIGUIENTE DECISION GATE
 
-F17-F deberá demostrar como mínimo:
+Antes de abrir otro checkpoint se debe decidir si Respawn Foundation aporta suficiente valor inmediato.
+
+Si se elige F17-G, el criterio mínimo será:
 
 ```text
-1. un mob puede pasar de HP > 0 a HP = 0 por damage autoritativo;
-2. la transición alive → dead ocurre una sola vez;
-3. el snapshot replicado queda HP=0 y alive=false;
-4. MobActor deja de ser targetable al morir;
-5. el picking/target de combate no acepta al mob muerto;
-6. un request posterior no vuelve a aplicar damage;
-7. el Game Server devuelve target_not_alive para requests válidos estructuralmente;
-8. existe un hook/evento autoritativo de muerte reutilizable por F18;
-9. no se implementan todavía drops ni EXP dentro de F17-F;
+1. la muerte actual sigue funcionando exactamente una vez;
+2. el mob permanece dead durante un tiempo autoritativo;
+3. no puede ser targeteado durante dead;
+4. el Game Server restaura HP a max_hp al respawn;
+5. vuelve a spawn_position / spawn_rotation_y;
+6. alive vuelve a true;
+7. el nuevo snapshot se replica a clientes del mapa;
+8. MobActor vuelve a ser targetable;
+9. no aparecen drops ni EXP todavía;
 10. no aparecen warnings/errors nuevos.
 ```
+
+Si se decide abrir F18 directamente, documentar explícitamente que el respawn queda diferido y que las pruebas de múltiples kills requieren reinicio/fixture temporal hasta implementar lifecycle repetible.
 
 ---
 
@@ -4318,7 +4638,16 @@ sin arma
 
 El HP del mob se muta exclusivamente en Game Server y se replica mediante `mob_state_updated`.
 
-No crear un segundo modelo de arma ni implementar damage fuera del pipeline autoritativo de entidad/mob.
+F17-F además centraliza la transición fatal en:
+
+```text
+WorldMobRegistry.apply_damage_to_mob()
+→ mob_died
+```
+
+para que futuras fuentes de damage y F18 no dependan de BasicAttackCoordinator.
+
+No crear un segundo modelo de arma ni implementar damage/muerte fuera del pipeline autoritativo de entidad/mob.
 
 Fire Ball necesitará:
 
@@ -4416,7 +4745,7 @@ El SHA definitivo de cierre de F16-C debe verificarse en `dev` después del push
 La etapa funcionalmente validada es:
 
 ```text
-F17-E — Authoritative Basic Attack Execution
+F17-F — Authoritative Mob Death Transition
 ```
 
 Contrato vigente:
@@ -4430,35 +4759,37 @@ CTRL + LEFT CLICK player  = BASIC ATTACK PvP
 CTRL + RIGHT CLICK player = SELECTED SKILL PvP
 ```
 
-Basic Attack real validado:
+Combat lifecycle validado:
 
 ```text
-bronze_sword
-→ melee
-→ 1000 damage
-→ range 2.0
-→ cooldown 0.9 s
-
-sin arma
-→ unarmed
-→ 500 damage
-→ range 1.5
-→ cooldown 1.0 s
-```
-
-Estado del mob:
-
-```text
-Game Server HP
+Basic Attack
+→ damage autoritativo
+→ HP 0
+→ alive=false
+→ mob_died exactly-once por vida
 → mob_state_updated
-→ clientes del mapa
-→ MobActor
+→ MobActor dead
+→ targetability deshabilitada
 ```
 
-Próxima etapa después del checkpoint Git:
+El cadáver:
 
 ```text
-F17-F — Authoritative Mob Death Transition
+LEFT CLICK
+→ ya no Basic Attack
+→ puede resolver terreno
+
+RIGHT CLICK Fire Ball
+→ entity_target_required
 ```
 
-**No avanzar a F17-F hasta commitear, pushear y confirmar la actualización canónica de F17-E.**
+Siguiente paso después del checkpoint Git:
+
+```text
+DECISION GATE:
+F17-G Respawn Foundation
+vs.
+F18 Drop / Pickup / EXP
+```
+
+**No implementar el siguiente checkpoint hasta commitear, pushear y confirmar la actualización canónica de F17-F.**
