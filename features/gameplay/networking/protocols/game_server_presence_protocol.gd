@@ -22,6 +22,10 @@ signal mob_state_updated(
 	mob: Dictionary
 )
 
+signal world_drop_spawned(
+	drop: Dictionary
+)
+
 # =========================================================
 # MENSAJES
 # =========================================================
@@ -42,6 +46,10 @@ const MESSAGE_MOB_STATE_UPDATED: String = (
 	"mob_state_updated"
 )
 
+const MESSAGE_WORLD_DROP_SPAWNED: String = (
+	"world_drop_spawned"
+)
+
 # =========================================================
 # DEPENDENCIAS
 # =========================================================
@@ -56,6 +64,8 @@ var get_local_peer_id: Callable = Callable()
 var remote_players: Dictionary = {}
 
 var remote_mobs: Dictionary = {}
+
+var remote_drops: Dictionary = {}
 
 # =========================================================
 # SETUP
@@ -139,6 +149,19 @@ func process_message(
 
 			return true
 
+		MESSAGE_WORLD_DROP_SPAWNED:
+			if typeof(data_value) == TYPE_DICTIONARY:
+				var drop_data: Dictionary = (
+					data_value
+				)
+
+
+				_process_world_drop_spawned(
+					drop_data
+				)
+
+
+			return true
 
 	return false
 
@@ -599,10 +622,20 @@ func _process_world_presence_snapshot(
 		)
 	)
 
+	var drops_value: Variant = (
+		data.get(
+			"drops",
+			null
+		)
+	)
+
 	if typeof(players_value) != TYPE_ARRAY:
 		return
 
 	if typeof(mobs_value) != TYPE_ARRAY:
+		return
+
+	if typeof(drops_value) != TYPE_ARRAY:
 		return
 
 	var players: Array = (
@@ -613,8 +646,13 @@ func _process_world_presence_snapshot(
 		mobs_value
 	)
 
+	var drops: Array = (
+		drops_value
+	)
+
 	remote_players.clear()
 	remote_mobs.clear()
+	remote_drops.clear()
 
 	for player_value: Variant in players:
 		var player := (
@@ -669,12 +707,42 @@ func _process_world_presence_snapshot(
 			entity_id
 		] = mob
 
+	for drop_value: Variant in drops:
+		var drop := (
+			_parse_world_drop_snapshot(
+				drop_value
+			)
+		)
+
+
+		if drop.is_empty():
+			continue
+
+
+		var entity_id := String(
+			drop.get(
+				"entity_id",
+				""
+			)
+		)
+
+
+		if entity_id.is_empty():
+			continue
+
+
+		remote_drops[
+			entity_id
+		] = drop
+
 	print(
 		"GameServerClient | Roster de mundo recibido",
 		" | Remotos: ",
 		remote_players.size(),
 		" | Mobs: ",
-		remote_mobs.size()
+		remote_mobs.size(),
+		" | Drops: ",
+		remote_drops.size()
 	)
 
 
@@ -958,3 +1026,239 @@ func reset() -> void:
 	remote_players.clear()
 
 	remote_mobs.clear()
+
+# =========================================================
+# VALIDAR WORLD DROP
+# =========================================================
+
+func _parse_world_drop_snapshot(
+	value: Variant
+) -> Dictionary:
+	if typeof(value) != TYPE_DICTIONARY:
+		return {}
+
+
+	var data: Dictionary = (
+		value
+	)
+
+
+	var entity_id := String(
+		data.get(
+			"entity_id",
+			""
+		)
+	).strip_edges().to_lower()
+
+
+	if entity_id.is_empty():
+		return {}
+
+
+	var entity_kind := String(
+		data.get(
+			"entity_kind",
+			""
+		)
+	).strip_edges().to_lower()
+
+
+	if entity_kind != "world_drop":
+		return {}
+
+
+	var item_value: Variant = (
+		data.get(
+			"item",
+			null
+		)
+	)
+
+
+	if typeof(item_value) != TYPE_DICTIONARY:
+		return {}
+
+
+	var item: Dictionary = (
+		item_value
+	)
+
+
+	var item_id := String(
+		item.get(
+			"item_id",
+			""
+		)
+	).strip_edges().to_lower()
+
+
+	var quantity := int(
+		item.get(
+			"quantity",
+			0
+		)
+	)
+
+
+	if (
+		item_id.is_empty()
+		or
+		quantity <= 0
+	):
+		return {}
+
+
+	var world_value: Variant = (
+		data.get(
+			"world",
+			null
+		)
+	)
+
+
+	if typeof(world_value) != TYPE_DICTIONARY:
+		return {}
+
+
+	var world: Dictionary = (
+		world_value
+	)
+
+
+	var map_id := String(
+		world.get(
+			"map_id",
+			""
+		)
+	).strip_edges()
+
+
+	if map_id.is_empty():
+		return {}
+
+
+	var position_value: Variant = (
+		world.get(
+			"position",
+			null
+		)
+	)
+
+
+	if typeof(position_value) != TYPE_DICTIONARY:
+		return {}
+
+
+	var position_data: Dictionary = (
+		position_value
+	)
+
+
+	if (
+		not position_data.has("x")
+		or
+		not position_data.has("y")
+		or
+		not position_data.has("z")
+	):
+		return {}
+
+
+	var position := Vector3(
+		float(position_data["x"]),
+		float(position_data["y"]),
+		float(position_data["z"])
+	)
+
+
+	return {
+		"entity_id": entity_id,
+
+		"entity_kind": "world_drop",
+
+		"item": {
+			"item_id": item_id,
+
+			"quantity": quantity,
+		},
+
+		"world": {
+			"map_id": map_id,
+
+			"position": position,
+		},
+	}
+
+func _process_world_drop_spawned(
+	data: Dictionary
+) -> void:
+	var drop_value: Variant = (
+		data.get(
+			"drop",
+			null
+		)
+	)
+
+
+	var drop := (
+		_parse_world_drop_snapshot(
+			drop_value
+		)
+	)
+
+
+	if drop.is_empty():
+		return
+
+
+	var entity_id := String(
+		drop.get(
+			"entity_id",
+			""
+		)
+	).strip_edges().to_lower()
+
+
+	if entity_id.is_empty():
+		return
+
+
+	remote_drops[
+		entity_id
+	] = drop
+
+
+	var item: Dictionary = (
+		drop.get(
+			"item",
+			{}
+		)
+	)
+
+
+	print(
+		"GameServerClient | World Drop recibido",
+		" | Entity: ",
+		entity_id,
+		" | Item: ",
+		String(
+			item.get(
+				"item_id",
+				""
+			)
+		),
+		" | Quantity: ",
+		int(
+			item.get(
+				"quantity",
+				0
+			)
+		)
+	)
+
+
+	world_drop_spawned.emit(
+		drop.duplicate(
+			true
+		)
+	)

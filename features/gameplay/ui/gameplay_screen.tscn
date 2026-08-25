@@ -37,6 +37,8 @@ mouse_filter = 0
 
 [node name="ActorsRoot" type="Node3D" parent="WorldRoot" unique_id=650207808]
 
+[node name="DropsRoot" type="Node3D" parent="WorldRoot" unique_id=909131120]
+
 [node name="PlayerCameraController" parent="WorldRoot" unique_id=1096174645 instance=ExtResource("3_ut2oh")]
 
 [node name="PlayerInputController" type="Node" parent="." unique_id=1375599803]

@@ -19,6 +19,10 @@ const MOB_ACTOR_SCENE: PackedScene = preload(
 	"res://features/world/mobs/mob_actor.tscn"
 )
 
+const WORLD_DROP_ACTOR_SCENE: PackedScene = preload(
+	"res://features/world/drops/world_drop_actor.tscn"
+)
+
 # =========================================================
 # SEÑALES
 # =========================================================
@@ -116,6 +120,10 @@ signal equipment_item_unequip_requested(
 	$NpcInteractionController
 )
 
+@onready var drops_root: Node3D = (
+	$WorldRoot/DropsRoot
+)
+
 # =========================================================
 # ESTADO DEL JUGADOR
 # =========================================================
@@ -145,6 +153,8 @@ var authorized_vault_active: bool = false
 var active_map: Node3D = null
 
 var active_map_definition: MapDefinition = null
+
+var world_drop_actors: Dictionary = {}
 
 
 # =========================================================
@@ -2038,3 +2048,197 @@ func apply_authoritative_skill_cast_result(
 		"/",
 		player_state.vitals.max_mp
 	)
+
+
+# =========================================================
+# SINCRONIZAR WORLD DROPS
+# =========================================================
+
+func sync_world_drops(
+	drops: Array
+) -> void:
+	_clear_world_drops()
+
+
+	for drop_value: Variant in drops:
+		if typeof(drop_value) != TYPE_DICTIONARY:
+			continue
+
+
+		var drop: Dictionary = (
+			drop_value
+		)
+
+
+		_spawn_or_update_world_drop(
+			drop
+		)
+
+
+	print(
+		"GameplayScreen | Drops sincronizados",
+		" | Cantidad: ",
+		world_drop_actors.size()
+	)
+
+func apply_world_drop_spawned(
+	drop: Dictionary
+) -> void:
+	if drop.is_empty():
+		return
+
+
+	_spawn_or_update_world_drop(
+		drop
+	)
+
+func _spawn_or_update_world_drop(
+	drop: Dictionary
+) -> void:
+	if drops_root == null:
+		return
+
+
+	if player_state == null:
+		return
+
+
+	if player_state.world == null:
+		return
+
+
+	var entity_id := String(
+		drop.get(
+			"entity_id",
+			""
+		)
+	).strip_edges().to_lower()
+
+
+	if entity_id.is_empty():
+		return
+
+
+	var world_value: Variant = (
+		drop.get(
+			"world",
+			null
+		)
+	)
+
+
+	if typeof(world_value) != TYPE_DICTIONARY:
+		return
+
+
+	var world: Dictionary = (
+		world_value
+	)
+
+
+	var drop_map_id := String(
+		world.get(
+			"map_id",
+			""
+		)
+	).strip_edges()
+
+
+	if (
+		drop_map_id
+		!=
+		player_state.world.map_id
+	):
+		return
+
+
+	if world_drop_actors.has(
+		entity_id
+	):
+		var existing_value: Variant = (
+			world_drop_actors[
+				entity_id
+			]
+		)
+
+
+		var existing_actor := (
+			existing_value
+			as WorldDropActor
+		)
+
+
+		if (
+			existing_actor != null
+			and
+			is_instance_valid(
+				existing_actor
+			)
+		):
+			existing_actor.setup(
+				drop
+			)
+
+
+		return
+
+
+	var actor_instance := (
+		WORLD_DROP_ACTOR_SCENE.instantiate()
+	)
+
+
+	if actor_instance == null:
+		return
+
+
+	var drop_actor := (
+		actor_instance
+		as WorldDropActor
+	)
+
+
+	if drop_actor == null:
+		actor_instance.free()
+
+
+		return
+
+
+	drops_root.add_child(
+		drop_actor
+	)
+
+
+	if not drop_actor.setup(
+		drop
+	):
+		drop_actor.queue_free()
+
+
+		return
+
+
+	world_drop_actors[
+		entity_id
+	] = drop_actor
+
+func _clear_world_drops() -> void:
+	for actor_value: Variant in world_drop_actors.values():
+		var drop_actor := (
+			actor_value
+			as WorldDropActor
+		)
+
+
+		if (
+			drop_actor != null
+			and
+			is_instance_valid(
+				drop_actor
+			)
+		):
+			drop_actor.queue_free()
+
+
+	world_drop_actors.clear()

@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://w7gm8q07sf3d"]
+
+[ext_resource type="Script" uid="uid://dbm6l42o55ial" path="res://features/world/drops/world_drop_actor.gd" id="1_m6f07"]
+
+[node name="WorldDropActor" type="Node3D" unique_id=377521659]
+script = ExtResource("1_m6f07")
+
+[node name="VisualRoot" type="Node3D" parent="." unique_id=1779109962]
+
+[node name="ItemSprite" type="Sprite3D" parent="VisualRoot" unique_id=1795303849]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
+pixel_size = 0.003
+billboard = 1
+
+[node name="NameLabel" type="Label3D" parent="VisualRoot" unique_id=514826595]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+billboard = 1

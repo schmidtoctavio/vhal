@@ -96,6 +96,10 @@ signal mob_state_updated(
 	mob: Dictionary
 )
 
+signal world_drop_spawned(
+	drop: Dictionary
+)
+
 # =========================================================
 # CONFIGURACIÓN DE TRANSPORTE
 # =========================================================
@@ -209,6 +213,14 @@ var remote_mobs: Dictionary:
 
 
 		return presence_protocol.remote_mobs
+
+var remote_drops: Dictionary:
+	get:
+		if presence_protocol == null:
+			return {}
+
+
+		return presence_protocol.remote_drops
 
 # =========================================================
 # CICLO DE VIDA
@@ -415,6 +427,13 @@ func _bind_protocol_signals() -> void:
 	):
 		presence_protocol.mob_state_updated.connect(
 			_on_protocol_mob_state_updated
+		)
+
+	if not presence_protocol.world_drop_spawned.is_connected(
+		_on_protocol_world_drop_spawned
+	):
+		presence_protocol.world_drop_spawned.connect(
+			_on_protocol_world_drop_spawned
 		)
 
 # =========================================================
@@ -1391,4 +1410,11 @@ func send_basic_attack_request(
 
 	return combat_protocol.send_basic_attack_request(
 		target
+	)
+
+func _on_protocol_world_drop_spawned(
+	drop: Dictionary
+) -> void:
+	world_drop_spawned.emit(
+		drop
 	)

@@ -300,6 +300,13 @@ func _bind_services() -> void:
 			_on_mob_state_updated
 		)
 
+	if not game_server_client.world_drop_spawned.is_connected(
+		_on_world_drop_spawned
+	):
+		game_server_client.world_drop_spawned.connect(
+			_on_world_drop_spawned
+		)
+
 # =========================================================
 # ENTRAR AL MUNDO
 # =========================================================
@@ -1106,6 +1113,10 @@ func _show_gameplay(
 
 	gameplay_screen.sync_world_mobs(
 		game_server_client.remote_mobs.values()
+	)
+
+	gameplay_screen.sync_world_drops(
+		game_server_client.remote_drops.values()
 	)
 
 # =========================================================
@@ -2098,4 +2109,20 @@ func _on_mob_state_updated(
 
 	gameplay_screen.apply_mob_state_updated(
 		mob
+	)
+
+func _on_world_drop_spawned(
+	drop: Dictionary
+) -> void:
+	var gameplay_screen := (
+		_get_gameplay_screen()
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	gameplay_screen.apply_world_drop_spawned(
+		drop
 	)
