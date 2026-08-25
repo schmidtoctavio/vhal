@@ -151,6 +151,13 @@ func _bind_services() -> void:
 			_on_game_session_ticket_failed
 		)
 
+	if not game_server_client.character_progression_updated.is_connected(
+		_on_character_progression_updated
+	):
+		game_server_client.character_progression_updated.connect(
+			_on_character_progression_updated
+		)
+
 	if not game_server_client.skill_cast_result_received.is_connected(
 		_on_skill_cast_result_received
 	):
@@ -621,6 +628,12 @@ func _apply_authoritative_world_snapshot(
 		)
 	)
 
+	var progression_value: Variant = (
+		pending_world_snapshot.get(
+			"progression",
+			null
+		)
+	)
 
 	if typeof(vitals_value) != TYPE_DICTIONARY:
 		return false
@@ -630,6 +643,19 @@ func _apply_authoritative_world_snapshot(
 		vitals_value
 	)
 
+	if typeof(progression_value) != TYPE_DICTIONARY:
+		return false
+
+
+	var progression_snapshot: Dictionary = (
+		progression_value
+	)
+
+
+	if not player_state.apply_progression_snapshot(
+		progression_snapshot
+	):
+		return false
 
 	if not player_state.apply_vitals_snapshot(
 		vitals_snapshot
@@ -779,6 +805,32 @@ func _on_game_session_started(
 
 		return
 
+	# -----------------------------------------------------
+	# IDENTIDAD DEL PERSONAJE
+	#
+	# El PlayerRuntimeState foundation todavía nace desde
+	# MockGameSessionService sin CharacterSummary.
+	#
+	# Progression necesita esa identidad ANTES de aplicar
+	# el snapshot autoritativo.
+	# -----------------------------------------------------
+
+	if player_state.character_summary == null:
+		player_state.character_summary = (
+			pending_game_character
+		)
+
+
+	if (
+		player_state.character_summary.character_id
+		!=
+		character_id
+	):
+		pending_game_character = null
+
+		game_session_service.end_session()
+
+		return
 
 	if not _apply_authoritative_world_snapshot(
 		player_state
@@ -813,26 +865,6 @@ func _on_game_session_started(
 		game_session_service.end_session()
 
 		return
-
-
-	if player_state.character_summary == null:
-		player_state.character_summary = (
-			pending_game_character
-		)
-
-
-	if (
-		player_state.character_summary.character_id
-		!=
-		character_id
-	):
-		pending_game_character = null
-
-
-		game_session_service.end_session()
-
-		return
-
 
 	if pending_character_inventory_snapshot.is_empty():
 		pending_game_character = null
@@ -2200,3 +2232,34 @@ func _on_world_drop_pickup_result_received(
 		" | Reason: ",
 		reason
 	)
+
+# =========================================================
+# PROGRESSION AUTORITATIVA → GAMEPLAY
+# =========================================================
+
+func _on_character_progression_updated(
+	snapshot: Dictionary
+) -> void:
+	var gameplay_screen := (
+		_get_gameplay_screen()
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	if gameplay_screen.apply_authoritative_progression_snapshot(
+		snapshot
+	):
+		return
+
+
+	print(
+		"GameSessionFlowCoordinator | "
+		+
+		"No se pudo aplicar Progression autoritativa."
+	)
+
+
+	game_session_service.end_session()

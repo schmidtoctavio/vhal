@@ -111,6 +111,10 @@ signal world_drop_pickup_result_received(
 	reason: String
 )
 
+signal character_progression_updated(
+	snapshot: Dictionary
+)
+
 # =========================================================
 # CONFIGURACIÓN DE TRANSPORTE
 # =========================================================
@@ -159,6 +163,7 @@ var npc_protocol: GameServerNpcProtocol = null
 
 var item_protocol: GameServerItemProtocol = null
 
+var progression_protocol: GameServerProgressionProtocol = null
 
 # =========================================================
 # COMPATIBILIDAD DE ESTADO PÚBLICO
@@ -269,12 +274,21 @@ func _setup_protocols() -> bool:
 
 	combat_protocol = GameServerCombatProtocol.new()
 
+	progression_protocol = (
+		GameServerProgressionProtocol.new()
+	)
+
 	if not world_protocol.setup(
 		_get_local_peer_id,
 		_fail_connection
 	):
 		return false
 
+	if not progression_protocol.setup(
+		_get_latest_world_snapshot,
+		_fail_connection
+	):
+		return false
 
 	if not presence_protocol.setup(
 		_get_local_peer_id
@@ -339,6 +353,12 @@ func _bind_protocol_signals() -> void:
 			_on_protocol_world_snapshot_received
 		)
 
+	if not progression_protocol.character_progression_updated.is_connected(
+		_on_protocol_character_progression_updated
+	):
+		progression_protocol.character_progression_updated.connect(
+			_on_protocol_character_progression_updated
+		)
 
 	if not movement_protocol.authoritative_movement_state_received.is_connected(
 		_on_protocol_authoritative_movement_state_received
@@ -852,6 +872,11 @@ func _on_peer_packet(
 	):
 		return
 
+	if progression_protocol.process_message(
+		message_type,
+		data_value
+	):
+		return
 
 	if movement_protocol.process_message(
 		message_type,
@@ -1028,6 +1053,12 @@ func _reset_connection_state() -> void:
 
 	if movement_protocol != null:
 		movement_protocol.reset()
+
+	if world_protocol != null:
+		world_protocol.reset()
+
+	if progression_protocol != null:
+		progression_protocol.reset()
 
 	if skill_protocol != null:
 		skill_protocol.reset()
@@ -1475,4 +1506,15 @@ func _on_protocol_world_drop_pickup_result_received(
 		entity_id,
 		accepted,
 		reason
+	)
+
+# =========================================================
+# FORWARD — PROGRESSION
+# =========================================================
+
+func _on_protocol_character_progression_updated(
+	snapshot: Dictionary
+) -> void:
+	character_progression_updated.emit(
+		snapshot
 	)

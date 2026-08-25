@@ -2328,3 +2328,37 @@ func apply_world_drop_removed(
 		" | Entity: ",
 		normalized_entity_id
 	)
+
+# =========================================================
+# PROGRESIÓN AUTORITATIVA
+# =========================================================
+
+func apply_authoritative_progression_snapshot(
+	snapshot: Dictionary
+) -> bool:
+	if player_state == null:
+		return false
+
+
+	if not player_state.apply_progression_snapshot(
+		snapshot
+	):
+		return false
+
+
+	_refresh_character_debug()
+
+
+	if player_state.experience != null:
+		print(
+			"GameplayScreen | Progression actualizada",
+			" | Level: ",
+			player_state.character_summary.level,
+			" | EXP: ",
+			player_state.experience.experience,
+			"/",
+			player_state.experience.experience_required
+		)
+
+
+	return true

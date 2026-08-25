@@ -178,6 +178,89 @@ func _process_world_snapshot(
 
 		return
 
+	# =====================================================
+	# PROGRESIÓN AUTORITATIVA
+	# =====================================================
+
+	var progression_value: Variant = (
+		snapshot.get(
+			"progression",
+			null
+		)
+	)
+
+
+	if typeof(progression_value) != TYPE_DICTIONARY:
+		_fail_connection(
+			"El snapshot no posee Progression válida."
+		)
+
+
+		return
+
+
+	var progression_data: Dictionary = (
+		progression_value
+	)
+
+
+	var level := int(
+		progression_data.get(
+			"level",
+			0
+		)
+	)
+
+
+	var experience := int(
+		progression_data.get(
+			"experience",
+			-1
+		)
+	)
+
+
+	var experience_required := int(
+		progression_data.get(
+			"experience_required",
+			0
+		)
+	)
+
+
+	if (
+		level <= 0
+		or
+		experience < 0
+		or
+		experience_required <= 0
+		or
+		experience >= experience_required
+	):
+		_fail_connection(
+			"La Progression del snapshot es inválida."
+		)
+
+
+		return
+
+
+	var character_level := int(
+		character_data.get(
+			"level",
+			0
+		)
+	)
+
+
+	if character_level != level:
+		_fail_connection(
+			"Level inconsistente en el snapshot."
+		)
+
+
+		return
+
 	# =========================================================
 	# VITALES AUTORITATIVOS
 	# =========================================================
@@ -368,6 +451,16 @@ func _process_world_snapshot(
 			true
 		),
 
+		"progression": {
+			"level": level,
+
+			"experience": experience,
+
+			"experience_required": (
+				experience_required
+			),
+		},
+
 		"vitals": {
 			"hp": hp,
 			"max_hp": max_hp,
@@ -405,7 +498,13 @@ func _process_world_snapshot(
 		" | MP: ",
 		mp,
 		"/",
-		max_mp
+		max_mp,
+		" | Level: ",
+		level,
+		" | EXP: ",
+		experience,
+		"/",
+		experience_required,
 	)
 
 
@@ -440,3 +539,11 @@ func _fail_connection(
 	fail_connection.call(
 		message
 	)
+
+
+# =========================================================
+# RESET
+# =========================================================
+
+func reset() -> void:
+	latest_world_snapshot = {}

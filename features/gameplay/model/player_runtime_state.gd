@@ -189,6 +189,87 @@ func apply_vitals_snapshot(
 
 
 # =========================================================
+# PROGRESIÓN AUTORITATIVA
+# =========================================================
+
+func apply_progression_snapshot(
+	snapshot: Dictionary
+) -> bool:
+	if character_summary == null:
+		return false
+
+
+	if experience == null:
+		return false
+
+
+	var level := int(
+		snapshot.get(
+			"level",
+			0
+		)
+	)
+
+
+	var current_experience := int(
+		snapshot.get(
+			"experience",
+			-1
+		)
+	)
+
+
+	var experience_required := int(
+		snapshot.get(
+			"experience_required",
+			0
+		)
+	)
+
+
+	if level <= 0:
+		return false
+
+
+	if current_experience < 0:
+		return false
+
+
+	if experience_required <= 0:
+		return false
+
+
+	if current_experience >= experience_required:
+		return false
+
+
+	character_summary.level = level
+
+
+	experience.set_experience_required(
+		experience_required
+	)
+
+
+	experience.set_experience(
+		current_experience
+	)
+
+
+	print(
+		"PlayerRuntimeState | Progression autoritativa aplicada",
+		" | Level: ",
+		level,
+		" | EXP: ",
+		current_experience,
+		"/",
+		experience_required
+	)
+
+
+	return true
+
+# =========================================================
 # INVENTORY PERSISTENTE
 # =========================================================
 
