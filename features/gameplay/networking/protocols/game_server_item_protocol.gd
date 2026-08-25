@@ -18,6 +18,12 @@ signal character_equipment_snapshot_received(
 	snapshot: Dictionary
 )
 
+signal world_drop_pickup_result_received(
+	request_id: int,
+	entity_id: String,
+	accepted: bool,
+	reason: String
+)
 
 # =========================================================
 # MENSAJES
@@ -55,6 +61,13 @@ const MESSAGE_EQUIPMENT_UNEQUIP_REQUEST: String = (
 	"equipment_unequip_request"
 )
 
+const MESSAGE_WORLD_DROP_PICKUP_REQUEST: String = (
+	"world_drop_pickup_request"
+)
+
+const MESSAGE_WORLD_DROP_PICKUP_RESULT: String = (
+	"world_drop_pickup_result"
+)
 
 # =========================================================
 # DEPENDENCIAS
@@ -95,6 +108,9 @@ var equipment_transfer_inventory_synced: bool = false
 
 var equipment_transfer_equipment_synced: bool = false
 
+var next_world_drop_pickup_request_id: int = 1
+
+var world_drop_pickup_request_pending: bool = false
 
 # =========================================================
 # SETUP
@@ -194,6 +210,14 @@ func process_message(
 
 			return true
 
+		MESSAGE_WORLD_DROP_PICKUP_RESULT:
+			if typeof(data_value) == TYPE_DICTIONARY:
+				_process_world_drop_pickup_result(
+					data_value
+				)
+
+
+			return true
 
 	return false
 
@@ -211,6 +235,8 @@ func _has_item_mutation_pending() -> bool:
 		item_container_transfer_request_pending
 		or
 		equipment_transfer_request_pending
+		or
+		world_drop_pickup_request_pending
 	)
 
 
@@ -528,7 +554,7 @@ func _process_character_inventory_snapshot(
 
 
 	inventory_item_move_request_pending = false
-
+	world_drop_pickup_request_pending = false
 
 	print(
 		"GameServerClient | Snapshot de Inventory recibido",
@@ -1354,6 +1380,9 @@ func reset() -> void:
 
 	equipment_transfer_equipment_synced = false
 
+	next_world_drop_pickup_request_id = 1
+	
+	world_drop_pickup_request_pending = false
 
 # =========================================================
 # WORLD SNAPSHOT
@@ -1394,4 +1423,127 @@ func _fail_connection(
 
 	fail_connection.call(
 		message
+	)
+
+func send_world_drop_pickup_request(
+	entity_id: String
+) -> Error:
+	if _has_item_mutation_pending():
+		return ERR_BUSY
+
+
+	var normalized_entity_id := (
+		entity_id
+		.strip_edges()
+		.to_lower()
+	)
+
+
+	if normalized_entity_id.is_empty():
+		return ERR_INVALID_PARAMETER
+
+
+	var request_id := (
+		next_world_drop_pickup_request_id
+	)
+
+
+	var result := int(
+		send_message.call(
+			MESSAGE_WORLD_DROP_PICKUP_REQUEST,
+			{
+				"request_id": request_id,
+
+				"entity_id": normalized_entity_id,
+			}
+		)
+	)
+
+
+	if result != OK:
+		return result as Error
+
+
+	world_drop_pickup_request_pending = true
+
+	next_world_drop_pickup_request_id += 1
+
+
+	print(
+		"GameServerClient | Intención de Pickup enviada",
+		" | Request: ",
+		request_id,
+		" | Entity: ",
+		normalized_entity_id
+	)
+
+
+	return OK
+
+func _process_world_drop_pickup_result(
+	data: Dictionary
+) -> void:
+	var request_id := int(
+		data.get(
+			"request_id",
+			0
+		)
+	)
+
+
+	var entity_id := String(
+		data.get(
+			"entity_id",
+			""
+		)
+	).strip_edges().to_lower()
+
+
+	var accepted := bool(
+		data.get(
+			"accepted",
+			false
+		)
+	)
+
+
+	var reason := String(
+		data.get(
+			"reason",
+			""
+		)
+	).strip_edges()
+
+
+	if (
+		request_id <= 0
+		or
+		entity_id.is_empty()
+	):
+		return
+
+
+	# Si fue rechazado no habrá snapshot nuevo.
+	if not accepted:
+		world_drop_pickup_request_pending = false
+
+
+	print(
+		"GameServerClient | Resultado autoritativo de Pickup",
+		" | Request: ",
+		request_id,
+		" | Entity: ",
+		entity_id,
+		" | Accepted: ",
+		accepted,
+		" | Reason: ",
+		reason
+	)
+
+
+	world_drop_pickup_result_received.emit(
+		request_id,
+		entity_id,
+		accepted,
+		reason
 	)

@@ -100,6 +100,17 @@ signal world_drop_spawned(
 	drop: Dictionary
 )
 
+signal world_drop_removed(
+	entity_id: String
+)
+
+signal world_drop_pickup_result_received(
+	request_id: int,
+	entity_id: String,
+	accepted: bool,
+	reason: String
+)
+
 # =========================================================
 # CONFIGURACIÓN DE TRANSPORTE
 # =========================================================
@@ -434,6 +445,21 @@ func _bind_protocol_signals() -> void:
 	):
 		presence_protocol.world_drop_spawned.connect(
 			_on_protocol_world_drop_spawned
+		)
+
+	if not presence_protocol.world_drop_removed.is_connected(
+		_on_protocol_world_drop_removed
+	):
+		presence_protocol.world_drop_removed.connect(
+			_on_protocol_world_drop_removed
+		)
+
+
+	if not item_protocol.world_drop_pickup_result_received.is_connected(
+		_on_protocol_world_drop_pickup_result_received
+	):
+		item_protocol.world_drop_pickup_result_received.connect(
+			_on_protocol_world_drop_pickup_result_received
 		)
 
 # =========================================================
@@ -1417,4 +1443,36 @@ func _on_protocol_world_drop_spawned(
 ) -> void:
 	world_drop_spawned.emit(
 		drop
+	)
+
+func send_world_drop_pickup_request(
+	entity_id: String
+) -> Error:
+	if not connected:
+		return ERR_UNAVAILABLE
+
+
+	return item_protocol.send_world_drop_pickup_request(
+		entity_id
+	)
+
+func _on_protocol_world_drop_removed(
+	entity_id: String
+) -> void:
+	world_drop_removed.emit(
+		entity_id
+	)
+
+
+func _on_protocol_world_drop_pickup_result_received(
+	request_id: int,
+	entity_id: String,
+	accepted: bool,
+	reason: String
+) -> void:
+	world_drop_pickup_result_received.emit(
+		request_id,
+		entity_id,
+		accepted,
+		reason
 	)

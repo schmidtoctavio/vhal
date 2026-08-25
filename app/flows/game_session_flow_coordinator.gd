@@ -307,6 +307,21 @@ func _bind_services() -> void:
 			_on_world_drop_spawned
 		)
 
+	if not game_server_client.world_drop_removed.is_connected(
+		_on_world_drop_removed
+	):
+		game_server_client.world_drop_removed.connect(
+			_on_world_drop_removed
+		)
+
+
+	if not game_server_client.world_drop_pickup_result_received.is_connected(
+		_on_world_drop_pickup_result_received
+	):
+		game_server_client.world_drop_pickup_result_received.connect(
+			_on_world_drop_pickup_result_received
+		)
+
 # =========================================================
 # ENTRAR AL MUNDO
 # =========================================================
@@ -1100,6 +1115,12 @@ func _show_gameplay(
 			_on_gameplay_equipment_item_unequip_requested
 		)
 
+	if not gameplay_screen.world_drop_pickup_intent_requested.is_connected(
+		_on_gameplay_world_drop_pickup_requested
+	):
+		gameplay_screen.world_drop_pickup_intent_requested.connect(
+			_on_gameplay_world_drop_pickup_requested
+		)
 
 	gameplay_screen.setup(
 		player_state,
@@ -2125,4 +2146,57 @@ func _on_world_drop_spawned(
 
 	gameplay_screen.apply_world_drop_spawned(
 		drop
+	)
+
+func _on_gameplay_world_drop_pickup_requested(
+	entity_id: String
+) -> void:
+	var result := (
+		game_server_client.send_world_drop_pickup_request(
+			entity_id
+		)
+	)
+
+
+	if result != OK:
+		print(
+			"GameSessionFlowCoordinator | Pickup no enviado",
+			" | Entity: ",
+			entity_id,
+			" | Error: ",
+			result
+		)
+
+func _on_world_drop_removed(
+	entity_id: String
+) -> void:
+	var gameplay_screen := (
+		_get_gameplay_screen()
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	gameplay_screen.apply_world_drop_removed(
+		entity_id
+	)
+
+func _on_world_drop_pickup_result_received(
+	request_id: int,
+	entity_id: String,
+	accepted: bool,
+	reason: String
+) -> void:
+	print(
+		"GameSessionFlowCoordinator | Pickup result",
+		" | Request: ",
+		request_id,
+		" | Entity: ",
+		entity_id,
+		" | Accepted: ",
+		accepted,
+		" | Reason: ",
+		reason
 	)

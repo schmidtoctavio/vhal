@@ -209,3 +209,6 @@ func setup(
 
 
 	return true
+
+func get_entity_id() -> String:
+	return entity_id

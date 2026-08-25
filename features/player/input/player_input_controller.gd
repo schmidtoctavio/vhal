@@ -22,6 +22,10 @@ signal basic_attack_requested(
 	target_entity_id: String
 )
 
+signal world_drop_pickup_requested(
+	entity_id: String
+)
+
 # =========================================================
 # CONSTANTES
 # =========================================================
@@ -256,6 +260,27 @@ func _input(
 
 		return
 
+	# -----------------------------------------------------
+	# WORLD DROP
+	# -----------------------------------------------------
+
+	var pickup_entity_id := (
+		_resolve_world_drop_entity_id(
+			mouse_event.position
+		)
+	)
+
+
+	if not pickup_entity_id.is_empty():
+		world_drop_pickup_requested.emit(
+			pickup_entity_id
+		)
+
+
+		get_viewport().set_input_as_handled()
+
+
+		return
 
 	# -----------------------------------------------------
 	# MOB HOSTIL
@@ -691,6 +716,124 @@ func _find_mob_actor_from_collider(
 
 		if mob_actor != null:
 			return mob_actor
+
+
+		current_node = (
+			current_node.get_parent()
+		)
+
+
+	return null
+
+func _resolve_world_drop_entity_id(
+	screen_position: Vector2
+) -> String:
+	if (
+		player_actor == null
+		or
+		world_camera == null
+	):
+		return ""
+
+
+	var ray_origin := (
+		world_camera.project_ray_origin(
+			screen_position
+		)
+	)
+
+
+	var ray_end := (
+		ray_origin
+		+
+		world_camera.project_ray_normal(
+			screen_position
+		)
+		*
+		RAY_LENGTH
+	)
+
+
+	var query := (
+		PhysicsRayQueryParameters3D.create(
+			ray_origin,
+			ray_end
+		)
+	)
+
+
+	query.collide_with_bodies = false
+
+	query.collide_with_areas = true
+
+	# Sólo layer de WorldDrops.
+	query.collision_mask = 8
+
+
+	var result := (
+		player_actor
+		.get_world_3d()
+		.direct_space_state
+		.intersect_ray(
+			query
+		)
+	)
+
+
+	if result.is_empty():
+		return ""
+
+
+	var drop_actor := (
+		_find_world_drop_actor_from_collider(
+			result.get(
+				"collider",
+				null
+			)
+		)
+	)
+
+
+	if drop_actor == null:
+		return ""
+
+
+	var entity_id := (
+		drop_actor.get_entity_id()
+	)
+
+
+	if entity_id.is_empty():
+		return ""
+
+
+	print(
+		"PlayerInputController | World Drop detectado",
+		" | Entity: ",
+		entity_id
+	)
+
+
+	return entity_id
+
+func _find_world_drop_actor_from_collider(
+	collider_value: Variant
+) -> WorldDropActor:
+	var current_node := (
+		collider_value
+		as Node
+	)
+
+
+	while current_node != null:
+		var drop_actor := (
+			current_node
+			as WorldDropActor
+		)
+
+
+		if drop_actor != null:
+			return drop_actor
 
 
 		current_node = (

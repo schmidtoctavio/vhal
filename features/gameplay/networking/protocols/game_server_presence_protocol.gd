@@ -26,6 +26,10 @@ signal world_drop_spawned(
 	drop: Dictionary
 )
 
+signal world_drop_removed(
+	entity_id: String
+)
+
 # =========================================================
 # MENSAJES
 # =========================================================
@@ -48,6 +52,10 @@ const MESSAGE_MOB_STATE_UPDATED: String = (
 
 const MESSAGE_WORLD_DROP_SPAWNED: String = (
 	"world_drop_spawned"
+)
+
+const MESSAGE_WORLD_DROP_REMOVED: String = (
+	"world_drop_removed"
 )
 
 # =========================================================
@@ -158,6 +166,15 @@ func process_message(
 
 				_process_world_drop_spawned(
 					drop_data
+				)
+
+
+			return true
+
+		MESSAGE_WORLD_DROP_REMOVED:
+			if typeof(data_value) == TYPE_DICTIONARY:
+				_process_world_drop_removed(
+					data_value
 				)
 
 
@@ -1261,4 +1278,35 @@ func _process_world_drop_spawned(
 		drop.duplicate(
 			true
 		)
+	)
+
+func _process_world_drop_removed(
+	data: Dictionary
+) -> void:
+	var entity_id := String(
+		data.get(
+			"entity_id",
+			""
+		)
+	).strip_edges().to_lower()
+
+
+	if entity_id.is_empty():
+		return
+
+
+	remote_drops.erase(
+		entity_id
+	)
+
+
+	print(
+		"GameServerClient | World Drop removido",
+		" | Entity: ",
+		entity_id
+	)
+
+
+	world_drop_removed.emit(
+		entity_id
 	)

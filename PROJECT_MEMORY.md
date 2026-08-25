@@ -314,24 +314,24 @@ Cuando aparece ese patrón hay que revisar la abstracción.
 │ intención + UI      │
 │ representación      │
 └──────────┬──────────┘
-           │
-           │ ENet
-           ▼
+		   │
+		   │ ENet
+		   ▼
 ┌─────────────────────┐
 │  GODOT GAME SERVER  │
 │ autoridad gameplay  │
 │ estado runtime      │
 └──────────┬──────────┘
-           │
-           │ HTTP interno
-           ▼
+		   │
+		   │ HTTP interno
+		   ▼
 ┌─────────────────────┐
 │   LARAVEL BACKEND   │
 │ identidad + API     │
 │ persistencia        │
 └──────────┬──────────┘
-           │
-           ▼
+		   │
+		   ▼
 ┌─────────────────────┐
 │        MYSQL        │
 │ almacenamiento      │
@@ -803,22 +803,22 @@ res://
 │       └── basic_attack_coordinator.gd
 │
 └── core/
-    ├── networking/
-    ├── backend/
-    ├── combat/
-    │   ├── server_vitals_state.gd
-    │   ├── server_character_runtime_bootstrap.gd
-    │   ├── server_basic_attack_profile_resolver.gd
-    │   └── server_basic_attack_runtime_state.gd
-    ├── skills/
-    │   ├── server_skill_definition.gd
-    │   ├── server_skill_catalog.gd
-    │   └── server_skill_runtime_state.gd
-    └── world/
-        ├── movement/
-        ├── navigation/
-        ├── npcs/
-        └── mobs/
+	├── networking/
+	├── backend/
+	├── combat/
+	│   ├── server_vitals_state.gd
+	│   ├── server_character_runtime_bootstrap.gd
+	│   ├── server_basic_attack_profile_resolver.gd
+	│   └── server_basic_attack_runtime_state.gd
+	├── skills/
+	│   ├── server_skill_definition.gd
+	│   ├── server_skill_catalog.gd
+	│   └── server_skill_runtime_state.gd
+	└── world/
+		├── movement/
+		├── navigation/
+		├── npcs/
+		└── mobs/
 ```
 
 ## ServerMain
@@ -2902,8 +2902,8 @@ El cliente sólo envía:
 {
   "request_id": 1,
   "target": {
-    "kind": "entity",
-    "entity_id": "mob_test_town_001"
+	"kind": "entity",
+	"entity_id": "mob_test_town_001"
   }
 }
 ```
@@ -3569,10 +3569,10 @@ El objetivo es que cualquier fuente futura de damage pueda converger en el mismo
 
 ```text
 mob_died(
-    entity_id,
-    map_id,
-    source,
-    mob_snapshot
+	entity_id,
+	map_id,
+	source,
+	mob_snapshot
 )
 ```
 
@@ -4014,9 +4014,9 @@ Esto prepara mejor la arquitectura para muchos mobs concurrentes que un timer de
 
 ```text
 mob_respawned(
-    entity_id,
-    map_id,
-    mob_snapshot
+	entity_id,
+	map_id,
+	mob_snapshot
 )
 ```
 
@@ -4180,15 +4180,15 @@ Dirección prevista:
 
 ```text
 WorldMobDefinition
-        ↓
+		↓
 WorldMobSpawnSpotDefinition
-        ↓
+		↓
 WorldMobSpawnSystem
-        ↓
+		↓
 WorldMobRuntimeState
-        ↓
+		↓
 WorldMobRegistry
-        ↓
+		↓
 Combat / Skills / AI / Drops
 ```
 
@@ -4280,20 +4280,20 @@ Arquitectura validada:
 
 ```text
 BasicAttackCoordinator
-        ↓
-      damage
-        ↓
+		↓
+	  damage
+		↓
 WorldMobRegistry
-        ↓
-     mob_died
-      ┌─┴──────────────────┐
-      ↓                    ↓
+		↓
+	 mob_died
+	  ┌─┴──────────────────┐
+	  ↓                    ↓
 WorldDropCoordinator       Respawn scheduler
-      ↓
+	  ↓
 ServerMobDropCatalog
-      ↓
+	  ↓
 WorldDropRegistry
-      ↓
+	  ↓
 WorldDropRuntimeState
 ```
 
@@ -4550,11 +4550,11 @@ drop:
   entity_id
   entity_kind = world_drop
   item:
-    item_id
-    quantity
+	item_id
+	quantity
   world:
-    map_id
-    position
+	map_id
+	position
 ```
 
 El transporte es reliable.
@@ -4670,8 +4670,8 @@ Estructura Foundation:
 ```text
 WorldDropActor
 └── VisualRoot
-    ├── ItemSprite
-    └── NameLabel
+	├── ItemSprite
+	└── NameLabel
 ```
 
 Sin `Area3D`/collider todavía.

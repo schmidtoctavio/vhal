@@ -88,6 +88,10 @@ signal equipment_item_unequip_requested(
 	new_position: Vector2i
 )
 
+signal world_drop_pickup_intent_requested(
+	entity_id: String
+)
+
 # =========================================================
 # REFERENCIAS
 # =========================================================
@@ -538,6 +542,13 @@ func _spawn_player_from_state() -> bool:
 	):
 		player_input_controller.zoom_out_requested.connect(
 			camera_controller.zoom_out
+		)
+
+	if not player_input_controller.world_drop_pickup_requested.is_connected(
+		_on_world_drop_pickup_requested
+	):
+		player_input_controller.world_drop_pickup_requested.connect(
+			_on_world_drop_pickup_requested
 		)
 
 	if not player_input_controller.setup(
@@ -2242,3 +2253,78 @@ func _clear_world_drops() -> void:
 
 
 	world_drop_actors.clear()
+
+func _on_world_drop_pickup_requested(
+	entity_id: String
+) -> void:
+	var normalized_entity_id := (
+		entity_id
+		.strip_edges()
+		.to_lower()
+	)
+
+
+	if normalized_entity_id.is_empty():
+		return
+
+
+	print(
+		"GameplayScreen | Pickup solicitado",
+		" | Entity: ",
+		normalized_entity_id
+	)
+
+
+	world_drop_pickup_intent_requested.emit(
+		normalized_entity_id
+	)
+
+func apply_world_drop_removed(
+	entity_id: String
+) -> void:
+	var normalized_entity_id := (
+		entity_id
+		.strip_edges()
+		.to_lower()
+	)
+
+
+	if not world_drop_actors.has(
+		normalized_entity_id
+	):
+		return
+
+
+	var actor_value: Variant = (
+		world_drop_actors[
+			normalized_entity_id
+		]
+	)
+
+
+	world_drop_actors.erase(
+		normalized_entity_id
+	)
+
+
+	var drop_actor := (
+		actor_value
+		as WorldDropActor
+	)
+
+
+	if (
+		drop_actor != null
+		and
+		is_instance_valid(
+			drop_actor
+		)
+	):
+		drop_actor.queue_free()
+
+
+	print(
+		"GameplayScreen | World Drop eliminado",
+		" | Entity: ",
+		normalized_entity_id
+	)
