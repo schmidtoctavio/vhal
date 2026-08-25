@@ -4,7 +4,7 @@
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama de desarrollo habitual:** `dev`  
-**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B/F17-C/F17-D/F17-E/F17-F/F17-G cerrados y validados; F18-A World Drops y F18-B Authoritative Pickup cerrados, probados y pusheados; siguiente checkpoint: F18-C — EXP / Level.
+**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B/F17-C/F17-D/F17-E/F17-F/F17-G cerrados y validados; F18-A World Drops, F18-B Authoritative Pickup y F18-C Authoritative EXP / Level cerrados, probados y pusheados; siguiente checkpoint: F19 — Vertical Slice completo.
 
 > Este archivo es la **fuente canónica única de contexto del proyecto VHAL**.
 >
@@ -314,24 +314,24 @@ Cuando aparece ese patrón hay que revisar la abstracción.
 │ intención + UI      │
 │ representación      │
 └──────────┬──────────┘
-		   │
-		   │ ENet
-		   ▼
+           │
+           │ ENet
+           ▼
 ┌─────────────────────┐
 │  GODOT GAME SERVER  │
 │ autoridad gameplay  │
 │ estado runtime      │
 └──────────┬──────────┘
-		   │
-		   │ HTTP interno
-		   ▼
+           │
+           │ HTTP interno
+           ▼
 ┌─────────────────────┐
 │   LARAVEL BACKEND   │
 │ identidad + API     │
 │ persistencia        │
 └──────────┬──────────┘
-		   │
-		   ▼
+           │
+           ▼
 ┌─────────────────────┐
 │        MYSQL        │
 │ almacenamiento      │
@@ -690,7 +690,8 @@ GameSessionFlowCoordinator
 ├── Inventory/Vault/Equipment bridge
 ├── Skills/Cast bridge
 ├── Combat/Mob-state bridge
-└── World Drop / Pickup bridge
+├── World Drop / Pickup bridge
+└── Character Progression bridge
 ```
 
 `GameSessionFlowCoordinator` es el puente entre:
@@ -703,7 +704,7 @@ GameServerClient
 
 para intención y resultados de gameplay.
 
-En F18-B también transporta:
+Desde F18-B transporta:
 
 ```text
 world_drop_pickup_intent_requested
@@ -716,6 +717,37 @@ character_inventory_snapshot
 → PlayerRuntimeState
 → GameplayUI refresh
 ```
+
+Desde F18-C también transporta:
+
+```text
+world_snapshot.progression
+→ PlayerRuntimeState.apply_progression_snapshot()
+→ ExperienceState
+→ XPBar
+
+character_progression_updated
+→ GameplayScreen
+→ PlayerRuntimeState
+→ CharacterSummary.level + ExperienceState
+→ HUD
+```
+
+Regla de bootstrap validada:
+
+```text
+PlayerRuntimeState
+↓
+asignar CharacterSummary real
+↓
+aplicar Progression / Vitals / World autoritativos
+↓
+reconstruir Inventory / Equipment
+↓
+abrir Gameplay
+```
+
+La identidad del personaje debe existir antes de aplicar Progression.
 
 `app/main.gd` no debe volver a transformarse en un monolito.
 
@@ -740,7 +772,8 @@ GameServerClient
 ├── GameServerNpcProtocol
 ├── GameServerItemProtocol
 ├── GameServerSkillProtocol
-└── GameServerCombatProtocol
+├── GameServerCombatProtocol
+└── GameServerProgressionProtocol
 ```
 
 No crear sockets independientes por feature sin necesidad real.
@@ -753,7 +786,71 @@ CombatConnection
 ChatConnection
 NpcConnection
 DropConnection
+ProgressionConnection
 ```
+
+## WorldProtocol
+
+Procesa el bootstrap autoritativo inicial.
+
+Desde F18-C el `world_snapshot` exige:
+
+```text
+character
+vitals
+progression
+world
+```
+
+Progression inicial:
+
+```text
+level
+experience
+experience_required
+```
+
+Además valida:
+
+```text
+character.level == progression.level
+```
+
+Su estado `latest_world_snapshot` se limpia al resetear conexión para evitar identidad stale entre reconnects.
+
+## ProgressionProtocol
+
+Introducido en F18-C2B.
+
+Procesa únicamente actualizaciones live:
+
+```text
+character_progression_updated
+```
+
+Valida:
+
+```text
+character_id
+level
+experience
+experience_required
+experience_gained
+levels_gained
+```
+
+y comprueba que `character_id` corresponda al personaje del snapshot activo.
+
+No calcula:
+
+```text
+EXP reward
+threshold
+level-up
+balance
+```
+
+Sólo transporta y valida el resultado autoritativo.
 
 ## ItemProtocol
 
@@ -851,6 +948,8 @@ cooldown real
 damage
 HP del mob
 muerte
+EXP
+level
 ```
 
 ---
@@ -865,6 +964,7 @@ res://
 │   └── coordinators/
 │       ├── authentication_coordinator.gd
 │       ├── character_item_state_coordinator.gd
+│       ├── character_progression_coordinator.gd
 │       ├── equipment_coordinator.gd
 │       ├── inventory_coordinator.gd
 │       ├── vault_coordinator.gd
@@ -878,32 +978,35 @@ res://
 │       └── basic_attack_coordinator.gd
 │
 └── core/
-	├── networking/
-	├── backend/
-	│   └── backend_character_inventory_repository.gd
-	├── items/
-	│   ├── server_item_catalog.gd
-	│   ├── server_character_inventory_snapshot_validator.gd
-	│   ├── server_persistent_item_uid_generator.gd
-	│   └── server_inventory_placement_resolver.gd
-	├── combat/
-	│   ├── server_vitals_state.gd
-	│   ├── server_character_runtime_bootstrap.gd
-	│   ├── server_basic_attack_profile_resolver.gd
-	│   └── server_basic_attack_runtime_state.gd
-	├── skills/
-	│   ├── server_skill_definition.gd
-	│   ├── server_skill_catalog.gd
-	│   └── server_skill_runtime_state.gd
-	└── world/
-		├── movement/
-		├── navigation/
-		├── npcs/
-		├── mobs/
-		└── drops/
-			├── world_drop_runtime_state.gd
-			├── world_drop_registry.gd
-			└── server_mob_drop_catalog.gd
+    ├── networking/
+    ├── backend/
+    │   ├── backend_character_inventory_repository.gd
+    │   └── backend_character_progression_repository.gd
+    ├── progression/
+    │   └── server_character_progression_rules.gd
+    ├── items/
+    │   ├── server_item_catalog.gd
+    │   ├── server_character_inventory_snapshot_validator.gd
+    │   ├── server_persistent_item_uid_generator.gd
+    │   └── server_inventory_placement_resolver.gd
+    ├── combat/
+    │   ├── server_vitals_state.gd
+    │   ├── server_character_runtime_bootstrap.gd
+    │   ├── server_basic_attack_profile_resolver.gd
+    │   └── server_basic_attack_runtime_state.gd
+    ├── skills/
+    │   ├── server_skill_definition.gd
+    │   ├── server_skill_catalog.gd
+    │   └── server_skill_runtime_state.gd
+    └── world/
+        ├── movement/
+        ├── navigation/
+        ├── npcs/
+        ├── mobs/
+        └── drops/
+            ├── world_drop_runtime_state.gd
+            ├── world_drop_registry.gd
+            └── server_mob_drop_catalog.gd
 ```
 
 ## ServerMain
@@ -921,19 +1024,21 @@ arrancar servidor
 manejar fallos de startup
 ```
 
-En F18-B registra también:
+Actualmente registra también:
 
 ```text
 WorldDropPickupCoordinator
+CharacterProgressionCoordinator
+BackendCharacterProgressionRepository
 ```
 
-dependiendo de:
+`CharacterProgressionCoordinator` depende de:
 
 ```text
 GameServer
 WorldSessionRegistry
-WorldDropRegistry
-BackendCharacterInventoryRepository
+WorldMobRegistry
+BackendCharacterProgressionRepository
 ```
 
 No debe absorber casos de uso.
@@ -954,6 +1059,62 @@ stale recovery
 ```
 
 Después de un pickup persistido, el Inventory vuelve a cargarse desde Laravel y este coordinator envía el snapshot definitivo al cliente.
+
+## CharacterProgressionCoordinator
+
+Introducido en F18-C2A.
+
+Escucha:
+
+```text
+WorldMobRegistry.mob_died
+```
+
+No depende de:
+
+```text
+BasicAttackCoordinator
+WorldDropCoordinator
+```
+
+Responsabilidad:
+
+```text
+resolver killer desde source autoritativo
+resolver PlayerWorldSession
+validar mismo character/map
+leer experience_reward desde WorldMobDefinition
+encolar EXP por peer
+calcular next level/experience con ServerCharacterProgressionRules
+persistir expected → next vía BackendCharacterProgressionRepository
+actualizar PlayerWorldSession sólo tras confirmación Laravel
+replicar character_progression_updated
+recuperar stale state cuando Laravel responde 409
+conservar reward en cola si una persistencia falla
+```
+
+Permite acumular rewards mientras existe una escritura pendiente:
+
+```text
+pending_by_peer
+queued_experience_by_peer
+```
+
+Orden crítico:
+
+```text
+mob_died
+↓
+calcular candidato
+↓
+persistir Laravel
+↓ éxito
+actualizar runtime
+↓
+replicar al cliente
+```
+
+No se informa EXP optimista antes de persistencia.
 
 ## EquipmentCoordinator
 
@@ -1066,6 +1227,15 @@ registrarlo en WorldDropRegistry
 
 No conoce BasicAttackCoordinator.
 
+La relación vigente con Progression es por fan-out del mismo evento:
+
+```text
+mob_died
+├── WorldDropCoordinator
+├── CharacterProgressionCoordinator
+└── respawn scheduler
+```
+
 ## WorldDropPickupCoordinator
 
 Introducido en F18-B.
@@ -1142,6 +1312,8 @@ replicación del mob actualizado
 
 El cliente nunca decide damage, range ni arma real.
 
+BasicAttack tampoco calcula EXP.
+
 ## AuthenticationCoordinator
 
 ```text
@@ -1152,6 +1324,15 @@ initial world snapshot
 presence bootstrap
 persistent item bootstrap
 disconnect cleanup
+```
+
+Desde F18-C el bootstrap incluye:
+
+```text
+progression
+├── level
+├── experience
+└── experience_required
 ```
 
 ## SkillCastCoordinator
@@ -1202,10 +1383,127 @@ persistencia durable
 operaciones atómicas internas
 queries persistentes
 protección stale
-idempotencia de grants persistentes
+idempotencia
 ```
 
 No es autoridad de gameplay en tiempo real.
+
+## Character progression
+
+Desde F18-C1 `characters` persiste:
+
+```text
+level
+experience
+```
+
+Semántica:
+
+```text
+level
+= nivel actual
+
+experience
+= EXP acumulada dentro del nivel actual
+```
+
+Laravel NO decide la curva de experiencia.
+
+No persiste:
+
+```text
+experience_required
+mob reward
+level curve
+```
+
+Eso pertenece al Game Server.
+
+Endpoint interno:
+
+```text
+PATCH
+/api/internal/accounts/{accountId}/characters/{characterId}/progression
+```
+
+Payload:
+
+```text
+expected:
+  level
+  experience
+
+next:
+  level
+  experience
+```
+
+Componentes:
+
+```text
+CharacterProgressionPersistence
+CharacterProgressionPersistenceException
+InternalCharacterProgressionController
+```
+
+Persistencia:
+
+```text
+DB transaction
+→ lockForUpdate(character)
+→ verificar account/character
+→ idempotencia exacta
+→ stale protection
+→ guardar level + experience
+```
+
+Idempotencia:
+
+```text
+estado durable actual == next
+→ OK
+→ idempotent = true
+```
+
+Stale:
+
+```text
+estado durable actual != expected
+y != next
+→ HTTP 409
+→ devuelve current
+```
+
+Protección estructural:
+
+```text
+level no puede retroceder
+experience no puede retroceder dentro del mismo level
+```
+
+Test validado:
+
+```text
+Tests\Feature\InternalCharacterProgressionTest
+5 passed
+23 assertions
+```
+
+Checkpoint backend:
+
+```text
+fc85ce6a684d8d85ab92a8af75afbd9f1a222bfb
+feat: add durable character progression persistence
+```
+
+El ticket interno también devuelve:
+
+```text
+character.level
+character.experience
+```
+
+para que el Game Server cree `PlayerWorldSession` desde el estado durable real.
 
 ## Item instances
 
@@ -1594,6 +1892,14 @@ WorldDrop consumido sólo después de persistencia
 world_drop_removed replicado
 Inventory actualizado después de pickup
 reconexión conserva item y no revive drop recogido
+EXP reward server-side por mob
+EXP/Level autoritativos
+persistencia durable level + experience
+level-up autoritativo
+replicación live de Progression
+bootstrap de Progression desde world_snapshot
+XPBar conectada a ExperienceState autoritativo
+reconnect conserva Level/EXP
 ```
 
 Loop MMORPG real ya probado:
@@ -1602,10 +1908,39 @@ Loop MMORPG real ya probado:
 Mob
 → Damage
 → Death
-→ Drop
-→ Pickup
-→ ItemInstance en MySQL
-→ Inventory cliente
+├── Drop
+│   → Pickup
+│   → ItemInstance en MySQL
+│   → Inventory cliente
+└── EXP
+    → persistencia MySQL
+    → Level Up
+    → HUD / XPBar
+```
+
+Test integrado F18-C:
+
+```text
+Level 121 | EXP 0/100
+→ matar Training Goblin
+Level 121 | EXP 50/100
+→ matar Training Goblin
+Level 122 | EXP 0/100
+→ reconnect
+Level 122 | EXP 0/100
+```
+
+Durante el mismo test siguieron funcionando:
+
+```text
+movement
+basic attack
+mob death
+drop
+pickup
+Inventory refresh
+respawn
+reconnect con WorldDrop no recogido
 ```
 
 VHAL ya no debe describirse como un simple “UI Lab”.
@@ -3256,8 +3591,8 @@ El cliente sólo envía:
 {
   "request_id": 1,
   "target": {
-	"kind": "entity",
-	"entity_id": "mob_test_town_001"
+    "kind": "entity",
+    "entity_id": "mob_test_town_001"
   }
 }
 ```
@@ -3923,10 +4258,10 @@ El objetivo es que cualquier fuente futura de damage pueda converger en el mismo
 
 ```text
 mob_died(
-	entity_id,
-	map_id,
-	source,
-	mob_snapshot
+    entity_id,
+    map_id,
+    source,
+    mob_snapshot
 )
 ```
 
@@ -4368,9 +4703,9 @@ Esto prepara mejor la arquitectura para muchos mobs concurrentes que un timer de
 
 ```text
 mob_respawned(
-	entity_id,
-	map_id,
-	mob_snapshot
+    entity_id,
+    map_id,
+    mob_snapshot
 )
 ```
 
@@ -4534,15 +4869,15 @@ Dirección prevista:
 
 ```text
 WorldMobDefinition
-		↓
+        ↓
 WorldMobSpawnSpotDefinition
-		↓
+        ↓
 WorldMobSpawnSystem
-		↓
+        ↓
 WorldMobRuntimeState
-		↓
+        ↓
 WorldMobRegistry
-		↓
+        ↓
 Combat / Skills / AI / Drops
 ```
 
@@ -4622,7 +4957,9 @@ F18-A1 — Authoritative World Drop Runtime      ✅
 F18-A2 — World Drop Replication & Visual       ✅
 F18-B1 — Durable Inventory Grant Foundation   ✅
 F18-B2 — Authoritative Pickup Flow             ✅
-F18-C  — EXP / Level                           ⏳ SIGUIENTE
+F18-C1 — Durable Character Progression         ✅
+F18-C2A — Authoritative EXP Runtime            ✅
+F18-C2B — Progression Replication + HUD        ✅
 ```
 
 ## F18-A1 — AUTHORITATIVE WORLD DROP RUNTIME
@@ -4635,20 +4972,20 @@ Arquitectura validada:
 
 ```text
 BasicAttackCoordinator
-		↓
-	  damage
-		↓
+        ↓
+      damage
+        ↓
 WorldMobRegistry
-		↓
-	 mob_died
-	  ┌─┴──────────────────┐
-	  ↓                    ↓
+        ↓
+     mob_died
+      ┌─┴──────────────────┐
+      ↓                    ↓
 WorldDropCoordinator       Respawn scheduler
-	  ↓
+      ↓
 ServerMobDropCatalog
-	  ↓
+      ↓
 WorldDropRegistry
-	  ↓
+      ↓
 WorldDropRuntimeState
 ```
 
@@ -4908,11 +5245,11 @@ drop:
   entity_id
   entity_kind = world_drop
   item:
-	item_id
-	quantity
+    item_id
+    quantity
   world:
-	map_id
-	position
+    map_id
+    position
 ```
 
 El transporte es reliable.
@@ -5028,8 +5365,8 @@ Estructura Foundation:
 ```text
 WorldDropActor
 └── VisualRoot
-	├── ItemSprite
-	└── NameLabel
+    ├── ItemSprite
+    └── NameLabel
 ```
 
 Sin `Area3D`/collider todavía.
@@ -5239,7 +5576,7 @@ feat: render authoritative world drops
 ❌ eliminación/despawn del drop
 ❌ ownership/party loot
 ❌ lifetime del drop
-❌ EXP/Level
+✅ EXP/Level
 ```
 
 **Siguiente checkpoint:** `F18-B — Authoritative Pickup`.
@@ -5771,7 +6108,508 @@ feat: add authoritative world drop pickup flow
 ❌ EXP/Level
 ```
 
-**Siguiente checkpoint:** `F18-C — Authoritative EXP / Level`.
+**Siguiente checkpoint:** `F19 — Vertical Slice completo`.
+
+---
+
+## F18-C1 — DURABLE CHARACTER PROGRESSION
+
+**Estado:** ✅ COMPLETADO, PROBADO, COMMITEADO Y PUSHEADO.
+
+Se agregó persistencia durable de:
+
+```text
+characters.level
+characters.experience
+```
+
+La experiencia almacenada representa:
+
+```text
+EXP dentro del nivel actual
+```
+
+La curva NO vive en Laravel.
+
+Endpoint:
+
+```text
+PATCH
+/api/internal/accounts/{accountId}/characters/{characterId}/progression
+```
+
+Contrato:
+
+```text
+expected:
+  level
+  experience
+
+next:
+  level
+  experience
+```
+
+Garantías:
+
+```text
+DB transaction
+lockForUpdate
+exact retry idempotency
+stale protection
+monotonic structural validation
+```
+
+Tests:
+
+```text
+InternalCharacterProgressionTest
+5 passed
+23 assertions
+```
+
+Casos cubiertos:
+
+```text
+persist EXP
+retry idéntico
+stale reject
+level-up persistente
+regresión reject
+```
+
+Checkpoint:
+
+```text
+fc85ce6a684d8d85ab92a8af75afbd9f1a222bfb
+feat: add durable character progression persistence
+```
+
+---
+
+## F18-C2A — AUTHORITATIVE EXP / LEVEL RUNTIME
+
+**Estado:** ✅ COMPLETADO, PROBADO, COMMITEADO Y PUSHEADO.
+
+Componentes principales:
+
+```text
+ServerCharacterProgressionRules
+BackendCharacterProgressionRepository
+CharacterProgressionCoordinator
+```
+
+`PlayerWorldSession` ahora posee:
+
+```text
+level
+experience
+```
+
+y los obtiene desde el ticket durable.
+
+### Reglas foundation de testing
+
+Temporalmente:
+
+```text
+EXP requerida por nivel: 100
+Training Goblin reward: +50 EXP
+```
+
+Esto NO es balance final.
+
+`WorldMobDefinition` posee:
+
+```text
+experience_reward
+```
+
+El Game Server calcula level-up y overflow.
+
+Ejemplo:
+
+```text
+Lv120 | 0/100 + 50
+→ Lv120 | 50/100
+
+Lv120 | 50/100 + 50
+→ Lv121 | 0/100
+```
+
+También soporta conceptualmente rewards que crucen más de un nivel.
+
+### Evento desacoplado
+
+Progression escucha:
+
+```text
+WorldMobRegistry.mob_died
+```
+
+Fan-out actual:
+
+```text
+mob_died
+├── WorldDropCoordinator
+├── CharacterProgressionCoordinator
+└── respawn scheduler
+```
+
+Por lo tanto:
+
+```text
+Combat NO calcula EXP.
+Drop NO calcula EXP.
+```
+
+El killer se resuelve desde `source` autoritativo:
+
+```text
+peer_id
+character_id
+```
+
+y se valida contra:
+
+```text
+PlayerWorldSession
+same character
+same map
+```
+
+### Persistencia
+
+Orden:
+
+```text
+reward
+→ calculate next
+→ Laravel expected→next
+→ confirm
+→ PlayerWorldSession update
+```
+
+Nunca:
+
+```text
+actualizar runtime/client
+→ después intentar persistir
+```
+
+El coordinator maneja:
+
+```text
+pending_by_peer
+queued_experience_by_peer
+```
+
+para no perder rewards si entra otra muerte mientras existe una escritura pendiente.
+
+En stale 409:
+
+```text
+Laravel current
+→ runtime resync
+→ reward reencolada
+→ retry
+```
+
+En otro error:
+
+```text
+reward no se descarta dentro de la sesión
+```
+
+### Test real C2A
+
+Estado inicial:
+
+```text
+Level 120
+EXP 0
+```
+
+Kill 1:
+
+```text
++50
+→ 120 / 50
+```
+
+MySQL confirmado:
+
+```text
+level = 120
+experience = 50
+```
+
+Kill 2:
+
+```text
++50
+→ 121 / 0
+```
+
+MySQL confirmado:
+
+```text
+level = 121
+experience = 0
+```
+
+Reconnect:
+
+```text
+WorldSessionRegistry
+→ Nivel: 121
+→ EXP: 0/100
+```
+
+Además:
+
+```text
+0 warnings
+0 errors
+```
+
+Checkpoint:
+
+```text
+05cb339418baa14695f481d742012b7b46b12820
+feat: add authoritative character progression runtime
+```
+
+---
+
+## F18-C2B — PROGRESSION REPLICATION + HUD
+
+**Estado:** ✅ COMPLETADO, PROBADO, COMMITEADO Y PUSHEADO.
+
+Se agregó actualización live:
+
+```text
+character_progression_updated
+```
+
+El Game Server la envía solamente después de:
+
+```text
+Laravel confirmado
+→ PlayerWorldSession actualizado
+```
+
+Payload:
+
+```text
+character_id
+level
+experience
+experience_required
+experience_gained
+levels_gained
+```
+
+No se reenvía un world snapshot completo por cada kill.
+
+### Cliente
+
+Nuevo:
+
+```text
+GameServerProgressionProtocol
+```
+
+Responsabilidad:
+
+```text
+validar update
+validar character_id
+mantener latest progression snapshot
+emitir estado autoritativo
+```
+
+Bootstrap inicial continúa viniendo por:
+
+```text
+world_snapshot.progression
+```
+
+`GameServerWorldProtocol` valida:
+
+```text
+level > 0
+experience >= 0
+experience_required > 0
+experience < experience_required
+character.level == progression.level
+```
+
+### PlayerRuntimeState / HUD
+
+Se reutilizó la foundation existente:
+
+```text
+PlayerRuntimeState
+└── ExperienceState
+    └── experience_changed
+        └── GameplayUI
+            └── XPBar
+```
+
+No se creó una segunda implementación de EXP.
+
+Al aplicar Progression:
+
+```text
+CharacterSummary.level = authoritative level
+ExperienceState.experience_required = authoritative required
+ExperienceState.experience = authoritative experience
+```
+
+### Corrección de bootstrap encontrada durante el test
+
+`DebugPlayerStateFactory` crea inicialmente:
+
+```text
+PlayerRuntimeState
+sin CharacterSummary
+```
+
+Progression correctamente exige identidad.
+
+El orden anterior era:
+
+```text
+apply world snapshot
+→ después asignar CharacterSummary
+```
+
+y provocaba cierre de sesión.
+
+Se corrigió a:
+
+```text
+crear PlayerRuntimeState
+→ asignar CharacterSummary seleccionado
+→ aplicar Progression/Vitals/World
+→ entrar a Gameplay
+```
+
+### Test integrado C2B
+
+Inicio:
+
+```text
+Level 121
+EXP 0/100
+XPBar 0%
+```
+
+Kill 1:
+
+```text
+Server:
+121/0 → 121/50
+
+Client:
+Level 121
+EXP 50/100
+XPBar ~50%
+levels_gained = 0
+```
+
+Kill 2:
+
+```text
+Server:
+121/50 → 122/0
+
+Client:
+Level 122
+EXP 0/100
+XPBar 0%
+levels_gained = 1
+```
+
+Reconnect:
+
+```text
+world_snapshot
+→ Level 122
+→ EXP 0/100
+→ HUD Level 122
+→ XPBar 0%
+```
+
+Durante la misma prueba:
+
+```text
+Drop 1 se recogió
+Inventory 3 → 4
+Drop 2 quedó en suelo
+cliente reconectó
+Drop 2 seguía en world roster
+Inventory persistente siguió en 4
+Mob respawn siguió funcionando
+```
+
+Sin regresiones observadas.
+
+### Checkpoints C2B
+
+Game Server:
+
+```text
+5f67cbcb7988da26007bd787013c65c2e9178eae
+feat: replicate authoritative character progression
+```
+
+Cliente:
+
+```text
+d0c477ebb8a416aed6545b8b61eb7a6f5ef0766e
+feat: apply authoritative progression to gameplay hud
+```
+
+### Resultado total F18-C
+
+```text
+✅ level + experience durable
+✅ expected→next persistence
+✅ stale protection
+✅ idempotent backend retry
+✅ reward server-side
+✅ progression desacoplada de Combat
+✅ progression desacoplada de Drops
+✅ PlayerWorldSession Level/EXP
+✅ level-up server-side
+✅ overflow foundation
+✅ pending/queue de rewards
+✅ replication reliable
+✅ bootstrap world_snapshot.progression
+✅ GameServerProgressionProtocol
+✅ CharacterSummary.level autoritativo
+✅ ExperienceState reutilizado
+✅ XPBar autoritativa
+✅ reconnect durable
+✅ 0 warnings/errors
+```
+
+Pendiente deliberadamente:
+
+```text
+❌ curva de EXP final
+❌ rewards finales
+❌ party EXP
+❌ quest EXP
+❌ PvP EXP
+❌ skill points
+❌ stat allocation
+❌ level-up VFX/SFX final
+```
+
+**Siguiente checkpoint:** `F19 — Vertical Slice completo`.
 
 
 # 45. F19 — VERTICAL SLICE COMPLETO
@@ -6034,6 +6872,49 @@ con estados incompatibles.
 
 # 52. SKILL OWNERSHIP / PROGRESIÓN
 
+Hay que distinguir dos conceptos.
+
+## Character Progression
+
+Desde F18-C ya existe de forma real:
+
+```text
+level
+experience
+```
+
+Persistencia:
+
+```text
+Laravel / MySQL
+```
+
+Autoridad de reglas:
+
+```text
+Game Server
+```
+
+Replicación:
+
+```text
+Game Server
+→ Client
+→ PlayerRuntimeState
+→ HUD
+```
+
+Foundation actual de testing:
+
+```text
+100 EXP por nivel
+Training Goblin +50 EXP
+```
+
+No es balance final.
+
+## Skill Ownership / Skill Progression
+
 Actualmente las tres skills se asignan temporalmente mediante bootstrap de desarrollo.
 
 No es el modelo final.
@@ -6056,7 +6937,15 @@ mana
 execution
 ```
 
-aunque ownership/progresión sea durable.
+aunque ownership/progresión de skills sea durable.
+
+No mezclar:
+
+```text
+character EXP/Level
+con
+skill learning/progression
+```
 
 ---
 
@@ -6435,9 +7324,11 @@ F18-A1 World Drop runtime     ✅
 F18-A2 Drop replication/UI    ✅
 F18-B1 Durable Inventory grant✅
 F18-B2 Authoritative Pickup   ✅
-F18-C EXP / Level             ⏳ SIGUIENTE
+F18-C1 Durable Progression    ✅
+F18-C2A EXP runtime           ✅
+F18-C2B Progression HUD       ✅
 
-F19 Vertical Slice            ⏳
+F19 Vertical Slice            ⏳ SIGUIENTE
 
 PERF-1                        ⏳ después de F19 estable
 ```
@@ -6449,7 +7340,7 @@ PERF-1                        ⏳ después de F19 estable
 Antes de implementar gameplay nuevo:
 
 ```text
-cerrar documentación/checkpoint F18-B
+cerrar documentación/checkpoint F18-C
 → reemplazar PROJECT_MEMORY.md
 → git status
 → commit
@@ -6460,87 +7351,91 @@ cerrar documentación/checkpoint F18-B
 Después abrir:
 
 ```text
-F18-C — Authoritative EXP / Level
+F19 — Vertical Slice completo
 ```
 
-Dirección conceptual:
+F19 no debe comenzar automáticamente agregando otro sistema grande.
+
+Primero hacer un audit explícito del circuito actual:
 
 ```text
-WorldMobRegistry.mob_died
-→ Progression / EXP coordinator
-→ identificar killer/source autoritativo
-→ resolver PlayerWorldSession
-→ calcular recompensa EXP desde definición/reglas server-side
-→ mutar Experience runtime
-→ detectar level-up
-→ persistir progresión durable
-→ confirmar backend
-→ replicar EXP / Level autoritativos
-→ actualizar HUD/estado cliente
+CUENTA
+→ LOGIN
+→ PERSONAJE
+→ TICKET
+→ GAME SERVER
+→ LOADING
+→ MAPA
+→ PLAYER
+→ MOVEMENT
+→ NPC
+→ INVENTORY / VAULT / EQUIPMENT
+→ SKILL
+→ MOB
+→ COMBAT
+→ DROP
+→ PICKUP
+→ EXP / LEVEL
+→ LOGOUT
+→ LOGIN
+→ PERSISTENCIA
 ```
 
-Regla arquitectónica:
+Objetivo de F19:
+
+> demostrar que los sistemas ya construidos forman un vertical slice coherente, estable y repetible.
+
+El primer paso de F19 debe ser identificar únicamente los gaps reales que impidan afirmar:
 
 ```text
-Combat NO debe calcular progresión.
-Drop NO debe otorgar EXP.
+"este circuito completo funciona como una pequeña sesión MMORPG"
 ```
 
-Ambos pueden reaccionar independientemente al mismo evento:
+No agregar por inercia:
 
 ```text
-mob_died
-├── WorldDropCoordinator
-├── Respawn scheduler
-└── future ProgressionCoordinator
-```
-
-F18-C no debe introducir todavía:
-
-```text
-skill points completos
-stat allocation manual
-prestige/reset
+quests
+guilds
 party EXP
-quest EXP
-PvP EXP
-final balancing
+merchant completo
+trade
+PvP completo
+más mapas
+muchos mobs
+más items
+más skills
 ```
 
-Primero Foundation autoritativa de:
-
-```text
-EXP
-level
-persistencia
-replicación
-```
+hasta conocer esos gaps.
 
 ---
 
 # 67. CRITERIO DE ÉXITO DEL PRÓXIMO TEST
 
-F18-C deberá demostrar como mínimo:
+El primer audit/test de F19 debe demostrar o clasificar:
 
 ```text
-1. una muerte de mob emite progreso exactamente una vez por vida;
-2. Progression no depende de BasicAttackCoordinator;
-3. el Game Server identifica al killer por source autoritativo;
-4. Training Goblin tiene una recompensa EXP server-side;
-5. el cliente no decide cuánta EXP gana;
-6. EXP runtime aumenta autoritativamente;
-7. si se alcanza el threshold, Level aumenta autoritativamente;
-8. no se puede otorgar dos veces EXP por la misma muerte;
-9. EXP/Level se persisten de forma durable;
-10. reconnect conserva EXP/Level;
-11. cliente recibe estado actualizado;
-12. HUD/debug refleja el nuevo Level/EXP;
-13. drops y respawn siguen funcionando;
-14. pickup sigue funcionando;
-15. no aparecen warnings/errors nuevos.
+1. login → character select → enter world funciona;
+2. bootstrap autoritativo es consistente;
+3. movimiento sigue siendo server-authoritative;
+4. NPC Warehouse conserva su flujo;
+5. Inventory/Vault/Equipment persisten correctamente;
+6. skill foundation no presenta regresiones;
+7. Basic Attack mata al Training Goblin;
+8. muerte dispara Drop exactamente una vez;
+9. pickup persiste el ItemInstance;
+10. muerte otorga EXP exactamente una vez;
+11. level-up se persiste y replica;
+12. logout/reconnect conserva estado durable;
+13. drops runtime no recogidos continúan mientras vive el Game Server;
+14. no hay warnings/errors;
+15. cualquier gap restante queda clasificado como:
+    blocker F19 / mejora futura / contenido futuro.
 ```
 
-Para facilitar pruebas se puede usar temporalmente una recompensa/threshold pequeño, igual que con los 5000 HP del Training Goblin, siempre documentándolo como fixture de testing y no balance final.
+El resultado del audit debe producir un scope pequeño de F19.
+
+No asumir de antemano que F19 necesita un sistema nuevo.
 
 ---
 
@@ -6703,24 +7598,13 @@ Al abrir una nueva conversación o retomar el proyecto:
 7. respetar test → commit → push → "pusheado".
 ```
 
-Referencias históricas de F16 antes del cierre de F16-C:
-
-```text
-Cliente F16-B:
-c8a7916be8fe3091f394611e09d89da75b398c20
-feat: add skill cast intent protocol
-
-Game Server F16-B:
-9d32d0e62705a916036afba97e39d21a656d4424
-feat: receive authoritative skill cast intents
-```
-
 La etapa funcionalmente validada actual es:
 
 ```text
-F18-B — Authoritative Pickup
-├── F18-B1 Durable Inventory Grant ✅
-└── F18-B2 Pickup end-to-end        ✅
+F18-C — Authoritative EXP / Level
+├── F18-C1  Durable Character Progression ✅
+├── F18-C2A Authoritative EXP Runtime      ✅
+└── F18-C2B Progression Replication/HUD    ✅
 ```
 
 Contrato vigente de input:
@@ -6742,8 +7626,9 @@ SPAWN
 → ALIVE
 → DAMAGE
 → mob_died
-→ DEAD
-→ respawn
+├── DROP
+├── EXP
+└── RESPAWN
 → ALIVE
 ```
 
@@ -6753,8 +7638,8 @@ Lifecycle de drop actual:
 mob_died
 → ServerMobDropCatalog
 → WorldDropRuntimeState
-	├── entity_id runtime
-	└── persistent_item_uid UUID
+    ├── entity_id runtime
+    └── persistent_item_uid UUID
 → WorldDropRegistry
 → world_drop_spawned
 → clients del mapa
@@ -6765,6 +7650,26 @@ mob_died
 → consume_drop
 → world_drop_removed
 → WorldDropActor eliminado
+```
+
+Lifecycle de Progression actual:
+
+```text
+mob_died
+→ CharacterProgressionCoordinator
+→ WorldMobDefinition.experience_reward
+→ ServerCharacterProgressionRules
+→ expected Level/EXP
+→ next Level/EXP
+→ BackendCharacterProgressionRepository
+→ Laravel transaction
+→ confirm
+→ PlayerWorldSession
+→ character_progression_updated
+→ GameServerProgressionProtocol
+→ PlayerRuntimeState
+→ CharacterSummary + ExperienceState
+→ XPBar
 ```
 
 Presence actual:
@@ -6781,9 +7686,13 @@ Training fixture:
 ```text
 Training Goblin
 HP: 5000
+EXP testing reward: +50
 Respawn: 3.0 s
 Drop testing: Health Potion x1, 100%
 Pickup range foundation: 2.0
+
+Progression testing:
+100 EXP por nivel
 ```
 
 Checkpoints F18-A:
@@ -6818,28 +7727,57 @@ Cliente B2:
 feat: add authoritative world drop pickup flow
 ```
 
-Prueba F18-B validada:
+Checkpoints F18-C:
 
 ```text
-pickup fuera de rango
-→ rejected: out_of_range
-→ drop permanece
+Backend C1:
+fc85ce6a684d8d85ab92a8af75afbd9f1a222bfb
+feat: add durable character progression persistence
 
-pickup válido
-→ persistencia
-→ drop consumido
-→ Inventory 1 → 2
-→ actor eliminado
+Game Server C2A:
+05cb339418baa14695f481d742012b7b46b12820
+feat: add authoritative character progression runtime
 
-reconnect
-→ item persiste
-→ drop no reaparece
+Game Server C2B:
+5f67cbcb7988da26007bd787013c65c2e9178eae
+feat: replicate authoritative character progression
+
+Cliente C2B:
+d0c477ebb8a416aed6545b8b61eb7a6f5ef0766e
+feat: apply authoritative progression to gameplay hud
+```
+
+Prueba F18-C validada:
+
+```text
+bootstrap:
+Level 121 | EXP 0/100
+
+kill 1:
+Level 121 | EXP 50/100
+XPBar ~50%
+
+kill 2:
+Level 122 | EXP 0/100
+XPBar 0%
+
+reconnect:
+Level 122 | EXP 0/100
+```
+
+En la misma sesión:
+
+```text
+Drop 1 → Pickup → Inventory 3→4
+Drop 2 → no recogido → reconnect → sigue en roster
+Respawn → OK
+0 warnings/errors
 ```
 
 Siguiente checkpoint después del cierre documental:
 
 ```text
-F18-C — Authoritative EXP / Level
+F19 — Vertical Slice completo
 ```
 
 No implementar todavía:
@@ -6857,6 +7795,7 @@ spots
 AI completa
 ```
 
-**No avanzar a F18-C hasta commitear, pushear y confirmar la actualización canónica de F18-B.**
+**No avanzar a F19 hasta commitear, pushear y confirmar esta actualización canónica de F18-C.**
 
 ---
+
