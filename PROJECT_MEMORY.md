@@ -314,24 +314,24 @@ Cuando aparece ese patrón hay que revisar la abstracción.
 │ intención + UI      │
 │ representación      │
 └──────────┬──────────┘
-           │
-           │ ENet
-           ▼
+		   │
+		   │ ENet
+		   ▼
 ┌─────────────────────┐
 │  GODOT GAME SERVER  │
 │ autoridad gameplay  │
 │ estado runtime      │
 └──────────┬──────────┘
-           │
-           │ HTTP interno
-           ▼
+		   │
+		   │ HTTP interno
+		   ▼
 ┌─────────────────────┐
 │   LARAVEL BACKEND   │
 │ identidad + API     │
 │ persistencia        │
 └──────────┬──────────┘
-           │
-           ▼
+		   │
+		   ▼
 ┌─────────────────────┐
 │        MYSQL        │
 │ almacenamiento      │
@@ -978,35 +978,35 @@ res://
 │       └── basic_attack_coordinator.gd
 │
 └── core/
-    ├── networking/
-    ├── backend/
-    │   ├── backend_character_inventory_repository.gd
-    │   └── backend_character_progression_repository.gd
-    ├── progression/
-    │   └── server_character_progression_rules.gd
-    ├── items/
-    │   ├── server_item_catalog.gd
-    │   ├── server_character_inventory_snapshot_validator.gd
-    │   ├── server_persistent_item_uid_generator.gd
-    │   └── server_inventory_placement_resolver.gd
-    ├── combat/
-    │   ├── server_vitals_state.gd
-    │   ├── server_character_runtime_bootstrap.gd
-    │   ├── server_basic_attack_profile_resolver.gd
-    │   └── server_basic_attack_runtime_state.gd
-    ├── skills/
-    │   ├── server_skill_definition.gd
-    │   ├── server_skill_catalog.gd
-    │   └── server_skill_runtime_state.gd
-    └── world/
-        ├── movement/
-        ├── navigation/
-        ├── npcs/
-        ├── mobs/
-        └── drops/
-            ├── world_drop_runtime_state.gd
-            ├── world_drop_registry.gd
-            └── server_mob_drop_catalog.gd
+	├── networking/
+	├── backend/
+	│   ├── backend_character_inventory_repository.gd
+	│   └── backend_character_progression_repository.gd
+	├── progression/
+	│   └── server_character_progression_rules.gd
+	├── items/
+	│   ├── server_item_catalog.gd
+	│   ├── server_character_inventory_snapshot_validator.gd
+	│   ├── server_persistent_item_uid_generator.gd
+	│   └── server_inventory_placement_resolver.gd
+	├── combat/
+	│   ├── server_vitals_state.gd
+	│   ├── server_character_runtime_bootstrap.gd
+	│   ├── server_basic_attack_profile_resolver.gd
+	│   └── server_basic_attack_runtime_state.gd
+	├── skills/
+	│   ├── server_skill_definition.gd
+	│   ├── server_skill_catalog.gd
+	│   └── server_skill_runtime_state.gd
+	└── world/
+		├── movement/
+		├── navigation/
+		├── npcs/
+		├── mobs/
+		└── drops/
+			├── world_drop_runtime_state.gd
+			├── world_drop_registry.gd
+			└── server_mob_drop_catalog.gd
 ```
 
 ## ServerMain
@@ -1913,9 +1913,9 @@ Mob
 │   → ItemInstance en MySQL
 │   → Inventory cliente
 └── EXP
-    → persistencia MySQL
-    → Level Up
-    → HUD / XPBar
+	→ persistencia MySQL
+	→ Level Up
+	→ HUD / XPBar
 ```
 
 Test integrado F18-C:
@@ -3591,8 +3591,8 @@ El cliente sólo envía:
 {
   "request_id": 1,
   "target": {
-    "kind": "entity",
-    "entity_id": "mob_test_town_001"
+	"kind": "entity",
+	"entity_id": "mob_test_town_001"
   }
 }
 ```
@@ -4258,10 +4258,10 @@ El objetivo es que cualquier fuente futura de damage pueda converger en el mismo
 
 ```text
 mob_died(
-    entity_id,
-    map_id,
-    source,
-    mob_snapshot
+	entity_id,
+	map_id,
+	source,
+	mob_snapshot
 )
 ```
 
@@ -4815,20 +4815,20 @@ Arquitectura validada:
 
 ```text
 BasicAttackCoordinator
-        ↓
-      damage
-        ↓
+		↓
+	  damage
+		↓
 WorldMobRegistry
-        ↓
-     mob_died
-      ┌─┴──────────────────┐
-      ↓                    ↓
+		↓
+	 mob_died
+	  ┌─┴──────────────────┐
+	  ↓                    ↓
 WorldDropCoordinator       Respawn scheduler
-      ↓
+	  ↓
 ServerMobDropCatalog
-      ↓
+	  ↓
 WorldDropRegistry
-      ↓
+	  ↓
 WorldDropRuntimeState
 ```
 
@@ -5088,11 +5088,11 @@ drop:
   entity_id
   entity_kind = world_drop
   item:
-    item_id
-    quantity
+	item_id
+	quantity
   world:
-    map_id
-    position
+	map_id
+	position
 ```
 
 El transporte es reliable.
@@ -5208,8 +5208,8 @@ Estructura Foundation:
 ```text
 WorldDropActor
 └── VisualRoot
-    ├── ItemSprite
-    └── NameLabel
+	├── ItemSprite
+	└── NameLabel
 ```
 
 Sin `Area3D`/collider todavía.
@@ -6295,9 +6295,9 @@ Se reutilizó la foundation existente:
 ```text
 PlayerRuntimeState
 └── ExperienceState
-    └── experience_changed
-        └── GameplayUI
-            └── XPBar
+	└── experience_changed
+		└── GameplayUI
+			└── XPBar
 ```
 
 No se creó una segunda implementación de EXP.
@@ -6500,10 +6500,10 @@ DEATH
 │   ITEMINSTANCE / MYSQL
 │
 └── EXP
-    ↓
-    LEVEL
-    ↓
-    MYSQL / HUD
+	↓
+	LEVEL
+	↓
+	MYSQL / HUD
 ↓
 RESPAWN
 ↓
@@ -7472,12 +7472,12 @@ Jugador visita Trainer
 Trainer consulta skill definition
 ↓
 Game Server valida:
-    scroll presente
-    clase
-    level
-    stats
-    trainer compatible
-    skill no aprendida
+	scroll presente
+	clase
+	level
+	stats
+	trainer compatible
+	skill no aprendida
 ↓
 operación durable
 ↓
@@ -8503,4 +8503,3 @@ sin duplicar la persistencia Level/EXP ya existente.
 **No abrir el siguiente checkpoint hasta commitear, pushear y confirmar esta actualización canónica de F19.**
 
 ---
-
