@@ -4,7 +4,7 @@
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama de desarrollo habitual:** `dev`  
-**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B/F17-C/F17-D/F17-E/F17-F/F17-G cerrados y validados; próximo bloque F18, comenzando por una foundation autoritativa de World Drops antes de Pickup/EXP.
+**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B/F17-C/F17-D/F17-E/F17-F/F17-G cerrados y validados; F18-A1/F18-A2 World Drops cerrados y validados; siguiente checkpoint: F18-B — Pickup autoritativo.
 
 > Este archivo es la **fuente canónica única de contexto del proyecto VHAL**.
 >
@@ -314,24 +314,24 @@ Cuando aparece ese patrón hay que revisar la abstracción.
 │ intención + UI      │
 │ representación      │
 └──────────┬──────────┘
-		   │
-		   │ ENet
-		   ▼
+           │
+           │ ENet
+           ▼
 ┌─────────────────────┐
 │  GODOT GAME SERVER  │
 │ autoridad gameplay  │
 │ estado runtime      │
 └──────────┬──────────┘
-		   │
-		   │ HTTP interno
-		   ▼
+           │
+           │ HTTP interno
+           ▼
 ┌─────────────────────┐
 │   LARAVEL BACKEND   │
 │ identidad + API     │
 │ persistencia        │
 └──────────┬──────────┘
-		   │
-		   ▼
+           │
+           ▼
 ┌─────────────────────┐
 │        MYSQL        │
 │ almacenamiento      │
@@ -505,6 +505,7 @@ ServerVitalsState
 ServerSkillRuntimeState
 ServerBasicAttackRuntimeState
 WorldMobRuntimeState
+WorldDropRuntimeState
 movimiento autoritativo
 servicio NPC activo
 snapshots persistentes conocidos
@@ -644,6 +645,11 @@ res://
 │   ├── skills/
 │   ├── vault/
 │   └── world/
+│       ├── mobs/
+│       ├── npcs/
+│       └── drops/
+│           ├── world_drop_actor.gd
+│           └── world_drop_actor.tscn
 │
 ├── ui/
 │   └── shared/
@@ -797,22 +803,22 @@ res://
 │       └── basic_attack_coordinator.gd
 │
 └── core/
-	├── networking/
-	├── backend/
-	├── combat/
-	│   ├── server_vitals_state.gd
-	│   ├── server_character_runtime_bootstrap.gd
-	│   ├── server_basic_attack_profile_resolver.gd
-	│   └── server_basic_attack_runtime_state.gd
-	├── skills/
-	│   ├── server_skill_definition.gd
-	│   ├── server_skill_catalog.gd
-	│   └── server_skill_runtime_state.gd
-	└── world/
-		├── movement/
-		├── navigation/
-		├── npcs/
-		└── mobs/
+    ├── networking/
+    ├── backend/
+    ├── combat/
+    │   ├── server_vitals_state.gd
+    │   ├── server_character_runtime_bootstrap.gd
+    │   ├── server_basic_attack_profile_resolver.gd
+    │   └── server_basic_attack_runtime_state.gd
+    ├── skills/
+    │   ├── server_skill_definition.gd
+    │   ├── server_skill_catalog.gd
+    │   └── server_skill_runtime_state.gd
+    └── world/
+        ├── movement/
+        ├── navigation/
+        ├── npcs/
+        └── mobs/
 ```
 
 ## ServerMain
@@ -2896,8 +2902,8 @@ El cliente sólo envía:
 {
   "request_id": 1,
   "target": {
-	"kind": "entity",
-	"entity_id": "mob_test_town_001"
+    "kind": "entity",
+    "entity_id": "mob_test_town_001"
   }
 }
 ```
@@ -3563,10 +3569,10 @@ El objetivo es que cualquier fuente futura de damage pueda converger en el mismo
 
 ```text
 mob_died(
-	entity_id,
-	map_id,
-	source,
-	mob_snapshot
+    entity_id,
+    map_id,
+    source,
+    mob_snapshot
 )
 ```
 
@@ -4008,9 +4014,9 @@ Esto prepara mejor la arquitectura para muchos mobs concurrentes que un timer de
 
 ```text
 mob_respawned(
-	entity_id,
-	map_id,
-	mob_snapshot
+    entity_id,
+    map_id,
+    mob_snapshot
 )
 ```
 
@@ -4174,15 +4180,15 @@ Dirección prevista:
 
 ```text
 WorldMobDefinition
-		↓
+        ↓
 WorldMobSpawnSpotDefinition
-		↓
+        ↓
 WorldMobSpawnSystem
-		↓
+        ↓
 WorldMobRuntimeState
-		↓
+        ↓
 WorldMobRegistry
-		↓
+        ↓
 Combat / Skills / AI / Drops
 ```
 
@@ -4242,20 +4248,661 @@ La apertura debe hacerse en checkpoints pequeños; el primer candidato es una Fo
 
 # 44. F18 — DROP + PICKUP + EXP + LEVEL
 
-Objetivo:
+Objetivo global:
 
 ```text
 mob muere
 → server calcula drop
-→ WorldDrop
+→ WorldDrop autoritativo
+→ cliente lo representa
 → pickup intent
 → server valida
 → Inventory
+→ EXP / Level
 ```
 
-Progression:
+F18 se divide en checkpoints pequeños:
 
 ```text
+F18-A1 — Authoritative World Drop Runtime      ✅
+F18-A2 — World Drop Replication & Visual       ✅
+F18-B  — Authoritative Pickup                  ⏳ SIGUIENTE
+F18-C  — EXP / Level                           ⏳
+```
+
+## F18-A1 — AUTHORITATIVE WORLD DROP RUNTIME
+
+**Estado:** ✅ COMPLETADO, PROBADO Y VALIDADO.
+
+F18-A1 crea la entidad runtime de un item tirado en el mundo y conecta el lifecycle de muerte del mob con loot autoritativo.
+
+Arquitectura validada:
+
+```text
+BasicAttackCoordinator
+        ↓
+      damage
+        ↓
+WorldMobRegistry
+        ↓
+     mob_died
+      ┌─┴──────────────────┐
+      ↓                    ↓
+WorldDropCoordinator       Respawn scheduler
+      ↓
+ServerMobDropCatalog
+      ↓
+WorldDropRegistry
+      ↓
+WorldDropRuntimeState
+```
+
+Regla fundamental:
+
+```text
+BasicAttackCoordinator NO conoce loot.
+```
+
+Por lo tanto cualquier futura fuente de muerte que termine en:
+
+```text
+WorldMobRegistry
+→ mob_died
+```
+
+puede reutilizar el mismo sistema de drops.
+
+### WorldDropRuntimeState
+
+Responsabilidad:
+
+```text
+representar un item concreto actualmente tirado en el mundo
+```
+
+Campos actuales:
+
+```text
+entity_id
+item_id
+quantity
+map_id
+position
+```
+
+Snapshot:
+
+```text
+entity_kind = world_drop
+
+item:
+  item_id
+  quantity
+
+world:
+  map_id
+  position
+```
+
+Importante:
+
+```text
+WorldDropRuntimeState
+≠
+ItemInstance persistente de Inventory
+```
+
+La conversión:
+
+```text
+World Drop
+→ Inventory Item
+```
+
+pertenece a F18-B.
+
+### WorldDropRegistry
+
+Mantiene:
+
+```text
+drops_by_entity_id
+next_drop_sequence
+```
+
+IDs runtime actuales:
+
+```text
+world_drop_00000001
+world_drop_00000002
+...
+```
+
+Estos IDs son válidos durante la vida del Game Server.
+
+No se exige que sobrevivan a un restart porque los drops de suelo todavía no son persistencia durable.
+
+Responsabilidades:
+
+```text
+spawn_drop()
+register
+get_drop()
+get_drops_in_map()
+emit world_drop_spawned
+```
+
+### ServerMobDropCatalog
+
+Foundation inicial:
+
+```text
+training_goblin
+→ health_potion x1
+→ chance 100%
+```
+
+El 100% es deliberado para testing.
+
+El contrato valida:
+
+```text
+mob_type_id
+item_id existente en ServerItemCatalog
+chance 0..1
+quantity_min
+quantity_max
+max_stack
+```
+
+Dirección futura:
+
+```text
+Goblin
+├── potion 30%
+├── zen 60%
+├── sword 0.5%
+└── nada
+```
+
+sin introducir condicionales especiales en Combat.
+
+### WorldDropCoordinator
+
+Escucha:
+
+```text
+WorldMobRegistry.mob_died
+```
+
+y:
+
+```text
+lee mob_type_id
+lee posición autoritativa de muerte
+roll_drops()
+crea WorldDropRuntimeState mediante WorldDropRegistry
+```
+
+También conserva información del source del kill para futuras reglas:
+
+```text
+character_id
+peer_id
+request_id
+attack_mode
+weapon_item_id
+```
+
+sin convertir ownership/party loot en requisito de F18-A.
+
+### Test F18-A1
+
+Primera muerte:
+
+```text
+WorldMobRegistry | Muerte autoritativa confirmada
+| Entity: mob_test_town_001
+| HP: 0/5000
+
+WorldDropRegistry | Drop creado
+| Entity: world_drop_00000001
+| Item: health_potion
+| Quantity: 1
+| Mapa: test_town
+| Posición: (4.0, 0.0, 4.0)
+
+WorldDropCoordinator | Muerte procesada
+| Mob: mob_test_town_001
+| Type: training_goblin
+| Killer Character: 1
+| Drops: 1
+```
+
+Segunda muerte después del respawn:
+
+```text
+WorldDropRegistry | Drop creado
+| Entity: world_drop_00000002
+| Item: health_potion
+| Quantity: 1
+```
+
+Se validó:
+
+```text
+dos muertes
+→ dos entidades WorldDrop distintas
+→ ambas pueden coexistir en WorldDropRegistry
+```
+
+El respawn continuó funcionando sin regresión.
+
+### Checkpoint F18-A1
+
+Game Server:
+
+```text
+505324ec3f5c2a1b8a231c6787e17464e33b050d
+feat: add authoritative world drop runtime foundation
+```
+
+Cliente:
+
+```text
+sin cambios requeridos en F18-A1
+```
+
+---
+
+## F18-A2 — WORLD DROP REPLICATION & VISUAL FOUNDATION
+
+**Estado:** ✅ COMPLETADO, PROBADO Y VALIDADO.
+
+F18-A2 convierte al WorldDrop autoritativo en estado replicado del mundo.
+
+Flujo:
+
+```text
+WorldDropRegistry
+→ world_drop_spawned
+→ WorldPresenceCoordinator
+→ GameServer.send_world_drop_spawned
+→ GameServerPresenceProtocol
+→ GameServerClient
+→ GameSessionFlowCoordinator
+→ GameplayScreen
+→ WorldDropActor
+```
+
+### Networking en tiempo real
+
+Mensaje server → client:
+
+```text
+world_drop_spawned
+```
+
+Payload principal:
+
+```text
+drop:
+  entity_id
+  entity_kind = world_drop
+  item:
+    item_id
+    quantity
+  world:
+    map_id
+    position
+```
+
+El transporte es reliable.
+
+No existe todavía:
+
+```text
+world_drop_pickup_request
+```
+
+porque eso pertenece a F18-B.
+
+### Roster inicial
+
+`world_presence_snapshot` evolucionó de:
+
+```text
+players
+mobs
+```
+
+a:
+
+```text
+players
+mobs
+drops
+```
+
+Esto es una decisión crítica.
+
+Un jugador que entra después de la muerte del mob debe observar el mismo estado autoritativo:
+
+```text
+drop ya existía
+→ jugador entra
+→ get_drops_in_map(map_id)
+→ world_presence_snapshot
+→ WorldDropActor
+```
+
+No depender de haber presenciado el evento `world_drop_spawned`.
+
+### GameServerPresenceProtocol
+
+Mantiene:
+
+```text
+remote_players
+remote_mobs
+remote_drops
+```
+
+Valida snapshots de drop:
+
+```text
+entity_id no vacío
+entity_kind == world_drop
+item_id no vacío
+quantity > 0
+map_id no vacío
+position válida
+```
+
+Procesa:
+
+```text
+world_presence_snapshot
+world_drop_spawned
+```
+
+### WorldDropActor
+
+Cliente:
+
+```text
+features/world/drops/world_drop_actor.gd
+features/world/drops/world_drop_actor.tscn
+```
+
+Responsabilidad:
+
+```text
+representar visualmente un WorldDrop autoritativo
+```
+
+No decide:
+
+```text
+si el item existe
+si puede recogerse
+quién es dueño
+qué entra al Inventory
+```
+
+Utiliza:
+
+```text
+ItemCatalog.get_definition(item_id)
+```
+
+para resolver presentación local:
+
+```text
+display_name
+icon
+```
+
+Por lo tanto el Game Server no necesita enviar recursos visuales ni nombres confiables.
+
+Estructura Foundation:
+
+```text
+WorldDropActor
+└── VisualRoot
+    ├── ItemSprite
+    └── NameLabel
+```
+
+Sin `Area3D`/collider todavía.
+
+### Separación del árbol de Gameplay
+
+`GameplayScreen` posee ahora conceptualmente:
+
+```text
+WorldRoot
+├── MapRoot
+├── ActorsRoot
+└── DropsRoot
+```
+
+Players/mobs permanecen en `ActorsRoot`.
+
+Items de suelo viven en `DropsRoot`.
+
+`GameplayScreen` mantiene:
+
+```text
+world_drop_actors[entity_id]
+```
+
+y soporta:
+
+```text
+sync_world_drops()
+apply_world_drop_spawned()
+_spawn_or_update_world_drop()
+_clear_world_drops()
+```
+
+### Test en tiempo real validado
+
+Ingreso inicial:
+
+```text
+WorldPresenceCoordinator | Presencia de mundo preparada
+| Mobs: 1
+| Drops: 0
+```
+
+Cliente:
+
+```text
+GameServerClient | Roster de mundo recibido
+| Remotos: 0
+| Mobs: 1
+| Drops: 0
+
+GameplayScreen | Drops sincronizados
+| Cantidad: 0
+```
+
+Después del kill:
+
+```text
+WorldDropRegistry | Drop creado
+| Entity: world_drop_00000001
+| Item: health_potion
+| Quantity: 1
+
+WorldPresenceCoordinator | Drop de mundo replicado
+| Entity: world_drop_00000001
+| Mapa: test_town
+| Recipients: 1
+```
+
+Cliente:
+
+```text
+GameServerClient | World Drop recibido
+| Entity: world_drop_00000001
+| Item: health_potion
+| Quantity: 1
+
+WorldDropActor | Preparado
+| Entity: world_drop_00000001
+| Item: health_potion
+| Quantity: 1
+| Posición: (4.0, 0.0, 4.0)
+```
+
+Visualmente se confirmó:
+
+```text
+Health Potion x1
+```
+
+en el mundo.
+
+### Test de reconexión validado
+
+Condición:
+
+```text
+drop existente
+Game Server sigue encendido
+cliente se desconecta
+cliente vuelve a entrar
+```
+
+Server:
+
+```text
+WorldPresenceCoordinator | Presencia de mundo preparada
+| Mobs: 1
+| Drops: 1
+```
+
+Cliente:
+
+```text
+GameServerClient | Roster de mundo recibido
+| Remotos: 0
+| Mobs: 1
+| Drops: 1
+
+WorldDropActor | Preparado
+| Entity: world_drop_00000001
+| Item: health_potion
+| Quantity: 1
+
+GameplayScreen | Drops sincronizados
+| Cantidad: 1
+```
+
+Esto confirma:
+
+> **WorldDrop es estado runtime autoritativo del mundo y no un efecto visual temporal del kill.**
+
+### Observaciones Foundation no bloqueantes
+
+Actualmente el Training Goblin respawnea exactamente en su spawn y el drop se crea exactamente en la posición de muerte.
+
+En el fixture:
+
+```text
+mob spawn = (4,0,4)
+drop = (4,0,4)
+```
+
+por lo que el mob respawneado puede superponerse visualmente con el texto/icono del drop.
+
+Más adelante puede evolucionar a:
+
+```text
+drop scatter
+posición offset
+varios drops distribuidos alrededor del cadáver
+```
+
+pero no bloquear F18-A por presentación temporal.
+
+También se observó que el evento de drop puede llegar visualmente antes que el resultado final del Basic Attack, debido al orden interno:
+
+```text
+apply damage
+→ mob_died
+→ drop
+→ retorno de attack result
+```
+
+No viola autoridad.
+
+Cuando exista presentación final de muerte/drop se podrá coordinar el timing visual sin mover reglas de loot a Combat.
+
+### Checkpoints F18-A2
+
+Game Server:
+
+```text
+c249c737ae4768c56bfc5742f072cd2d338c45bf
+feat: replicate authoritative world drops
+```
+
+Cliente:
+
+```text
+a043ac76478256f36f6a17002629c9c3733c7f46
+feat: render authoritative world drops
+```
+
+### Resultado total F18-A
+
+```text
+✅ loot decidido por Game Server
+✅ drop table server-side
+✅ WorldDropRuntimeState
+✅ WorldDropRegistry
+✅ WorldDropCoordinator desacoplado de BasicAttackCoordinator
+✅ IDs runtime propios
+✅ map_id autoritativo
+✅ posición autoritativa
+✅ múltiples drops coexistentes
+✅ replicación en tiempo real
+✅ roster inicial incluye drops existentes
+✅ reconexión conserva representación del drop
+✅ WorldDropActor visual
+✅ icono/nombre resueltos localmente mediante ItemCatalog
+✅ respawn del mob sin regresión
+
+❌ pickup
+❌ Inventory mutation por pickup
+❌ eliminación/despawn del drop
+❌ ownership/party loot
+❌ lifetime del drop
+❌ EXP/Level
+```
+
+**Siguiente checkpoint:** `F18-B — Authoritative Pickup`.
+
+La regla será:
+
+```text
+cliente pide recoger entity_id
+→ Game Server resuelve WorldDrop real
+→ valida mapa/rango/estado
+→ persiste/muta Inventory de forma autoritativa
+→ sólo después consume el WorldDrop
+→ replica Inventory + desaparición del drop
+```
+
+No diseñar pickup como eliminación cliente-side.
+
+Progression posterior:
+
+```text
+F18-C
 kill
 → EXP
 → level
@@ -4856,8 +5503,9 @@ F17-D Basic Attack PvE        ✅
 F17-E Basic Attack execution  ✅
 F17-F Mob death transition    ✅
 F17-G Mob respawn foundation  ✅
-F18-A World Drop foundation   ⏳ SIGUIENTE
-F18-B Pickup                  ⏳
+F18-A1 World Drop runtime     ✅
+F18-A2 Drop replication/UI    ✅
+F18-B Pickup                  ⏳ SIGUIENTE
 F18-C EXP / Level             ⏳
 F19 Vertical Slice            ⏳
 
@@ -4871,7 +5519,7 @@ PERF-1                        ⏳ después de F19 estable
 Antes de implementar gameplay nuevo:
 
 ```text
-cerrar documentación/checkpoint F17-G
+cerrar documentación/checkpoint F18-A
 → reemplazar PROJECT_MEMORY.md
 → git status
 → commit
@@ -4882,62 +5530,72 @@ cerrar documentación/checkpoint F17-G
 Después abrir:
 
 ```text
-F18-A — Authoritative World Drop Foundation
+F18-B — Authoritative Pickup
 ```
 
-Dirección del checkpoint:
+Dirección conceptual:
 
 ```text
-mob_died existente
-→ Drop Coordinator / World Drop domain
-→ decidir drop autoritativamente
-→ crear WorldDropRuntimeState
-→ registrar drop en mundo
-→ replicar drop a clientes del mapa
-→ representación visual mínima
+WorldDropActor
+→ pickup intention(entity_id)
+→ Game Server
+→ resolver PlayerWorldSession
+→ resolver WorldDropRegistry.get_drop(entity_id)
+→ validar mismo mapa
+→ validar rango
+→ validar item/quantity
+→ mutar/persistir Inventory autoritativamente
+→ consumir drop sólo si Inventory confirmó
+→ enviar Inventory snapshot
+→ replicar world_drop_removed
+→ todos los clientes eliminan el actor
 ```
 
-F18-A todavía NO debe incluir:
+Regla transaccional:
 
 ```text
-pickup
-Inventory mutation
+NO borrar primero el WorldDrop
+y después intentar Inventory.
+```
+
+Debe evitarse perder items si persistence/Inventory falla.
+
+F18-B todavía NO debe incluir:
+
+```text
 EXP
 level-up
-loot ownership complejo
 party loot
-drop animations finales
-economía
+ownership temporal complejo
+auto-loot
+drop lifetime/despawn
+stack split manual
+animaciones finales
 ```
 
-La muerte y el respawn ya son independientes del futuro sistema de drops:
-
-```text
-mob_died
-├── futuro Drop system
-└── respawn scheduler
-```
-
-No acoplar Drop al `BasicAttackCoordinator`.
+Si el pickup de una Health Potion apilable demuestra una necesidad real de stack merge/partial stack, se reevalúa el scope mínimo de F15-C en ese momento.
 
 ---
 
 # 67. CRITERIO DE ÉXITO DEL PRÓXIMO TEST
 
-F18-A deberá demostrar como mínimo:
+F18-B deberá demostrar como mínimo:
 
 ```text
-1. mob_died sigue ocurriendo exactamente una vez por vida;
-2. Drop system escucha ese evento sin depender de BasicAttackCoordinator;
-3. el Game Server decide si existe drop;
-4. el Game Server crea una identidad estable para el WorldDrop;
-5. el drop posee map_id y posición autoritativos;
-6. el drop se registra en un runtime registry de mundo;
-7. el drop se replica sólo a sesiones del mismo mapa;
-8. el cliente puede representarlo de forma mínima;
-9. todavía no existe pickup ni mutación de Inventory;
-10. el respawn del mob continúa funcionando sin regresión;
-11. no aparecen warnings/errors nuevos.
+1. el cliente sólo envía entity_id/intención de pickup;
+2. el Game Server resuelve el WorldDrop real;
+3. drop inexistente se rechaza;
+4. drop de otro mapa se rechaza;
+5. pickup fuera de rango se rechaza;
+6. un pickup válido muta Inventory autoritativamente;
+7. el WorldDrop sólo se consume después de confirmar Inventory;
+8. el cliente recibe el Inventory actualizado;
+9. todos los clientes del mapa reciben la eliminación del drop;
+10. el WorldDropActor desaparece;
+11. reconnect ya no incluye un drop recogido;
+12. dos requests sobre el mismo drop no duplican el item;
+13. muerte/respawn/drop creation siguen sin regresiones;
+14. no aparecen warnings/errors nuevos.
 ```
 
 ---
@@ -5118,7 +5776,9 @@ El SHA definitivo de cierre de F16-C debe verificarse en `dev` después del push
 La etapa funcionalmente validada es:
 
 ```text
-F17-G — Authoritative Mob Respawn Foundation
+F18-A — Authoritative World Drop Foundation
+├── F18-A1 Runtime / Loot ✅
+└── F18-A2 Replication / Visual ✅
 ```
 
 Contrato vigente:
@@ -5132,52 +5792,88 @@ CTRL + LEFT CLICK player  = BASIC ATTACK PvP
 CTRL + RIGHT CLICK player = SELECTED SKILL PvP
 ```
 
-Lifecycle de mob validado:
+Lifecycle de mob:
 
 ```text
 SPAWN
 → ALIVE
 → DAMAGE
-→ HP 0
 → mob_died
-→ DEAD / no targeteable
-→ respawn_delay
-→ HP max
-→ spawn transform
-→ mob_respawned
-→ ALIVE / targeteable
+→ DEAD
+→ respawn
+→ ALIVE
 ```
 
-Training Goblin de testing:
+Lifecycle de drop actual:
 
 ```text
+mob_died
+→ ServerMobDropCatalog
+→ WorldDropRuntimeState
+→ WorldDropRegistry
+→ world_drop_spawned
+→ clients del mapa
+→ WorldDropActor
+```
+
+Presence actual:
+
+```text
+world_presence_snapshot
+├── players
+├── mobs
+└── drops
+```
+
+Training fixture:
+
+```text
+Training Goblin
 HP: 5000
 Respawn: 3.0 s
+Drop de testing: Health Potion x1, 100%
 ```
 
-Checkpoint F17-G:
+Checkpoints F18-A:
 
 ```text
-Game Server:
-28097de12d55b021b1a2834339f948612d22e069
-feat: add authoritative mob respawn foundation
+Game Server A1:
+505324ec3f5c2a1b8a231c6787e17464e33b050d
+feat: add authoritative world drop runtime foundation
+
+Game Server A2:
+c249c737ae4768c56bfc5742f072cd2d338c45bf
+feat: replicate authoritative world drops
+
+Cliente A2:
+a043ac76478256f36f6a17002629c9c3733c7f46
+feat: render authoritative world drops
 ```
 
 Próximo checkpoint después del cierre documental:
 
 ```text
-F18-A — Authoritative World Drop Foundation
+F18-B — Authoritative Pickup
 ```
 
-Dirección futura confirmada para spots:
+Principio de seguridad:
 
 ```text
-WorldMobSpawnSpotDefinition
-→ WorldMobSpawnSystem
-→ WorldMobRuntimeState
-→ WorldMobRegistry
+Inventory confirmado
+→ recién entonces consumir WorldDrop
 ```
 
-pero no implementarla todavía.
+No implementar todavía:
 
-**No avanzar a F18-A hasta commitear, pushear y confirmar la actualización canónica de F17-G.**
+```text
+EXP
+level
+party loot
+ownership complejo
+drop lifetime
+auto-loot
+spots
+AI completa
+```
+
+**No avanzar a F18-B hasta commitear, pushear y confirmar la actualización canónica de F18-A.**
