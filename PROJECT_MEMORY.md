@@ -4,7 +4,7 @@
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama de desarrollo habitual:** `dev`  
-**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B/F17-C/F17-D/F17-E/F17-F/F17-G cerrados y validados; F18-A World Drops, F18-B Authoritative Pickup y F18-C Authoritative EXP / Level cerrados, probados y pusheados; siguiente checkpoint: F19 — Vertical Slice completo.
+**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16 completo, F17 completo, F18 completo y F19 Vertical Slice completo, probado de punta a punta y sin blockers funcionales observados. El gameplay normal ya no depende del bootstrap debug. Próxima decisión: elegir el siguiente bloque post-F19; candidato recomendado: persistencia durable del runtime del personaje (posición + HP/MP), antes de escalar contenido.
 
 > Este archivo es la **fuente canónica única de contexto del proyecto VHAL**.
 >
@@ -314,24 +314,24 @@ Cuando aparece ese patrón hay que revisar la abstracción.
 │ intención + UI      │
 │ representación      │
 └──────────┬──────────┘
-		   │
-		   │ ENet
-		   ▼
+           │
+           │ ENet
+           ▼
 ┌─────────────────────┐
 │  GODOT GAME SERVER  │
 │ autoridad gameplay  │
 │ estado runtime      │
 └──────────┬──────────┘
-		   │
-		   │ HTTP interno
-		   ▼
+           │
+           │ HTTP interno
+           ▼
 ┌─────────────────────┐
 │   LARAVEL BACKEND   │
 │ identidad + API     │
 │ persistencia        │
 └──────────┬──────────┘
-		   │
-		   ▼
+           │
+           ▼
 ┌─────────────────────┐
 │        MYSQL        │
 │ almacenamiento      │
@@ -978,35 +978,35 @@ res://
 │       └── basic_attack_coordinator.gd
 │
 └── core/
-	├── networking/
-	├── backend/
-	│   ├── backend_character_inventory_repository.gd
-	│   └── backend_character_progression_repository.gd
-	├── progression/
-	│   └── server_character_progression_rules.gd
-	├── items/
-	│   ├── server_item_catalog.gd
-	│   ├── server_character_inventory_snapshot_validator.gd
-	│   ├── server_persistent_item_uid_generator.gd
-	│   └── server_inventory_placement_resolver.gd
-	├── combat/
-	│   ├── server_vitals_state.gd
-	│   ├── server_character_runtime_bootstrap.gd
-	│   ├── server_basic_attack_profile_resolver.gd
-	│   └── server_basic_attack_runtime_state.gd
-	├── skills/
-	│   ├── server_skill_definition.gd
-	│   ├── server_skill_catalog.gd
-	│   └── server_skill_runtime_state.gd
-	└── world/
-		├── movement/
-		├── navigation/
-		├── npcs/
-		├── mobs/
-		└── drops/
-			├── world_drop_runtime_state.gd
-			├── world_drop_registry.gd
-			└── server_mob_drop_catalog.gd
+    ├── networking/
+    ├── backend/
+    │   ├── backend_character_inventory_repository.gd
+    │   └── backend_character_progression_repository.gd
+    ├── progression/
+    │   └── server_character_progression_rules.gd
+    ├── items/
+    │   ├── server_item_catalog.gd
+    │   ├── server_character_inventory_snapshot_validator.gd
+    │   ├── server_persistent_item_uid_generator.gd
+    │   └── server_inventory_placement_resolver.gd
+    ├── combat/
+    │   ├── server_vitals_state.gd
+    │   ├── server_character_runtime_bootstrap.gd
+    │   ├── server_basic_attack_profile_resolver.gd
+    │   └── server_basic_attack_runtime_state.gd
+    ├── skills/
+    │   ├── server_skill_definition.gd
+    │   ├── server_skill_catalog.gd
+    │   └── server_skill_runtime_state.gd
+    └── world/
+        ├── movement/
+        ├── navigation/
+        ├── npcs/
+        ├── mobs/
+        └── drops/
+            ├── world_drop_runtime_state.gd
+            ├── world_drop_registry.gd
+            └── server_mob_drop_catalog.gd
 ```
 
 ## ServerMain
@@ -1913,9 +1913,9 @@ Mob
 │   → ItemInstance en MySQL
 │   → Inventory cliente
 └── EXP
-	→ persistencia MySQL
-	→ Level Up
-	→ HUD / XPBar
+    → persistencia MySQL
+    → Level Up
+    → HUD / XPBar
 ```
 
 Test integrado F18-C:
@@ -3591,8 +3591,8 @@ El cliente sólo envía:
 {
   "request_id": 1,
   "target": {
-	"kind": "entity",
-	"entity_id": "mob_test_town_001"
+    "kind": "entity",
+    "entity_id": "mob_test_town_001"
   }
 }
 ```
@@ -4258,10 +4258,10 @@ El objetivo es que cualquier fuente futura de damage pueda converger en el mismo
 
 ```text
 mob_died(
-	entity_id,
-	map_id,
-	source,
-	mob_snapshot
+    entity_id,
+    map_id,
+    source,
+    mob_snapshot
 )
 ```
 
@@ -4542,9 +4542,11 @@ La decisión debe priorizar un vertical slice repetible y evitar scope creep.
 
 # 43. PvP — DIRECCIÓN CANÓNICA
 
-PvP no debe implementarse como excepción improvisada.
+PvP / PK no debe implementarse como excepción improvisada.
 
-Contrato de input:
+Debe construirse sobre el combat runtime autoritativo existente.
+
+## Input canónico
 
 ```text
 CTRL + LEFT CLICK sobre player
@@ -4554,384 +4556,225 @@ CTRL + RIGHT CLICK sobre player
 → selected skill PvP
 ```
 
-Game Server deberá decidir:
+El Game Server deberá decidir:
 
 ```text
 si el target es jugador
 si el mapa permite PvP
+safe zone
 estado PvP del atacante
 estado PvP del objetivo
-safe zone
+auto-defense vigente
 distancia
 line-of-sight
+equipment
 skill
 mana
 cooldown
 damage
 kill
-criminal state
+criminal / sin state
 ```
 
-La arquitectura histórica prevista incluye estados tipo:
+El cliente nunca decide si una muerte penaliza o no.
+
+## Estados canónicos de pecado / criminalidad
+
+La dirección histórica de VHAL queda confirmada como:
 
 ```text
 Inocente
+↓
 Diablillo
+↓
 Delincuente
-Pecador
+↓
+Pecador / Sinner
 ```
 
-y “auto defense”.
+Los umbrales exactos de kills/puntos de pecado todavía NO están balanceados.
 
-Estos sistemas se implementarán sobre el combat runtime autoritativo, no como lógica local del cliente.
-
-
-## F17-G — AUTHORITATIVE MOB RESPAWN FOUNDATION
-
-**Estado:** ✅ COMPLETADO, PROBADO Y VALIDADO.
-
-F17-G hace repetible el lifecycle del mob sin reiniciar el Game Server.
-
-Flujo cerrado:
+La progresión entre estados deberá depender de una métrica server-side durable, por ejemplo:
 
 ```text
-SPAWN
-→ ALIVE
-→ DAMAGE
-→ DEATH
-→ respawn_delay
-→ RESPAWN
-→ ALIVE
-→ nuevamente combatible
+player kills penalizables
+sin points / criminal points
+estado criminal resultante
 ```
 
-### Respawn como regla de definición
+El nombre técnico final de esa métrica se decidirá al implementar el sistema.
 
-`WorldMobDefinition` incorpora:
+## Auto-defense / legítima defensa
+
+Regla canónica:
 
 ```text
-respawn_delay_seconds
+Player A ataca primero a Player B
+↓
+Game Server registra agresión válida
+↓
+Player B queda autorizado temporalmente a defenderse
+↓
+B puede atacar/matar a A sin recibir penalización PK por esa defensa
 ```
 
-Para el `Training Goblin` de testing:
+Esto debe parecerse conceptualmente al comportamiento clásico de MU, pero implementado con reglas y arquitectura propias de VHAL.
+
+La autorización de defensa:
 
 ```text
-max_hp = 5000
-respawn_delay_seconds = 3.0
+es temporal
+es server-side
+debe identificar atacante/defensor
+debe expirar
+no puede depender de lógica local del cliente
 ```
 
-Estos valores son temporales de Foundation y no representan balance final.
-
-### Runtime de respawn
-
-`WorldMobRuntimeState` ya conservaba:
+Casos futuros a definir:
 
 ```text
-spawn_position
-spawn_rotation_y
-position actual
-rotation actual
-vitals
+duración de auto-defense
+qué pasa si interviene un tercero
+party/guild
+duelos
+event maps
+safe zones
+self-defense contra múltiples agresores
 ```
 
-Se incorporó una operación de lifecycle:
+## Pecador / Sinner — estado máximo
+
+Al alcanzar `Pecador`:
 
 ```text
-respawn_at_spawn()
+otros jugadores pueden atacarlo sin ser penalizados
 ```
 
-La misma instancia runtime:
+Presentación visual deseada:
 
 ```text
-mob_test_town_001
+cuerpo
+armadura
+arma
+alas
+otros componentes visuales principales
 ```
 
-pasa:
+deben adquirir una tonalidad roja visible.
+
+El color es representación cliente del estado autoritativo; el cliente NO decide que alguien es Pecador.
+
+Conceptualmente:
 
 ```text
-alive=false
-HP=0
+Game Server criminal state
+↓
+presence/combat replication
+↓
+appearance state
+↓
+tint rojo del personaje completo
 ```
 
-a:
+## Sacerdote / Confesión — lore y mecánica
+
+VHAL tendrá uno o más NPCs de tipo:
 
 ```text
-alive=true
-HP=max_hp
-position=spawn_position
-rotation=spawn_rotation_y
+Sacerdote / Priest
 ```
 
-sin cambiar `entity_id`.
+Su función de lore y gameplay será:
 
-No se destruye/recrea arbitrariamente la entidad sólo para respawnear.
+> confesar al personaje y limpiar sus pecados.
 
-### Scheduler centralizado
-
-`WorldMobRegistry` mantiene un scheduler único:
+Flujo conceptual:
 
 ```text
-pending_respawn_deadlines_msec
-RespawnTimer
+jugador con pecado
+→ habla con Sacerdote
+→ Game Server calcula deuda/penalización
+→ se informa costo
+→ jugador acepta
+→ se cobra moneda
+→ se reduce o limpia el estado de pecado
+→ estado durable actualizado
 ```
 
-No se crea un `Timer` por mob.
-
-La muerte:
+El costo deberá escalar según la gravedad de los pecados cometidos, por ejemplo en función de:
 
 ```text
-mob_died
-→ schedule respawn deadline
-→ armar próximo timeout
+kills penalizables
+sin points
+estado criminal
 ```
 
-Al vencer:
+La fórmula exacta queda para balance posterior.
+
+## Redención mediante PvE
+
+Debe existir también una vía gratuita y más lenta:
 
 ```text
-resolver entity_id
-→ verificar que siga muerto
-→ respawn_at_spawn()
-→ snapshot
-→ mob_respawned
+matar mobs válidos
+→ reducir progresivamente pecado
 ```
 
-Esto prepara mejor la arquitectura para muchos mobs concurrentes que un timer dedicado por entidad.
-
-### Evento autoritativo de respawn
-
-`WorldMobRegistry` emite:
+Objetivo:
 
 ```text
-mob_respawned(
-	entity_id,
-	map_id,
-	mob_snapshot
-)
+pagar al Sacerdote
+→ limpieza rápida / costosa
+
+jugar PvE
+→ limpieza lenta / gratuita
 ```
 
-`WorldPresenceCoordinator` escucha ese evento y replica el snapshot mediante el mensaje ya existente:
+No todos los mobs necesariamente deberán valer lo mismo.
+
+La reducción futura podrá considerar:
 
 ```text
-mob_state_updated
+nivel del mob
+nivel del jugador
+zona
+anti-exploit
+diminishing returns
 ```
 
-No se creó un protocolo paralelo de respawn.
+sin definir todavía la fórmula.
 
-### Reutilización total del cliente
+## Persistencia futura PvP
 
-F17-G no requirió cambios del cliente.
+El Backend deberá conservar únicamente el estado durable necesario.
 
-El `MobActor` creado en F17-F ya sabe representar ambos estados.
-
-Dead:
+Ejemplo conceptual, NO esquema definitivo:
 
 ```text
-alive=false
-HP=0
-→ placeholder acostado
-→ [DEAD]
-→ collider / TargetArea deshabilitados
+criminal_state
+sin_points
+penalizable_player_kills
 ```
 
-Respawn:
+`auto-defense` es principalmente runtime del Game Server y no debe persistirse como si fuera una condena durable.
+
+## Regla arquitectónica
 
 ```text
-alive=true
-HP=5000
-→ VisualRoot vuelve a posición normal
-→ desaparece [DEAD]
-→ collider / TargetArea se reactivan
-→ vuelve a ser targetable
+Combat determina hit/damage/kill
+↓
+PvP/PK Domain determina agresión, defensa y penalización
+↓
+Persistence guarda estado criminal durable
+↓
+Presence replica estado necesario
+↓
+Client representa color/feedback
 ```
 
-La misma instancia visual recibe el nuevo snapshot.
+No mezclar todo dentro de `BasicAttackCoordinator`.
 
-### Test real validado
-
-Golpe letal:
-
-```text
-WorldMobRegistry | Muerte autoritativa confirmada
-| Entity: mob_test_town_001
-| HP: 0/5000
-```
-
-Scheduler:
-
-```text
-WorldMobRegistry | Respawn programado
-| Entity: mob_test_town_001
-| Delay: 3.0 s
-```
-
-Resultado final del ataque:
-
-```text
-Accepted: true
-Reason: ok
-Damage: 1000
-HP restante: 0/5000
-Killed: true
-```
-
-Después del delay:
-
-```text
-WorldMobRegistry | Respawn autoritativo confirmado
-| Entity: mob_test_town_001
-| Mapa: test_town
-| Posición: (4.0, 0.0, 4.0)
-| HP: 5000/5000
-```
-
-Replicación:
-
-```text
-WorldPresenceCoordinator | Respawn de mob replicado
-| Entity: mob_test_town_001
-| Mapa: test_town
-| Recipients: 1
-```
-
-Cliente:
-
-```text
-GameServerClient | Estado de mob actualizado
-| Entity: mob_test_town_001
-| HP: 5000/5000
-
-MobActor | Preparado
-| Entity: mob_test_town_001
-| HP: 5000/5000
-```
-
-### Targeting posterior al respawn
-
-Después del respawn:
-
-```text
-Fire Ball
-→ vuelve a resolver entity target
-→ Game Server valida target vivo
-→ skill_not_implemented
-```
-
-y Basic Attack vuelve a ejecutarse:
-
-```text
-5000 → 4000
-```
-
-Esto prueba que el lifecycle no deja al mob bloqueado en estado dead ni rompe el picking cliente.
-
-### Ciclo repetible
-
-Se validó además que el mob puede completar nuevamente el ciclo:
-
-```text
-alive
-→ death
-→ respawn
-→ alive
-→ death
-→ respawn
-```
-
-sin reiniciar el Game Server.
-
-La regla deseada es:
-
-```text
-un mob_died por cada vida
-un mob_respawned por cada respawn
-```
-
-### Checkpoint remoto
-
-Game Server:
-
-```text
-28097de12d55b021b1a2834339f948612d22e069
-feat: add authoritative mob respawn foundation
-```
-
-Cliente:
-
-```text
-sin cambios requeridos en F17-G
-```
-
-### Dirección futura — spots estilo MU
-
-La arquitectura actual queda preparada para evolucionar a spots sin rehacer Combat ni Presence.
-
-Dirección prevista:
-
-```text
-WorldMobDefinition
-		↓
-WorldMobSpawnSpotDefinition
-		↓
-WorldMobSpawnSystem
-		↓
-WorldMobRuntimeState
-		↓
-WorldMobRegistry
-		↓
-Combat / Skills / AI / Drops
-```
-
-Un spot podrá definir progresivamente:
-
-```text
-map_id
-área delimitada
-cantidad de slots
-mob types / pesos
-level_min / level_max
-respawn range
-posición random validada contra navegación
-```
-
-Ejemplo conceptual:
-
-```text
-Spot goblins_norte_01
-Map: test_town
-Cantidad: 8
-Área: X/Z delimitados
-Mob: goblin
-Level: 1..2
-Respawn: 5..8 s
-```
-
-No implementar esto todavía.
-
-Cuando se soporte level variable por instancia, la dirección arquitectónica es que el nivel concreto viva en `WorldMobRuntimeState` y que `WorldMobDefinition` describa el tipo/base del mob, evitando definiciones separadas `goblin_lv1`, `goblin_lv2`, etc.
-
-### Límite de F17-G
-
-F17-G NO implementa:
-
-```text
-spawn spots
-random spawn positions
-random level
-weighted mob variants
-AI
-aggro
-leash
-patrol
-drops
-pickup
-EXP
-loot tables
-```
-
-**Siguiente bloque:** `F18 — Drop / Pickup / EXP`.
-
-La apertura debe hacerse en checkpoints pequeños; el primer candidato es una Foundation de World Drop autoritativo conectada al `mob_died` existente.
-
+No implementar PvP completo hasta abrir formalmente su checkpoint.
 
 ---
 
@@ -4972,20 +4815,20 @@ Arquitectura validada:
 
 ```text
 BasicAttackCoordinator
-		↓
-	  damage
-		↓
+        ↓
+      damage
+        ↓
 WorldMobRegistry
-		↓
-	 mob_died
-	  ┌─┴──────────────────┐
-	  ↓                    ↓
+        ↓
+     mob_died
+      ┌─┴──────────────────┐
+      ↓                    ↓
 WorldDropCoordinator       Respawn scheduler
-	  ↓
+      ↓
 ServerMobDropCatalog
-	  ↓
+      ↓
 WorldDropRegistry
-	  ↓
+      ↓
 WorldDropRuntimeState
 ```
 
@@ -5245,11 +5088,11 @@ drop:
   entity_id
   entity_kind = world_drop
   item:
-	item_id
-	quantity
+    item_id
+    quantity
   world:
-	map_id
-	position
+    map_id
+    position
 ```
 
 El transporte es reliable.
@@ -5365,8 +5208,8 @@ Estructura Foundation:
 ```text
 WorldDropActor
 └── VisualRoot
-	├── ItemSprite
-	└── NameLabel
+    ├── ItemSprite
+    └── NameLabel
 ```
 
 Sin `Area3D`/collider todavía.
@@ -6452,9 +6295,9 @@ Se reutilizó la foundation existente:
 ```text
 PlayerRuntimeState
 └── ExperienceState
-	└── experience_changed
-		└── GameplayUI
-			└── XPBar
+    └── experience_changed
+        └── GameplayUI
+            └── XPBar
 ```
 
 No se creó una segunda implementación de EXP.
@@ -6614,7 +6457,11 @@ Pendiente deliberadamente:
 
 # 45. F19 — VERTICAL SLICE COMPLETO
 
-Primer gran objetivo estratégico:
+**Estado:** ✅ COMPLETADO, PROBADO Y VALIDADO.
+
+F19 tuvo como objetivo demostrar que los sistemas construidos hasta F18 forman una sesión MMORPG pequeña pero coherente, repetible y conectada.
+
+Circuito validado:
 
 ```text
 CUENTA
@@ -6635,34 +6482,424 @@ PLAYER
 ↓
 MOVEMENT
 ↓
-NPC
+NPC / WAREHOUSE
 ↓
 INVENTORY / VAULT / EQUIPMENT
 ↓
-SKILL
+SKILLS
 ↓
 MOB
 ↓
 COMBAT
 ↓
-DROP
+DEATH
+├── DROP
+│   ↓
+│   PICKUP
+│   ↓
+│   ITEMINSTANCE / MYSQL
+│
+└── EXP
+    ↓
+    LEVEL
+    ↓
+    MYSQL / HUD
 ↓
-PICKUP
-↓
-EXP / LEVEL
+RESPAWN
 ↓
 LOGOUT
 ↓
 LOGIN
 ↓
-TODO PERSISTE
+RECONSTRUCCIÓN DURABLE
 ```
 
-Hasta F19 estable:
+---
 
-> **No escalar contenido masivamente.**
+## F19-A — REAL GAMEPLAY BOOTSTRAP
 
-Primero demostrar el circuito completo.
+**Estado:** ✅ COMPLETADO, PROBADO, COMMITEADO Y PUSHEADO.
+
+El audit inicial encontró un blocker real:
+
+```text
+GameSessionFlowCoordinator
+→ MockGameSessionService
+→ DebugPlayerStateFactory
+```
+
+El gameplay normal todavía nacía desde valores fixture.
+
+`DebugPlayerStateFactory` podía inyectar:
+
+```text
+HP / MP debug
+EXP debug
+Fire Ball
+Poison
+Heal
+Hotbar
+moneda debug
+```
+
+Aunque Vitals, EXP, Inventory y Equipment eran reemplazados después por snapshots autoritativos, Skills/Hotbar y Currency todavía dependían del fixture.
+
+### Solución
+
+Se incorporó:
+
+```text
+ClientGameSessionService
+```
+
+El runtime normal ahora nace como:
+
+```text
+PlayerRuntimeState.new()
+```
+
+sin valores demo.
+
+El Game Server incorporó al `world_snapshot`:
+
+```text
+skills:
+  learned_skill_ids
+```
+
+El cliente incorporó:
+
+```text
+ClientSkillCatalog
+```
+
+Su responsabilidad es solamente:
+
+```text
+skill_id autoritativo
+→ SkillDefinition local
+→ nombre/icono/target visual
+```
+
+No decide ownership.
+
+`PlayerRuntimeState.apply_skill_snapshot()`:
+
+```text
+recibe IDs autorizados
+→ reconstruye SkillBook
+→ configura Hotbar foundation
+```
+
+### Regla actual
+
+El Game Server todavía asigna temporalmente las tres skills foundation:
+
+```text
+fire_ball
+heal
+poison
+```
+
+mediante `ServerCharacterRuntimeBootstrap`.
+
+Eso sigue siendo temporal, pero la diferencia crítica es:
+
+```text
+ANTES
+cliente inventaba ownership desde debug fixture
+
+AHORA
+Game Server informa ownership runtime
+cliente solamente lo representa
+```
+
+### Heal después de quitar bootstrap debug
+
+Validado:
+
+```text
+Heal
+→ intent
+→ Game Server accepted
+→ MP 350 → 310
+→ cooldown 4.0 s
+→ resultado reliable
+→ Vitals autoritativos
+→ HUD actualizado
+```
+
+Sin depender del fixture.
+
+### Checkpoints F19-A
+
+Game Server:
+
+```text
+c8a4a75f9acc656b5610d636e341615cf88327c9
+feat: expose authoritative learned skills
+```
+
+Cliente:
+
+```text
+2d463f6e3687df781f0e39311e14c1515715e839
+feat: remove debug gameplay bootstrap
+```
+
+`MockGameSessionService` y `DebugPlayerStateFactory` pueden seguir existiendo para pruebas aisladas, pero:
+
+```text
+flujo normal de gameplay
+→ NO depende de ellos
+```
+
+---
+
+## F19-B — INTEGRATED VERTICAL-SLICE AUDIT
+
+**Estado:** ✅ COMPLETADO Y VALIDADO.
+
+F19-B no agregó features.
+
+Se ejecutó una sesión completa para detectar gaps entre sistemas.
+
+### Inventory
+
+Validado:
+
+```text
+movimiento interno
+→ persistencia
+→ reload
+→ snapshot
+→ PlayerRuntimeState
+→ UI
+```
+
+### Equipment
+
+Validado:
+
+```text
+Bronze Sword equipada
+→ Unequip
+→ Equipment 1 → 0
+→ Inventory 4 → 5
+→ persistencia
+
+→ Equip
+→ Inventory 5 → 4
+→ Equipment 0 → 1
+→ persistencia
+```
+
+### Warehouse / Vault
+
+Validado:
+
+```text
+Warehouse Keeper
+→ interacción dentro de rango
+→ autorización Game Server
+→ Vault persistente
+→ movimiento interno Vault
+→ Inventory → Vault
+→ Vault → Inventory
+→ snapshots sincronizados
+```
+
+### Skill
+
+Heal validado dentro del slice:
+
+```text
+selected skill
+→ intent
+→ Game Server
+→ mana
+→ cooldown
+→ result
+→ HUD
+```
+
+### Combat / Death
+
+Con Bronze Sword:
+
+```text
+mode = melee
+damage = 1000 foundation
+Training Goblin
+5000 → 0
+```
+
+Una sola transición de muerte:
+
+```text
+mob_died
+```
+
+### Death fan-out
+
+Una sola muerte produjo exactamente:
+
+```text
+mob_died
+├── WorldDrop x1
+└── EXP +50
+```
+
+Sin duplicación observada.
+
+### EXP / Level
+
+Baseline del audit:
+
+```text
+Level 122
+EXP 50/100
+```
+
+Después de un kill:
+
+```text
++50
+→ Level 123
+→ EXP 0/100
+```
+
+Persistido y replicado.
+
+### Pickup
+
+Drop:
+
+```text
+Health Potion x1
+```
+
+Flujo validado:
+
+```text
+pickup intent
+→ Game Server validation
+→ Laravel durable grant
+→ WorldDrop consume
+→ world_drop_removed
+→ Inventory reload
+→ Items 4 → 5
+```
+
+### Respawn
+
+Después de:
+
+```text
+3.0 s
+```
+
+Training Goblin:
+
+```text
+5000/5000
+```
+
+y vuelve a ser interactuable.
+
+### Segundo kill + reconnect sin pickup
+
+Se mató nuevamente al Goblin.
+
+Resultado:
+
+```text
+Level 123
+EXP 50/100
+```
+
+El segundo drop NO se recogió.
+
+Después:
+
+```text
+logout
+→ character select
+→ login/world reconnect
+```
+
+se reconstruyó:
+
+```text
+Level: 123
+EXP: 50/100
+Inventory: 5
+Equipment: 1
+Skills: 3
+Drops runtime: 1
+```
+
+El WorldDrop no recogido reapareció en roster:
+
+```text
+world_drop_00000002
+Health Potion x1
+```
+
+Demostración:
+
+```text
+drop recogido
+→ durable ItemInstance
+→ NO reaparece
+
+drop no recogido
+→ runtime del Game Server
+→ SÍ reaparece mientras ese Game Server sigue vivo
+```
+
+### Movimiento
+
+Movimiento corto/largo continuó funcionando de manera autoritativa durante el audit.
+
+### Calidad
+
+Confirmado:
+
+```text
+Cliente:
+0 warnings
+0 errors
+
+Game Server:
+0 warnings
+0 errors
+
+Backend:
+sin errores observados
+```
+
+### Resultado del audit
+
+No se detectaron blockers funcionales que impidan afirmar:
+
+> VHAL ya posee un primer vertical slice MMORPG pequeño, autoritativo y persistente en sus sistemas principales.
+
+Quedan gaps deliberados que NO bloquean este cierre:
+
+```text
+posición durable del personaje
+HP/MP durable
+skills aprendidas persistentes reales
+economía real
+PvP/PK
+world drops persistentes tras restart del Game Server
+merchant completo
+múltiples mapas/contenido
+AI avanzada
+```
+
+Estos deben desarrollarse como checkpoints posteriores, no agregarse por inercia dentro de F19.
 
 ---
 
@@ -6832,7 +7069,7 @@ Systems ejecutan lógica runtime especializada
 
 # 51. VITALS — DIRECCIÓN
 
-Game Server es autoridad de:
+Game Server es autoridad runtime de:
 
 ```text
 HP
@@ -6843,7 +7080,7 @@ max MP
 
 El cliente representa esos valores.
 
-Consumidores futuros:
+Consumidores:
 
 ```text
 Heal
@@ -6868,11 +7105,102 @@ CombatHPSystem separado
 
 con estados incompatibles.
 
+## Persistencia durable futura del estado del personaje
+
+Después de F19 queda asentado como prioridad futura guardar y restaurar el estado real del personaje entre sesiones.
+
+Estado durable esperado:
+
+```text
+map_id
+position x/y/z
+rotation_y
+
+hp
+mp
+
+level
+experience
+```
+
+Situación actual:
+
+```text
+Level / EXP
+→ YA son durables en Laravel/MySQL
+→ YA se restauran al iniciar sesión
+
+Position
+→ todavía vuelve al spawn foundation
+
+HP / MP
+→ todavía nacen desde ServerCharacterRuntimeBootstrap
+```
+
+La futura implementación NO debe crear un segundo sistema de EXP.
+
+Debe reutilizar:
+
+```text
+Character Progression persistence existente
+```
+
+y agregar el estado durable faltante de mundo/vitals de forma coherente.
+
+Objetivo de reconnect:
+
+```text
+logout / disconnect seguro
+→ persistir checkpoint
+
+login / enter world
+→ ticket
+→ Game Server
+→ restaurar mapa/posición
+→ restaurar HP/MP
+→ restaurar Level/EXP
+→ construir sesión
+```
+
+Puntos de guardado a diseñar:
+
+```text
+logout normal
+disconnect
+cambio de mapa
+intervalic checkpoint / autosave
+eventos críticos
+shutdown controlado del Game Server
+```
+
+No persistir posición en MySQL en cada frame/tick.
+
+Debe existir batching/checkpointing razonable.
+
+Aspectos a definir al abrir el bloque:
+
+```text
+frecuencia de autosave
+qué ocurre ante crash del Game Server
+posición segura de fallback
+HP mínimo/máximo al restaurar
+estado al morir/desconectarse
+map migrations
+versionado del snapshot durable
+```
+
 ---
 
 # 52. SKILL OWNERSHIP / PROGRESIÓN
 
-Hay que distinguir dos conceptos.
+Hay que distinguir:
+
+```text
+Character Progression
+Skill Ownership
+Skill Learning
+Skill Runtime
+```
 
 ## Character Progression
 
@@ -6904,7 +7232,7 @@ Game Server
 → HUD
 ```
 
-Foundation actual de testing:
+Foundation actual:
 
 ```text
 100 EXP por nivel
@@ -6913,39 +7241,307 @@ Training Goblin +50 EXP
 
 No es balance final.
 
-## Skill Ownership / Skill Progression
+## Skill Runtime actual
 
-Actualmente las tres skills se asignan temporalmente mediante bootstrap de desarrollo.
+Desde F19-A:
 
-No es el modelo final.
+```text
+Game Server
+→ learned_skill_ids
+→ world_snapshot
+→ Client SkillBook / Hotbar
+```
+
+El cliente ya no inventa las Skills desde `DebugPlayerStateFactory`.
+
+Sin embargo, ownership real todavía NO es durable.
+
+Temporalmente:
+
+```text
+ServerCharacterRuntimeBootstrap
+→ fire_ball
+→ heal
+→ poison
+```
+
+para todos los personajes foundation.
+
+## Dirección canónica — aprender una Skill
+
+Una Skill NO se aprenderá solamente por alcanzar nivel.
+
+La idea canónica de VHAL es:
+
+```text
+conseguir el libro / scroll de la habilidad
++
+cumplir requisitos
++
+hablar con un entrenador compatible
+=
+aprender Skill
+```
+
+### Requisito 1 — Scroll / libro
+
+La habilidad tendrá un item de aprendizaje asociado.
+
+Ejemplo conceptual:
+
+```text
+Scroll: Fire Ball
+```
+
+El scroll podrá obtenerse mediante contenido del mundo, principalmente:
+
+```text
+mobs
+drop tables
+mapas concretos
+eventos/quests futuros
+```
+
+No hardcodear el origen en UI.
+
+Debe provenir de sistemas de loot/contenido.
+
+El comportamiento final del scroll después de aprender:
+
+```text
+consumirse / no consumirse
+```
+
+queda por definir al diseñar el sistema.
+
+### Requisito 2 — Clase
+
+Cada skill puede restringir:
+
+```text
+una clase
+varias clases
+todas las clases
+```
+
+Ejemplo conceptual:
+
+```text
+Fire Ball
+→ clases mágicas permitidas
+```
+
+No asumir que toda skill pertenece a una sola clase.
+
+### Requisito 3 — Nivel mínimo
+
+Cada skill puede exigir:
+
+```text
+required_level
+```
+
+Validado server-side.
+
+### Requisito 4 — Stats mínimos
+
+Puede exigir uno o más stats.
+
+Ejemplo conceptual:
+
+```text
+Strength
+Agility
+Vitality
+Energy / atributo mágico futuro
+```
+
+Los nombres y sistema definitivo de stats se fijarán en su checkpoint.
+
+Regla:
+
+```text
+cliente puede mostrar requisitos
+Game Server decide si realmente se cumplen
+```
+
+### Requisito 5 — Entrenador
+
+Incluso con scroll + requisitos cumplidos:
+
+```text
+el jugador deberá hablar con un entrenador compatible
+```
+
+para aprender la skill.
+
+El trainer actúa como pieza de:
+
+```text
+gameplay
+progresión
+descubrimiento
+lore
+```
+
+## NPC Trainer / Entrenador
+
+Debe existir un servicio NPC tipo:
+
+```text
+Skill Trainer
+Class Trainer
+Entrenador
+```
+
+Un entrenador podrá soportar:
+
+```text
+una sola clase
+o
+una lista de clases
+```
+
+No obligar arquitectónicamente a crear exactamente un NPC por clase.
+
+Ejemplos:
+
+```text
+Trainer A
+→ Warrior
+
+Trainer B
+→ Mage + Summoner
+
+Trainer C
+→ varias clases avanzadas
+```
+
+según el contenido/lore futuro.
+
+## El entrenador también guía al jugador
+
+No será solamente un botón “Learn”.
+
+Debe poder informar:
+
+```text
+qué skills puede aprender tu clase
+qué scroll necesitás
+nivel requerido
+stats requeridos
+si cumplís o no los requisitos
+en qué mapas puede encontrarse el scroll
+qué mobs pueden dropearlo
+```
+
+Ejemplo conceptual:
+
+```text
+Fire Ball
+
+Requiere:
+Mage
+Level 20
+Energy 80
+Scroll of Fire Ball
+
+Podés buscarlo en:
+Ashen Valley
+
+Mobs conocidos:
+Dark Wizard
+Fire Imp
+```
+
+Estos datos deberán provenir de definiciones/catalogs del juego, no de texto duplicado hardcodeado en cada UI/NPC.
+
+## Flujo futuro completo
+
+```text
+Mob / contenido
+↓
+Drop table
+↓
+Skill Scroll ItemInstance
+↓
+Inventory
+↓
+Jugador visita Trainer
+↓
+Trainer consulta skill definition
+↓
+Game Server valida:
+    scroll presente
+    clase
+    level
+    stats
+    trainer compatible
+    skill no aprendida
+↓
+operación durable
+↓
+Backend persiste learned skill
+↓
+si corresponde, consumir scroll
+↓
+ServerSkillRuntimeState actualizado
+↓
+cliente recibe nuevo SkillBook
+```
+
+## Persistencia de Skills
 
 Futuro:
 
 ```text
 Backend
-→ skills aprendidas persistentes
+→ learned skills persistentes por personaje
 → bootstrap de sesión
 → ServerSkillRuntimeState
 ```
 
-Game Server sigue siendo autoridad de:
+El Backend almacena ownership durable.
+
+El Game Server conserva autoridad sobre:
 
 ```text
+learn request
+requisitos
 cast availability
-cooldown
 mana
+cooldown
+targeting
 execution
 ```
 
-aunque ownership/progresión de skills sea durable.
+El cliente nunca puede enviar:
+
+```text
+"aprendí esta skill"
+```
+
+como hecho consumado.
+
+Sólo:
+
+```text
+"quiero aprender esta skill con este trainer/scroll"
+```
+
+## Separación obligatoria
 
 No mezclar:
 
 ```text
-character EXP/Level
+Character EXP/Level
 con
-skill learning/progression
+Skill Learning
+con
+Skill Cast Runtime
 ```
+
+Son dominios relacionados pero diferentes.
 
 ---
 
@@ -7002,7 +7598,7 @@ Todos los futuros controladores de input deben respetar este contrato.
 
 # 55. DEBUG / FIXTURES
 
-Los fixtures existen para acelerar Foundation.
+Los fixtures existen para acelerar desarrollo y pruebas aisladas.
 
 Regla:
 
@@ -7011,23 +7607,58 @@ mientras un sistema no sea real
 → fixture permitido
 
 cuando aparece autoridad real
-→ retirar gradualmente el fixture correspondiente
+→ retirar gradualmente el fixture del flujo normal
 ```
 
-Ejemplos:
+Después de F19-A:
 
 ```text
-Inventory persistente
-→ ya no debe depender de inventario demo
-
-Equipment persistente
-→ ya no debe depender de equipment demo
-
-Skills
-→ todavía tienen ownership/bootstrap temporal
+gameplay normal
+→ ClientGameSessionService
+→ PlayerRuntimeState vacío
+→ snapshots autoritativos
 ```
 
-No eliminar fixtures que aún sirven a sistemas no reemplazados sin plan de transición.
+Ya NO depende de:
+
+```text
+MockGameSessionService
+DebugPlayerStateFactory
+```
+
+para entrar al mundo.
+
+Esos archivos pueden mantenerse para:
+
+```text
+tests visuales
+prototipos aislados
+debug UI
+fixtures controlados
+```
+
+pero no deben volver a convertirse en source of truth del gameplay normal.
+
+Ejemplos ya retirados del flujo normal:
+
+```text
+Inventory demo
+Equipment demo
+Vitals demo
+EXP demo
+Skill ownership demo del cliente
+Currency debug
+```
+
+Skills todavía tienen bootstrap temporal, pero ahora es:
+
+```text
+Game Server temporal
+→ learned_skill_ids
+→ cliente
+```
+
+y no una invención local.
 
 ---
 
@@ -7047,11 +7678,64 @@ movimiento
 NavMesh
 NPC
 Warehouse
-presencia
-skills foundation
+presence
+skills
+mobs
+combat
+drops
+pickup
+EXP
 ```
 
-No construir mapa final gigante antes del vertical slice F19.
+F19 ya validó este mapa como vertical slice completo.
+
+## Persistencia futura de ubicación
+
+Situación actual:
+
+```text
+logout/reconnect
+→ personaje vuelve al spawn foundation
+```
+
+Dirección requerida:
+
+```text
+guardar map_id
+guardar posición
+guardar rotation_y
+restaurar esos valores al iniciar/entrar al mundo
+```
+
+No persistir por frame.
+
+Debe usarse un sistema de checkpoint/autosave coherente con la persistencia de Vitals.
+
+Fallbacks futuros:
+
+```text
+mapa inexistente
+posición inválida
+posición fuera de NavMesh
+mapa deshabilitado
+coordenadas corruptas
+```
+
+deben llevar al jugador a un spawn seguro y nunca impedir permanentemente el login.
+
+No construir todavía un mapa final gigante.
+
+El siguiente contenido de mapas deberá crecer sobre:
+
+```text
+WorldNavigationRegistry
+WorldPresence
+mob spots futuros
+NPC definitions
+drop tables
+trainer locations
+PvP/safe-zone rules
+```
 
 ---
 
@@ -7297,50 +7981,148 @@ transaction
 
 ---
 
-# 65. ROADMAP RESUMIDO ACTUAL
+# 65. ECONOMÍA / MONEDA — DIRECCIÓN
+
+VHAL tendrá economía persistente, pero el nombre final de la moneda todavía está pendiente.
+
+Regla explícita:
 
 ```text
-F00-F14 Foundation             ✅
-F15-A Inventory ↔ Vault       ✅
-F15-B Equipment               ✅
-F15-R Architectural Refactor  ✅
-F15-C Item operations         🟡 evaluado / diferido
-
-F16-A Skill runtime           ✅
-F16-B Cast protocol           ✅
-F16-BR Input MU correction    ✅
-F16-C Authoritative Heal      ✅
-F16-D Cooldown visual/UI      ✅
-
-F17-A Mob runtime             ✅
-F17-B Mob replication         ✅
-F17-C Entity targeting        ✅
-F17-D Basic Attack PvE        ✅
-F17-E Basic Attack execution  ✅
-F17-F Mob death transition    ✅
-F17-G Mob respawn foundation  ✅
-
-F18-A1 World Drop runtime     ✅
-F18-A2 Drop replication/UI    ✅
-F18-B1 Durable Inventory grant✅
-F18-B2 Authoritative Pickup   ✅
-F18-C1 Durable Progression    ✅
-F18-C2A EXP runtime           ✅
-F18-C2B Progression HUD       ✅
-
-F19 Vertical Slice            ⏳ SIGUIENTE
-
-PERF-1                        ⏳ después de F19 estable
+NO usar "Zen" como nombre canónico final.
 ```
+
+`Zen` fue únicamente una referencia/debug heredada de la inspiración MU y no debe convertirse en identidad de VHAL.
+
+El modelo genérico actual:
+
+```text
+CurrencyState
+```
+
+puede mantenerse mientras se define el nombre de lore.
+
+## Objetivo futuro
+
+La economía deberá soportar progresivamente:
+
+```text
+saldo durable por personaje o cuenta según diseño
+recompensas
+drops de moneda si se decide
+NPC merchants
+compras
+ventas
+servicios pagos
+trainer fees si aplica
+Sacerdote / confesión
+trade futuro
+taxes/fees futuros
+```
+
+## Autoridad
+
+```text
+Client
+→ intención de compra/pago
+
+Game Server
+→ valida contexto/reglas
+
+Backend
+→ operación durable/atómica
+```
+
+Nunca:
+
+```text
+client set_currency(999999)
+```
+
+como source of truth.
+
+## Nombre pendiente
+
+Antes de implementar economía real hay que definir:
+
+```text
+nombre singular
+nombre plural
+símbolo/icono
+lore/origen
+si existe una moneda principal o varias
+```
+
+El nombre debe pertenecer al universo VHAL y NO copiar `Zen`.
+
+Hasta elegirlo, documentación/código nuevo debe preferir términos genéricos:
+
+```text
+currency
+gold/currency placeholder sólo si es técnico
+balance
+amount
+```
+
+sin fijar todavía el nombre de interfaz.
 
 ---
 
-# 66. PRÓXIMO PASO EXACTO
 
-Antes de implementar gameplay nuevo:
+# 66. ROADMAP RESUMIDO ACTUAL
 
 ```text
-cerrar documentación/checkpoint F18-C
+F00-F14 Foundation               ✅
+F15-A Inventory ↔ Vault         ✅
+F15-B Equipment                 ✅
+F15-R Architectural Refactor    ✅
+F15-C Item operations           🟡 evaluado / diferido
+
+F16-A Skill runtime             ✅
+F16-B Cast protocol             ✅
+F16-BR Input MU correction      ✅
+F16-C Authoritative Heal        ✅
+F16-D Cooldown visual/UI        ✅
+
+F17-A Mob runtime               ✅
+F17-B Mob replication           ✅
+F17-C Entity targeting          ✅
+F17-D Basic Attack PvE          ✅
+F17-E Basic Attack execution    ✅
+F17-F Mob death transition      ✅
+F17-G Mob respawn foundation    ✅
+
+F18-A1 World Drop runtime       ✅
+F18-A2 Drop replication/UI      ✅
+F18-B1 Durable Inventory grant  ✅
+F18-B2 Authoritative Pickup     ✅
+F18-C1 Durable Progression      ✅
+F18-C2A EXP runtime             ✅
+F18-C2B Progression HUD         ✅
+
+F19-A Real gameplay bootstrap   ✅
+F19-B Integrated slice audit    ✅
+F19 Vertical Slice              ✅
+
+POST-F19
+Persistent player runtime       ⏳ candidato recomendado
+Skill learning + Trainers       ⏳ futuro
+Economy / VHAL currency         ⏳ futuro
+PvP / PK / Sin system           ⏳ futuro
+World/content expansion         ⏳ futuro
+
+PERF-1                          ⏳ después de base estable
+```
+
+El orden post-F19 no queda bloqueado salvo por decisión explícita en un checkpoint posterior.
+
+---
+
+# 67. PRÓXIMO PASO EXACTO
+
+Antes de abrir gameplay nuevo:
+
+```text
+cerrar documentación/checkpoint F19
 → reemplazar PROJECT_MEMORY.md
 → git status
 → commit
@@ -7348,98 +8130,95 @@ cerrar documentación/checkpoint F18-C
 → confirmar "pusheado"
 ```
 
-Después abrir:
+F19 ya demostró:
+
+> los sistemas construidos forman una pequeña sesión MMORPG coherente, autoritativa y repetible.
+
+No existe un blocker funcional inmediato que obligue a agregar otra feature para “hacer funcionar” el vertical slice.
+
+## Candidato recomendado siguiente
+
+El gap foundation más natural para resolver después de F19 es:
 
 ```text
-F19 — Vertical Slice completo
+Persistent Character Runtime
 ```
 
-F19 no debe comenzar automáticamente agregando otro sistema grande.
-
-Primero hacer un audit explícito del circuito actual:
+principalmente:
 
 ```text
-CUENTA
-→ LOGIN
-→ PERSONAJE
-→ TICKET
-→ GAME SERVER
-→ LOADING
-→ MAPA
-→ PLAYER
-→ MOVEMENT
-→ NPC
-→ INVENTORY / VAULT / EQUIPMENT
-→ SKILL
-→ MOB
-→ COMBAT
-→ DROP
-→ PICKUP
-→ EXP / LEVEL
-→ LOGOUT
-→ LOGIN
-→ PERSISTENCIA
+map_id
+position
+rotation_y
+HP
+MP
 ```
 
-Objetivo de F19:
-
-> demostrar que los sistemas ya construidos forman un vertical slice coherente, estable y repetible.
-
-El primer paso de F19 debe ser identificar únicamente los gaps reales que impidan afirmar:
+porque:
 
 ```text
-"este circuito completo funciona como una pequeña sesión MMORPG"
+Level/EXP ya persisten
+Inventory ya persiste
+Equipment ya persiste
+Vault ya persiste
 ```
 
-No agregar por inercia:
+y actualmente posición + Vitals se reinician al bootstrap foundation.
+
+Aun así:
+
+> no abrir ese bloque hasta cerrar/pushear esta memoria y confirmar explícitamente el siguiente checkpoint.
+
+Otros bloques ya asentados:
 
 ```text
-quests
-guilds
-party EXP
-merchant completo
-trade
-PvP completo
+Skill Scrolls + Trainers
+Economy / moneda propia de VHAL
+PvP / PK / Pecado / Sacerdote
+world content
+merchant
+stats reales
+```
+
+No intentar implementarlos juntos.
+
+---
+
+# 68. CRITERIO DE ÉXITO DEL PRÓXIMO TEST
+
+F19-B ya quedó validado.
+
+El criterio del próximo test dependerá del checkpoint post-F19 que se elija.
+
+Si se abre `Persistent Character Runtime`, el objetivo inicial deberá ser pequeño:
+
+```text
+1. guardar posición/mapa de un personaje;
+2. guardar HP/MP;
+3. salir de forma controlada;
+4. volver a entrar;
+5. restaurar posición/mapa;
+6. restaurar HP/MP;
+7. conservar Level/EXP actual;
+8. conservar Inventory/Equipment/Vault;
+9. no persistir cada frame;
+10. 0 warnings/errors.
+```
+
+No mezclar en ese primer test:
+
+```text
+PvP
+Economy
+Skill Trainers
+Stats completos
 más mapas
-muchos mobs
-más items
-más skills
+AI
 ```
-
-hasta conocer esos gaps.
 
 ---
 
-# 67. CRITERIO DE ÉXITO DEL PRÓXIMO TEST
-
-El primer audit/test de F19 debe demostrar o clasificar:
-
-```text
-1. login → character select → enter world funciona;
-2. bootstrap autoritativo es consistente;
-3. movimiento sigue siendo server-authoritative;
-4. NPC Warehouse conserva su flujo;
-5. Inventory/Vault/Equipment persisten correctamente;
-6. skill foundation no presenta regresiones;
-7. Basic Attack mata al Training Goblin;
-8. muerte dispara Drop exactamente una vez;
-9. pickup persiste el ItemInstance;
-10. muerte otorga EXP exactamente una vez;
-11. level-up se persiste y replica;
-12. logout/reconnect conserva estado durable;
-13. drops runtime no recogidos continúan mientras vive el Game Server;
-14. no hay warnings/errors;
-15. cualquier gap restante queda clasificado como:
-	blocker F19 / mejora futura / contenido futuro.
-```
-
-El resultado del audit debe producir un scope pequeño de F19.
-
-No asumir de antemano que F19 necesita un sistema nuevo.
-
----
-
-# 68. DECISIÓN SOBRE HEAL
+# 69. DECISIÓN SOBRE HEAL
 
 Heal será la primera ejecución real porque no depende de F17.
 
@@ -7461,7 +8240,7 @@ Fire Ball y Poison continuarán después sobre el mismo backbone.
 
 ---
 
-# 69. DECISIÓN SOBRE BASIC ATTACK / FIRE BALL / POISON
+# 70. DECISIÓN SOBRE BASIC ATTACK / FIRE BALL / POISON
 
 Basic Attack es parte central del combate y no será reemplazado por Skills.
 
@@ -7545,7 +8324,7 @@ No crear implementaciones ficticias sólo para “hacerlas funcionar”.
 
 ---
 
-# 70. DECISIÓN SOBRE CONSUMIBLES
+# 71. DECISIÓN SOBRE CONSUMIBLES
 
 Health Potion existe como item foundation, pero su uso se difiere hasta que el pipeline autoritativo de vitals/effects esté listo.
 
@@ -7566,7 +8345,7 @@ No aplicar HP local desde UI.
 
 ---
 
-# 71. DEFINICIÓN DE “REAL” EN VHAL
+# 72. DEFINICIÓN DE “REAL” EN VHAL
 
 Un sistema se considera real cuando:
 
@@ -7584,7 +8363,7 @@ no depende de un shortcut de debug para su funcionamiento normal
 
 ---
 
-# 72. REGLA FINAL DE CONTINUIDAD
+# 73. REGLA FINAL DE CONTINUIDAD
 
 Al abrir una nueva conversación o retomar el proyecto:
 
@@ -7601,200 +8380,127 @@ Al abrir una nueva conversación o retomar el proyecto:
 La etapa funcionalmente validada actual es:
 
 ```text
-F18-C — Authoritative EXP / Level
-├── F18-C1  Durable Character Progression ✅
-├── F18-C2A Authoritative EXP Runtime      ✅
-└── F18-C2B Progression Replication/HUD    ✅
+F19 — Vertical Slice completo
+├── F19-A Real Gameplay Bootstrap   ✅
+└── F19-B Integrated Slice Audit    ✅
 ```
 
-Contrato vigente de input:
+Checkpoint F19-A Game Server:
 
 ```text
-LEFT CLICK WorldDrop      = PICKUP
-LEFT CLICK terreno        = MOVE
-LEFT CLICK NPC            = INTERACT
-LEFT CLICK mob hostil     = BASIC ATTACK PvE
-RIGHT CLICK               = SELECTED SKILL PvE
-CTRL + LEFT CLICK player  = BASIC ATTACK PvP
-CTRL + RIGHT CLICK player = SELECTED SKILL PvP
+c8a4a75f9acc656b5610d636e341615cf88327c9
+feat: expose authoritative learned skills
 ```
 
-Lifecycle de mob:
+Checkpoint F19-A Cliente:
 
 ```text
-SPAWN
-→ ALIVE
-→ DAMAGE
-→ mob_died
-├── DROP
-├── EXP
-└── RESPAWN
-→ ALIVE
+2d463f6e3687df781f0e39311e14c1515715e839
+feat: remove debug gameplay bootstrap
 ```
 
-Lifecycle de drop actual:
+Vertical slice validado:
 
 ```text
-mob_died
-→ ServerMobDropCatalog
-→ WorldDropRuntimeState
-	├── entity_id runtime
-	└── persistent_item_uid UUID
-→ WorldDropRegistry
-→ world_drop_spawned
-→ clients del mapa
-→ WorldDropActor
-→ pickup intent(entity_id)
-→ Game Server validation
-→ Laravel durable grant
-→ consume_drop
-→ world_drop_removed
-→ WorldDropActor eliminado
+Login
+→ Character Select
+→ Ticket
+→ Game Server
+→ World
+→ Movement
+→ Warehouse
+→ Inventory/Vault/Equipment
+→ Skill
+→ Mob
+→ Combat
+→ Death
+├── Drop → Pickup → MySQL
+└── EXP → Level → MySQL/HUD
+→ Respawn
+→ Logout
+→ Reconnect
 ```
 
-Lifecycle de Progression actual:
+Estado probado al cierre:
 
 ```text
-mob_died
-→ CharacterProgressionCoordinator
-→ WorldMobDefinition.experience_reward
-→ ServerCharacterProgressionRules
-→ expected Level/EXP
-→ next Level/EXP
-→ BackendCharacterProgressionRepository
-→ Laravel transaction
-→ confirm
-→ PlayerWorldSession
-→ character_progression_updated
-→ GameServerProgressionProtocol
-→ PlayerRuntimeState
-→ CharacterSummary + ExperienceState
-→ XPBar
-```
-
-Presence actual:
-
-```text
-world_presence_snapshot
-├── players
-├── mobs
-└── drops
-```
-
-Training fixture:
-
-```text
-Training Goblin
-HP: 5000
-EXP testing reward: +50
-Respawn: 3.0 s
-Drop testing: Health Potion x1, 100%
-Pickup range foundation: 2.0
-
-Progression testing:
-100 EXP por nivel
-```
-
-Checkpoints F18-A:
-
-```text
-Game Server A1:
-505324ec3f5c2a1b8a231c6787e17464e33b050d
-feat: add authoritative world drop runtime foundation
-
-Game Server A2:
-c249c737ae4768c56bfc5742f072cd2d338c45bf
-feat: replicate authoritative world drops
-
-Cliente A2:
-a043ac76478256f36f6a17002629c9c3733c7f46
-feat: render authoritative world drops
-```
-
-Checkpoints F18-B:
-
-```text
-Backend B1:
-d54dead554ec8e22f770fd9c429164da83dde922
-feat: add idempotent inventory item grants
-
-Game Server B2:
-60ab01625dc9f0014cdeefb1387640712a68f80a
-feat: add authoritative world drop pickup
-
-Cliente B2:
-89dae7d9a5b25f0d668e671bd838740d66290726
-feat: add authoritative world drop pickup flow
-```
-
-Checkpoints F18-C:
-
-```text
-Backend C1:
-fc85ce6a684d8d85ab92a8af75afbd9f1a222bfb
-feat: add durable character progression persistence
-
-Game Server C2A:
-05cb339418baa14695f481d742012b7b46b12820
-feat: add authoritative character progression runtime
-
-Game Server C2B:
-5f67cbcb7988da26007bd787013c65c2e9178eae
-feat: replicate authoritative character progression
-
-Cliente C2B:
-d0c477ebb8a416aed6545b8b61eb7a6f5ef0766e
-feat: apply authoritative progression to gameplay hud
-```
-
-Prueba F18-C validada:
-
-```text
-bootstrap:
-Level 121 | EXP 0/100
-
-kill 1:
-Level 121 | EXP 50/100
-XPBar ~50%
-
-kill 2:
-Level 122 | EXP 0/100
-XPBar 0%
-
-reconnect:
-Level 122 | EXP 0/100
-```
-
-En la misma sesión:
-
-```text
-Drop 1 → Pickup → Inventory 3→4
-Drop 2 → no recogido → reconnect → sigue en roster
-Respawn → OK
+Inventory persistente
+Equipment persistente
+Vault persistente
+Skills autoritativas runtime
+Level/EXP persistentes
+WorldDrop pickup durable
+WorldDrop no recogido conserva runtime durante vida del GS
 0 warnings/errors
 ```
 
-Siguiente checkpoint después del cierre documental:
+Gaps post-F19 ya aceptados:
 
 ```text
-F19 — Vertical Slice completo
+Position/map durable
+HP/MP durable
+Skill ownership durable real
+Skill Scroll + requirements + Trainer
+Economy con moneda propia de VHAL
+PvP/PK Sin system + Priest confession
+WorldDrop durable tras restart GS
+Merchant
+Stats completos
+más contenido/mapas/mobs
 ```
 
-No implementar todavía:
+Dirección de Skill Learning:
 
 ```text
-party EXP
-quest EXP
-PvP EXP
-stat allocation completo
-skill points completos
-auto-loot
-ownership complejo
-drop lifetime
-spots
-AI completa
+Scroll
++ clase
++ level
++ stats
++ trainer compatible
+→ server validation
+→ learned skill durable
 ```
 
-**No avanzar a F19 hasta commitear, pushear y confirmar esta actualización canónica de F18-C.**
+Dirección PvP:
+
+```text
+Inocente
+→ Diablillo
+→ Delincuente
+→ Pecador / Sinner
+
+agresión inicial
+→ auto-defense para víctima
+
+Pecador
+→ apariencia roja
+→ cualquiera puede atacarlo sin penalización
+
+Redención
+├── Sacerdote + pago proporcional al pecado
+└── matar mobs lentamente
+```
+
+Economía:
+
+```text
+NO usar "Zen" como nombre final.
+Nombre/lore de moneda VHAL pendiente.
+```
+
+Persistencia recomendada siguiente:
+
+```text
+map_id
+position
+rotation_y
+HP
+MP
+```
+
+sin duplicar la persistencia Level/EXP ya existente.
+
+**No abrir el siguiente checkpoint hasta commitear, pushear y confirmar esta actualización canónica de F19.**
 
 ---
+
