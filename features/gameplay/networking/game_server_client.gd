@@ -134,6 +134,8 @@ var movement_protocol: GameServerMovementProtocol = null
 
 var skill_protocol: GameServerSkillProtocol = null
 
+var combat_protocol: GameServerCombatProtocol = null
+
 var npc_protocol: GameServerNpcProtocol = null
 
 var item_protocol: GameServerItemProtocol = null
@@ -238,6 +240,7 @@ func _setup_protocols() -> bool:
 
 	item_protocol = GameServerItemProtocol.new()
 
+	combat_protocol = GameServerCombatProtocol.new()
 
 	if not world_protocol.setup(
 		_get_local_peer_id,
@@ -260,6 +263,12 @@ func _setup_protocols() -> bool:
 		return false
 
 	if not skill_protocol.setup(
+		_send_protocol_message,
+		_fail_connection
+	):
+		return false
+
+	if not combat_protocol.setup(
 		_send_protocol_message,
 		_fail_connection
 	):
@@ -801,6 +810,12 @@ func _on_peer_packet(
 	):
 		return
 
+	if combat_protocol.process_message(
+		message_type,
+		data_value
+	):
+		return
+
 	if presence_protocol.process_message(
 		message_type,
 		data_value
@@ -962,17 +977,17 @@ func _reset_connection_state() -> void:
 	if skill_protocol != null:
 		skill_protocol.reset()
 
+	if combat_protocol != null:
+		combat_protocol.reset()
+
 	if presence_protocol != null:
 		presence_protocol.reset()
-
 
 	if npc_protocol != null:
 		npc_protocol.reset()
 
-
 	if item_protocol != null:
 		item_protocol.reset()
-
 
 	var scene_multiplayer := (
 		multiplayer
@@ -1341,4 +1356,23 @@ func _on_protocol_character_equipment_snapshot_received(
 ) -> void:
 	character_equipment_snapshot_received.emit(
 		snapshot
+	)
+
+# =========================================================
+# API PÚBLICA — COMBAT
+# =========================================================
+
+func send_basic_attack_request(
+	target: Dictionary
+) -> Error:
+	if not connected:
+		return ERR_UNAVAILABLE
+
+
+	if combat_protocol == null:
+		return ERR_UNAVAILABLE
+
+
+	return combat_protocol.send_basic_attack_request(
+		target
 	)

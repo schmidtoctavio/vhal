@@ -1025,6 +1025,13 @@ func _show_gameplay(
 			_on_gameplay_skill_cast_intent_requested
 		)
 
+	if not gameplay_screen.basic_attack_intent_requested.is_connected(
+		_on_gameplay_basic_attack_intent_requested
+	):
+		gameplay_screen.basic_attack_intent_requested.connect(
+			_on_gameplay_basic_attack_intent_requested
+		)
+
 	if not gameplay_screen.npc_interaction_requested.is_connected(
 		_on_gameplay_npc_interaction_requested
 	):
@@ -2037,3 +2044,32 @@ func _on_skill_cast_result_received(
 		cooldown_remaining_seconds,
 		effect
 	)
+
+# =========================================================
+# BASIC ATTACK → GAME SERVER
+# =========================================================
+
+func _on_gameplay_basic_attack_intent_requested(
+	target: Dictionary
+) -> void:
+	var result := (
+		game_server_client.send_basic_attack_request(
+			target
+		)
+	)
+
+
+	if result == OK:
+		return
+
+
+	print(
+		"GameSessionFlowCoordinator | "
+		+
+		"No se pudo enviar Basic Attack.",
+		" Error: ",
+		result
+	)
+
+
+	game_session_service.end_session()

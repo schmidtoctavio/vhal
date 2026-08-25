@@ -314,24 +314,24 @@ Cuando aparece ese patrón hay que revisar la abstracción.
 │ intención + UI      │
 │ representación      │
 └──────────┬──────────┘
-           │
-           │ ENet
-           ▼
+		   │
+		   │ ENet
+		   ▼
 ┌─────────────────────┐
 │  GODOT GAME SERVER  │
 │ autoridad gameplay  │
 │ estado runtime      │
 └──────────┬──────────┘
-           │
-           │ HTTP interno
-           ▼
+		   │
+		   │ HTTP interno
+		   ▼
 ┌─────────────────────┐
 │   LARAVEL BACKEND   │
 │ identidad + API     │
 │ persistencia        │
 └──────────┬──────────┘
-           │
-           ▼
+		   │
+		   ▼
 ┌─────────────────────┐
 │        MYSQL        │
 │ almacenamiento      │
@@ -766,19 +766,19 @@ res://
 │       └── skill_cast_coordinator.gd
 │
 └── core/
-    ├── networking/
-    ├── backend/
-    ├── combat/
-    │   ├── server_vitals_state.gd
-    │   └── server_character_runtime_bootstrap.gd
-    ├── skills/
-    │   ├── server_skill_definition.gd
-    │   ├── server_skill_catalog.gd
-    │   └── server_skill_runtime_state.gd
-    └── world/
-        ├── movement/
-        ├── navigation/
-        └── npcs/
+	├── networking/
+	├── backend/
+	├── combat/
+	│   ├── server_vitals_state.gd
+	│   └── server_character_runtime_bootstrap.gd
+	├── skills/
+	│   ├── server_skill_definition.gd
+	│   ├── server_skill_catalog.gd
+	│   └── server_skill_runtime_state.gd
+	└── world/
+		├── movement/
+		├── navigation/
+		└── npcs/
 ```
 
 ## ServerMain

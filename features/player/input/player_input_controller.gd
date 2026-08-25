@@ -18,6 +18,10 @@ signal npc_clicked(
 	npc_actor: NpcActor
 )
 
+signal basic_attack_requested(
+	target_entity_id: String
+)
+
 # =========================================================
 # CONSTANTES
 # =========================================================
@@ -197,7 +201,7 @@ func _input(
 			return
 
 
-		var target_entity_id := (
+		var skill_target_entity_id := (
 			_resolve_mob_target_entity_id(
 				mouse_event.position
 			)
@@ -206,7 +210,7 @@ func _input(
 
 		skill_cast_requested.emit(
 			mouse_event.position,
-			target_entity_id
+			skill_target_entity_id
 		)
 
 
@@ -218,7 +222,12 @@ func _input(
 
 	# -----------------------------------------------------
 	# CLICK IZQUIERDO
-	# → movimiento.
+	#
+	# terreno → movimiento
+	# NPC     → interacción
+	# mob     → basic attack
+	#
+	# CTRL + LEFT CLICK queda reservado para PvP.
 	# -----------------------------------------------------
 
 	if (
@@ -232,6 +241,51 @@ func _input(
 	if _is_pointer_over_blocking_ui():
 		return
 
+
+	# -----------------------------------------------------
+	# CTRL + LEFT CLICK
+	#
+	# Futuro Basic Attack PvP.
+	# Por ahora consumimos el input para evitar que se
+	# convierta accidentalmente en movimiento/PvE.
+	# -----------------------------------------------------
+
+	if mouse_event.ctrl_pressed:
+		get_viewport().set_input_as_handled()
+
+
+		return
+
+
+	# -----------------------------------------------------
+	# MOB HOSTIL
+	# -----------------------------------------------------
+
+	var basic_attack_target_entity_id := (
+		_resolve_mob_target_entity_id(
+			mouse_event.position
+		)
+	)
+
+
+	if not basic_attack_target_entity_id.is_empty():
+		basic_attack_requested.emit(
+			basic_attack_target_entity_id
+		)
+
+
+		get_viewport().set_input_as_handled()
+
+
+		return
+
+
+	# -----------------------------------------------------
+	# NPC / TERRENO
+	#
+	# La función existente ya resuelve primero NPC y,
+	# si no existe uno, utiliza el suelo para movimiento.
+	# -----------------------------------------------------
 
 	_request_move_to_screen_position(
 		mouse_event.position
