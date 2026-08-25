@@ -1,10 +1,10 @@
 # VHAL — PROJECT MEMORY / ARQUITECTURA / ROADMAP CANÓNICO
 
-**Última actualización:** 24/08/2026  
+**Última actualización:** 25/08/2026  
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama de desarrollo habitual:** `dev`  
-**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B/F17-C/F17-D/F17-E/F17-F/F17-G cerrados y validados; F18-A1/F18-A2 World Drops cerrados y validados; siguiente checkpoint: F18-B — Pickup autoritativo.
+**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B/F17-C/F17-D/F17-E/F17-F/F17-G cerrados y validados; F18-A World Drops y F18-B Authoritative Pickup cerrados, probados y pusheados; siguiente checkpoint: F18-C — EXP / Level.
 
 > Este archivo es la **fuente canónica única de contexto del proyecto VHAL**.
 >
@@ -314,24 +314,24 @@ Cuando aparece ese patrón hay que revisar la abstracción.
 │ intención + UI      │
 │ representación      │
 └──────────┬──────────┘
-		   │
-		   │ ENet
-		   ▼
+           │
+           │ ENet
+           ▼
 ┌─────────────────────┐
 │  GODOT GAME SERVER  │
 │ autoridad gameplay  │
 │ estado runtime      │
 └──────────┬──────────┘
-		   │
-		   │ HTTP interno
-		   ▼
+           │
+           │ HTTP interno
+           ▼
 ┌─────────────────────┐
 │   LARAVEL BACKEND   │
 │ identidad + API     │
 │ persistencia        │
 └──────────┬──────────┘
-		   │
-		   ▼
+           │
+           ▼
 ┌─────────────────────┐
 │        MYSQL        │
 │ almacenamiento      │
@@ -689,7 +689,32 @@ GameSessionFlowCoordinator
 ├── NPC/Warehouse bridge
 ├── Inventory/Vault/Equipment bridge
 ├── Skills/Cast bridge
-└── Combat/Mob-state bridge
+├── Combat/Mob-state bridge
+└── World Drop / Pickup bridge
+```
+
+`GameSessionFlowCoordinator` es el puente entre:
+
+```text
+GameplayScreen
+↔
+GameServerClient
+```
+
+para intención y resultados de gameplay.
+
+En F18-B también transporta:
+
+```text
+world_drop_pickup_intent_requested
+→ GameServerClient.send_world_drop_pickup_request()
+
+world_drop_removed
+→ GameplayScreen.apply_world_drop_removed()
+
+character_inventory_snapshot
+→ PlayerRuntimeState
+→ GameplayUI refresh
 ```
 
 `app/main.gd` no debe volver a transformarse en un monolito.
@@ -727,11 +752,61 @@ InventoryConnection
 CombatConnection
 ChatConnection
 NpcConnection
+DropConnection
 ```
 
 ## ItemProtocol
 
-Inventory, Vault y Equipment continúan juntos cuando comparten serialización de mutaciones.
+Inventory, Vault, Equipment y las mutaciones persistentes relacionadas con items continúan juntos cuando comparten el mismo contrato de serialización.
+
+Responsabilidades actuales adicionales desde F18-B:
+
+```text
+serializar world_drop_pickup_request
+asignar request_id monotónico
+bloquear mutaciones de item mientras el pickup está pendiente
+procesar world_drop_pickup_result
+liberar el pending cuando llega el Inventory autoritativo
+```
+
+Mensajes relevantes:
+
+```text
+world_drop_pickup_request
+world_drop_pickup_result
+```
+
+Un pickup aceptado NO se considera totalmente resincronizado en cliente hasta recibir:
+
+```text
+character_inventory_snapshot
+```
+
+porque Laravel sigue siendo source of truth durable del Inventory.
+
+## PresenceProtocol
+
+Además de players y mobs mantiene:
+
+```text
+remote_drops
+```
+
+y procesa:
+
+```text
+world_drop_spawned
+world_drop_removed
+```
+
+Cuando llega `world_drop_removed`:
+
+```text
+remote_drops.erase(entity_id)
+→ GameSessionFlowCoordinator
+→ GameplayScreen
+→ WorldDropActor desaparece
+```
 
 ## SkillProtocol
 
@@ -780,8 +855,6 @@ muerte
 
 ---
 
-
-
 # 15. ESTRUCTURA CONCEPTUAL DEL GAME SERVER
 
 ```text
@@ -799,26 +872,38 @@ res://
 │       ├── npc_service_coordinator.gd
 │       ├── movement_coordinator.gd
 │       ├── world_presence_coordinator.gd
+│       ├── world_drop_coordinator.gd
+│       ├── world_drop_pickup_coordinator.gd
 │       ├── skill_cast_coordinator.gd
 │       └── basic_attack_coordinator.gd
 │
 └── core/
-	├── networking/
-	├── backend/
-	├── combat/
-	│   ├── server_vitals_state.gd
-	│   ├── server_character_runtime_bootstrap.gd
-	│   ├── server_basic_attack_profile_resolver.gd
-	│   └── server_basic_attack_runtime_state.gd
-	├── skills/
-	│   ├── server_skill_definition.gd
-	│   ├── server_skill_catalog.gd
-	│   └── server_skill_runtime_state.gd
-	└── world/
-		├── movement/
-		├── navigation/
-		├── npcs/
-		└── mobs/
+    ├── networking/
+    ├── backend/
+    │   └── backend_character_inventory_repository.gd
+    ├── items/
+    │   ├── server_item_catalog.gd
+    │   ├── server_character_inventory_snapshot_validator.gd
+    │   ├── server_persistent_item_uid_generator.gd
+    │   └── server_inventory_placement_resolver.gd
+    ├── combat/
+    │   ├── server_vitals_state.gd
+    │   ├── server_character_runtime_bootstrap.gd
+    │   ├── server_basic_attack_profile_resolver.gd
+    │   └── server_basic_attack_runtime_state.gd
+    ├── skills/
+    │   ├── server_skill_definition.gd
+    │   ├── server_skill_catalog.gd
+    │   └── server_skill_runtime_state.gd
+    └── world/
+        ├── movement/
+        ├── navigation/
+        ├── npcs/
+        ├── mobs/
+        └── drops/
+            ├── world_drop_runtime_state.gd
+            ├── world_drop_registry.gd
+            └── server_mob_drop_catalog.gd
 ```
 
 ## ServerMain
@@ -834,6 +919,21 @@ inicializar registries
 configurar coordinators
 arrancar servidor
 manejar fallos de startup
+```
+
+En F18-B registra también:
+
+```text
+WorldDropPickupCoordinator
+```
+
+dependiendo de:
+
+```text
+GameServer
+WorldSessionRegistry
+WorldDropRegistry
+BackendCharacterInventoryRepository
 ```
 
 No debe absorber casos de uso.
@@ -852,6 +952,8 @@ reload
 resend
 stale recovery
 ```
+
+Después de un pickup persistido, el Inventory vuelve a cargarse desde Laravel y este coordinator envía el snapshot definitivo al cliente.
 
 ## EquipmentCoordinator
 
@@ -921,15 +1023,104 @@ WorldMovementSystem
 
 ## WorldPresenceCoordinator
 
+Responsabilidad actual:
+
 ```text
 same-map roster
 initial presence
 player joined
 player left
 authoritative mob roster por mapa
+authoritative drop roster por mapa
+world_drop_spawned replication
+world_drop_removed replication
+mob respawn replication
 bootstrap de entidades de mundo replicadas
 ```
 
+El roster inicial vigente es:
+
+```text
+world_presence_snapshot
+├── players
+├── mobs
+└── drops
+```
+
+## WorldDropCoordinator
+
+Escucha:
+
+```text
+WorldMobRegistry.mob_died
+```
+
+Responsabilidad:
+
+```text
+resolver drop table
+hacer loot roll autoritativo
+crear WorldDropRuntimeState
+registrarlo en WorldDropRegistry
+```
+
+No conoce BasicAttackCoordinator.
+
+## WorldDropPickupCoordinator
+
+Introducido en F18-B.
+
+Responsabilidad:
+
+```text
+recibir pickup request
+resolver PlayerWorldSession
+validar request_id monotónico
+resolver WorldDrop por entity_id
+validar que no esté locked
+validar mismo mapa
+validar rango autoritativo
+resolver primer espacio válido de Inventory
+reservar/lockear el drop
+persistir ItemInstance vía BackendCharacterInventoryRepository
+esperar confirmación Laravel
+consumir WorldDrop recién después del éxito
+replicar world_drop_removed
+enviar pickup result
+recargar Inventory desde Laravel
+liberar pending/lock
+```
+
+Rango foundation actual:
+
+```text
+PICKUP_RANGE = 2.0
+```
+
+Protecciones:
+
+```text
+stale_request
+drop_not_found
+drop_busy
+wrong_map
+out_of_range
+inventory_unavailable
+inventory_full
+inventory_busy
+persistence_unavailable
+persistence_rejected
+```
+
+Regla crítica:
+
+```text
+PERSIST INVENTORY
+↓ éxito
+CONSUME WORLD DROP
+```
+
+Nunca al revés.
 
 ## BasicAttackCoordinator
 
@@ -992,7 +1183,7 @@ Fire Ball        → todavía skill_not_implemented
 Poison           → todavía skill_not_implemented
 ```
 
-Targeting de entidades, range y daño real se incorporan progresivamente en F17.
+Targeting de entidades, range y daño real se incorporan progresivamente.
 
 ---
 
@@ -1011,6 +1202,7 @@ persistencia durable
 operaciones atómicas internas
 queries persistentes
 protección stale
+idempotencia de grants persistentes
 ```
 
 No es autoridad de gameplay en tiempo real.
@@ -1051,11 +1243,90 @@ Vault
 → account_id + character_id NULL
 ```
 
+## F18-B1 — durable Inventory grant
+
+Se agregó una operación interna para crear un item nuevo dentro del Inventory:
+
+```text
+POST
+/api/internal/accounts/{accountId}/characters/{characterId}/inventory/items
+```
+
+Sólo accesible mediante el middleware interno del Game Server.
+
+Payload foundation:
+
+```text
+uid
+item_id
+quantity
+grid_position.x
+grid_position.y
+```
+
+Laravel NO genera otro UID.
+
+Persiste exactamente el UID decidido por el Game Server.
+
+Componentes:
+
+```text
+CharacterInventoryPersistence
+InventoryPersistenceException
+InternalCharacterInventoryController::storeItem()
+```
+
+Regla de idempotencia:
+
+```text
+mismo UID
++
+mismos account/character/container/item/quantity/position
+→ operación idempotente
+→ NO duplica
+→ devuelve el item existente
+```
+
+Conflicto:
+
+```text
+mismo UID
++
+estado diferente
+→ HTTP 409
+```
+
+`item_instances.uid` mantiene además `UNIQUE` como defensa final ante requests concurrentes.
+
+Test validado:
+
+```text
+Tests\Feature\InternalCharacterInventoryPickupTest
+4 passed
+20 assertions
+```
+
+Casos probados:
+
+```text
+grant nuevo → 201
+grant idéntico repetido → 200 idempotent
+mismo UID con payload diferente → 409
+UID inválido → 422
+```
+
+Checkpoint backend:
+
+```text
+d54dead554ec8e22f770fd9c429164da83dde922
+feat: add idempotent inventory item grants
+```
+
 ---
 
 # 18. CONTRATO DE UID DE ITEMS
 
-Cada item concreto tiene un UID estable.
+Cada item concreto persistente tiene un UID estable.
 
 Mover:
 
@@ -1093,6 +1364,62 @@ sockets
 bind state
 serial/history
 ```
+
+## WorldDrop: dos identidades diferentes
+
+Desde F18-B un drop posee:
+
+```text
+entity_id
+persistent_item_uid
+```
+
+Ejemplo:
+
+```text
+entity_id:
+world_drop_00000001
+
+persistent_item_uid:
+82448968-8c0a-4d8c-a299-91be8dbc12c1
+```
+
+Significado:
+
+```text
+entity_id
+= identidad runtime de la entidad tirada en el mundo
+
+persistent_item_uid
+= identidad durable del ItemInstance si el drop es recogido
+```
+
+`entity_id` puede reiniciar cuando reinicia el Game Server.
+
+`persistent_item_uid` NO debe derivarse de esa secuencia.
+
+Se genera como UUID v4 server-side mediante:
+
+```text
+ServerPersistentItemUidGenerator
+```
+
+El UUID persistente no se envía al cliente dentro del snapshot del WorldDrop porque el cliente no necesita decidir ni conocer esa identidad para solicitar pickup.
+
+Flujo:
+
+```text
+WorldDropRuntimeState
+persistent_item_uid = X
+↓
+pickup
+↓
+Laravel grant uid = X
+↓
+ItemInstance durable uid = X
+```
+
+Esto permite idempotencia y evita duplicar objetos ante reintentos.
 
 ---
 
@@ -1252,6 +1579,33 @@ cooldown autoritativo + feedback visual
 runtime autoritativo de mobs
 replicación de mobs por roster de mundo
 MobActor cliente originado desde snapshot del Game Server
+muerte autoritativa de mob
+respawn autoritativo
+WorldDrop runtime autoritativo
+loot table server-side
+replicación de WorldDrops
+WorldDropActor cliente
+reconexión con drops existentes
+pickup click/intention
+pickup range validation server-side
+UUID persistente por drop
+grant durable e idempotente en Laravel
+WorldDrop consumido sólo después de persistencia
+world_drop_removed replicado
+Inventory actualizado después de pickup
+reconexión conserva item y no revive drop recogido
+```
+
+Loop MMORPG real ya probado:
+
+```text
+Mob
+→ Damage
+→ Death
+→ Drop
+→ Pickup
+→ ItemInstance en MySQL
+→ Inventory cliente
 ```
 
 VHAL ya no debe describirse como un simple “UI Lab”.
@@ -2902,8 +3256,8 @@ El cliente sólo envía:
 {
   "request_id": 1,
   "target": {
-	"kind": "entity",
-	"entity_id": "mob_test_town_001"
+    "kind": "entity",
+    "entity_id": "mob_test_town_001"
   }
 }
 ```
@@ -3569,10 +3923,10 @@ El objetivo es que cualquier fuente futura de damage pueda converger en el mismo
 
 ```text
 mob_died(
-	entity_id,
-	map_id,
-	source,
-	mob_snapshot
+    entity_id,
+    map_id,
+    source,
+    mob_snapshot
 )
 ```
 
@@ -4014,9 +4368,9 @@ Esto prepara mejor la arquitectura para muchos mobs concurrentes que un timer de
 
 ```text
 mob_respawned(
-	entity_id,
-	map_id,
-	mob_snapshot
+    entity_id,
+    map_id,
+    mob_snapshot
 )
 ```
 
@@ -4180,15 +4534,15 @@ Dirección prevista:
 
 ```text
 WorldMobDefinition
-		↓
+        ↓
 WorldMobSpawnSpotDefinition
-		↓
+        ↓
 WorldMobSpawnSystem
-		↓
+        ↓
 WorldMobRuntimeState
-		↓
+        ↓
 WorldMobRegistry
-		↓
+        ↓
 Combat / Skills / AI / Drops
 ```
 
@@ -4266,8 +4620,9 @@ F18 se divide en checkpoints pequeños:
 ```text
 F18-A1 — Authoritative World Drop Runtime      ✅
 F18-A2 — World Drop Replication & Visual       ✅
-F18-B  — Authoritative Pickup                  ⏳ SIGUIENTE
-F18-C  — EXP / Level                           ⏳
+F18-B1 — Durable Inventory Grant Foundation   ✅
+F18-B2 — Authoritative Pickup Flow             ✅
+F18-C  — EXP / Level                           ⏳ SIGUIENTE
 ```
 
 ## F18-A1 — AUTHORITATIVE WORLD DROP RUNTIME
@@ -4280,20 +4635,20 @@ Arquitectura validada:
 
 ```text
 BasicAttackCoordinator
-		↓
-	  damage
-		↓
+        ↓
+      damage
+        ↓
 WorldMobRegistry
-		↓
-	 mob_died
-	  ┌─┴──────────────────┐
-	  ↓                    ↓
+        ↓
+     mob_died
+      ┌─┴──────────────────┐
+      ↓                    ↓
 WorldDropCoordinator       Respawn scheduler
-	  ↓
+      ↓
 ServerMobDropCatalog
-	  ↓
+      ↓
 WorldDropRegistry
-	  ↓
+      ↓
 WorldDropRuntimeState
 ```
 
@@ -4324,6 +4679,7 @@ Campos actuales:
 
 ```text
 entity_id
+persistent_item_uid
 item_id
 quantity
 map_id
@@ -4382,14 +4738,16 @@ Estos IDs son válidos durante la vida del Game Server.
 
 No se exige que sobrevivan a un restart porque los drops de suelo todavía no son persistencia durable.
 
-Responsabilidades:
+Responsabilidades actuales:
 
 ```text
 spawn_drop()
 register
 get_drop()
 get_drops_in_map()
+consume_drop()
 emit world_drop_spawned
+emit world_drop_removed
 ```
 
 ### ServerMobDropCatalog
@@ -4550,11 +4908,11 @@ drop:
   entity_id
   entity_kind = world_drop
   item:
-	item_id
-	quantity
+    item_id
+    quantity
   world:
-	map_id
-	position
+    map_id
+    position
 ```
 
 El transporte es reliable.
@@ -4670,8 +5028,8 @@ Estructura Foundation:
 ```text
 WorldDropActor
 └── VisualRoot
-	├── ItemSprite
-	└── NameLabel
+    ├── ItemSprite
+    └── NameLabel
 ```
 
 Sin `Area3D`/collider todavía.
@@ -4922,6 +5280,499 @@ partial stack behavior
 y entonces se reevalúa F15-C.
 
 ---
+
+---
+
+## F18-B1 — DURABLE INVENTORY GRANT FOUNDATION
+
+**Estado:** ✅ COMPLETADO, PROBADO, COMMITEADO Y PUSHEADO.
+
+Antes de permitir pickup real se detectó una necesidad arquitectónica:
+
+```text
+Laravel podía:
+GET Inventory
+PATCH movimiento de item existente
+
+pero todavía NO podía:
+crear de forma durable un ItemInstance nuevo por drop
+```
+
+No se implementó un atajo en memoria.
+
+Se agregó un grant persistente e idempotente.
+
+Flujo:
+
+```text
+Game Server
+→ POST Inventory item grant
+→ Laravel transaction
+→ ItemInstance
+→ MySQL
+```
+
+Endpoint:
+
+```text
+POST /api/internal/accounts/{accountId}/characters/{characterId}/inventory/items
+```
+
+Contrato:
+
+```text
+uid UUID
+item_id
+quantity
+grid_position
+```
+
+### Idempotencia
+
+El Game Server envía un UID durable ya decidido.
+
+Laravel:
+
+```text
+UID no existe
+→ crea item
+→ 201
+
+UID ya existe
++
+payload coincide exactamente
+→ devuelve mismo item
+→ idempotent = true
+→ 200
+
+UID ya existe
++
+payload distinto
+→ 409
+```
+
+La DB mantiene:
+
+```text
+UNIQUE(item_instances.uid)
+```
+
+como defensa final.
+
+### Test validado
+
+```text
+InternalCharacterInventoryPickupTest
+4 passed
+20 assertions
+```
+
+Checkpoint Backend:
+
+```text
+d54dead554ec8e22f770fd9c429164da83dde922
+feat: add idempotent inventory item grants
+```
+
+---
+
+## F18-B2 — AUTHORITATIVE WORLD DROP PICKUP
+
+**Estado:** ✅ COMPLETADO, PROBADO, COMMITEADO Y PUSHEADO.
+
+F18-B2 cerró el primer pickup real del proyecto.
+
+Flujo completo:
+
+```text
+LEFT CLICK WorldDrop
+↓
+PlayerInputController
+↓
+GameplayScreen
+↓
+GameSessionFlowCoordinator
+↓
+GameServerItemProtocol
+↓
+world_drop_pickup_request
+↓
+Game Server
+↓
+WorldDropPickupCoordinator
+↓
+PlayerWorldSession
+↓
+WorldDropRegistry
+↓
+same-map validation
+↓
+range validation
+↓
+Inventory placement resolver
+↓
+lock WorldDrop
+↓
+BackendCharacterInventoryRepository
+↓
+Laravel idempotent grant
+↓
+persistencia confirmada
+↓
+WorldDropRegistry.consume_drop()
+↓
+world_drop_removed
+↓
+clientes del mapa
+↓
+Inventory reload
+↓
+character_inventory_snapshot
+↓
+PlayerRuntimeState / UI
+```
+
+### Input cliente
+
+`WorldDropActor` incorporó:
+
+```text
+PickupArea
+└── CollisionShape3D
+```
+
+El drop vive en una collision layer separada para poder detectarlo incluso si el mob respawneado se superpone visualmente.
+
+Prioridad contextual actual de LEFT CLICK:
+
+```text
+WorldDrop hostil/no hostil → PICKUP
+NPC interactuable         → INTERACT
+Mob hostil                → BASIC ATTACK PvE
+Terreno                   → MOVE
+```
+
+El cliente sólo envía:
+
+```text
+request_id
+entity_id
+```
+
+No envía:
+
+```text
+item_id confiable
+quantity confiable
+posición Inventory confiable
+UID persistente
+range
+resultado
+```
+
+### Persistent item UID
+
+Cada `WorldDropRuntimeState` genera al nacer:
+
+```text
+persistent_item_uid = UUID v4
+```
+
+Ejemplo real validado:
+
+```text
+82448968-8c0a-4d8c-a299-91be8dbc12c1
+```
+
+Este UID:
+
+```text
+NO es el runtime entity_id
+NO se deriva de world_drop_00000001
+NO se envía al cliente
+```
+
+Se usa después como UID exacto del `ItemInstance` durable.
+
+### Inventory placement
+
+`ServerInventoryPlacementResolver` prueba posiciones sobre el snapshot autoritativo del Inventory.
+
+No reimplementa reglas de overlap/multicelda.
+
+Usa:
+
+```text
+ServerCharacterInventorySnapshotValidator
+```
+
+como contrato canónico.
+
+Foundation actual:
+
+```text
+buscar primer espacio válido de la grilla 8x8
+```
+
+No existe todavía stack merge automático.
+
+Por eso:
+
+```text
+Potion x1 existente
++
+Drop Potion x1
+→ pueden quedar dos stacks Potion x1
+```
+
+hasta que una necesidad real justifique reabrir el scope mínimo de F15-C.
+
+### Lock / anti-race
+
+Mientras Laravel procesa un pickup:
+
+```text
+locked_drop_entities[entity_id]
+pending_by_uid[persistent_item_uid]
+```
+
+evitan que el mismo WorldDrop sea recogido paralelamente.
+
+Además `GameServerItemProtocol` mantiene una mutación de item pendiente.
+
+Durante el test, clicks adicionales devolvieron:
+
+```text
+ERR_BUSY
+```
+
+y no generaron requests simultáneos.
+
+### Orden transaccional
+
+Regla crítica validada:
+
+```text
+1. persistir ItemInstance
+2. recibir confirmación Laravel
+3. recién entonces consume_drop()
+```
+
+Nunca:
+
+```text
+consume drop
+→ después intentar persistir
+```
+
+Esto evita perder un item si Laravel falla.
+
+### world_drop_removed
+
+Al consumir correctamente:
+
+```text
+WorldDropRegistry
+→ world_drop_removed
+→ WorldPresenceCoordinator
+→ todos los peers del mismo mapa
+→ GameServerPresenceProtocol
+→ remote_drops.erase(entity_id)
+→ GameplayScreen
+→ WorldDropActor.queue_free()
+```
+
+El drop no desaparece cliente-side por optimismo.
+
+Desaparece sólo por orden autoritativa.
+
+### Pickup result
+
+Mensajes:
+
+```text
+world_drop_pickup_request
+world_drop_pickup_result
+world_drop_removed
+```
+
+Reasons foundation:
+
+```text
+ok
+stale_request
+drop_not_found
+drop_busy
+wrong_map
+out_of_range
+inventory_unavailable
+inventory_full
+inventory_busy
+persistence_unavailable
+persistence_rejected
+```
+
+### Test fuera de rango
+
+Se probó:
+
+```text
+Player distance: 3.669...
+PICKUP_RANGE: 2.0
+```
+
+Resultado:
+
+```text
+Accepted: false
+Reason: out_of_range
+```
+
+El WorldDrop permaneció intacto.
+
+### Test pickup válido
+
+Después de acercarse:
+
+```text
+WorldDropPickupCoordinator | Pickup persistente iniciado
+| Entity: world_drop_00000001
+| Item: health_potion
+| Posición Inventory: (0, 0)
+```
+
+Luego:
+
+```text
+WorldDropRegistry | Drop consumido
+WorldPresenceCoordinator | Drop removido replicado
+WorldDropPickupCoordinator | Pickup confirmado
+```
+
+Laravel confirmó:
+
+```text
+Idempotent: false
+```
+
+y el Inventory pasó:
+
+```text
+Items: 1
+→
+Items: 2
+```
+
+El cliente:
+
+```text
+GameServerClient | World Drop removido
+GameplayScreen | World Drop eliminado
+GameServerClient | Resultado autoritativo de Pickup
+| Accepted: true
+| Reason: ok
+GameServerClient | Snapshot de Inventory recibido
+| Items: 2
+PlayerRuntimeState | Inventory persistente reconstruido
+GameplayScreen | Inventory persistente actualizado
+```
+
+### Test de reconexión
+
+Después de recoger la poción:
+
+```text
+cliente cerrado
+Game Server continúa
+cliente vuelve a entrar
+```
+
+Se confirmó:
+
+```text
+drop recogido NO reaparece
+ItemInstance sigue en Inventory
+```
+
+Por lo tanto:
+
+```text
+World state transitorio
++
+durable Inventory
+```
+
+se reconcilian correctamente.
+
+### Loop real logrado
+
+F18-B completa por primera vez:
+
+```text
+Mob
+→ Damage
+→ Death
+→ Drop
+→ Pickup
+→ Laravel
+→ MySQL ItemInstance
+→ Inventory
+```
+
+### Checkpoints F18-B
+
+Backend B1:
+
+```text
+d54dead554ec8e22f770fd9c429164da83dde922
+feat: add idempotent inventory item grants
+```
+
+Game Server B2:
+
+```text
+60ab01625dc9f0014cdeefb1387640712a68f80a
+feat: add authoritative world drop pickup
+```
+
+Cliente B2:
+
+```text
+89dae7d9a5b25f0d668e671bd838740d66290726
+feat: add authoritative world drop pickup flow
+```
+
+### Resultado total F18-B
+
+```text
+✅ click/intención de pickup
+✅ request_id monotónico
+✅ drop lookup autoritativo
+✅ same-map validation
+✅ range autoritativo
+✅ inventory placement server-side
+✅ UUID durable del item
+✅ backend grant idempotente
+✅ protection contra UID conflict
+✅ lock del WorldDrop mientras persiste
+✅ cliente bloquea mutaciones concurrentes
+✅ WorldDrop se consume sólo tras persistencia
+✅ world_drop_removed same-map
+✅ actor desaparece autoritativamente
+✅ Inventory reload desde Laravel
+✅ persistencia confirmada tras reconnect
+✅ drop recogido no reaparece
+✅ muerte/drop/respawn sin regresiones
+
+❌ stack merge automático
+❌ auto-loot
+❌ ownership/party loot
+❌ lifetime/despawn
+❌ EXP/Level
+```
+
+**Siguiente checkpoint:** `F18-C — Authoritative EXP / Level`.
+
 
 # 45. F19 — VERTICAL SLICE COMPLETO
 
@@ -5352,6 +6203,9 @@ bounds validation
 stack quantity
 stable UID
 authoritative server/backend
+grant durable desde WorldDrop
+first-valid-position resolver
+resync completo después de pickup
 ```
 
 Dirección visual:
@@ -5363,6 +6217,25 @@ fixed window
 draggable
 viewport constrained
 ```
+
+Pickup foundation actual NO hace merge de stacks.
+
+Ejemplo válido actual:
+
+```text
+Potion x1
+Potion x1
+```
+
+en lugar de:
+
+```text
+Potion x2
+```
+
+La decisión sigue siendo:
+
+> No reabrir F15-C hasta que una necesidad funcional concreta justifique el mínimo requerido.
 
 Operaciones avanzadas de stack siguen diferidas.
 
@@ -5415,7 +6288,29 @@ same-map roster
 remote joined
 remote left
 movement replication
+mob replication
+mob respawn replication
+WorldDrop roster
+WorldDrop spawn replication
+WorldDrop removal replication
 ```
+
+Roster inicial:
+
+```text
+world_presence_snapshot
+├── players
+├── mobs
+└── drops
+```
+
+La eliminación de un drop recogido también es same-map:
+
+```text
+world_drop_removed
+```
+
+Por lo tanto un segundo cliente observa que el item desaparece sin confiar en el cliente que lo recogió.
 
 Se deberá extender más adelante con interés espacial si profiling/concurrencia lo requiere.
 
@@ -5473,11 +6368,43 @@ client target permitido
 client range
 client EXP
 client level-up result
+client world-drop item_id
+client world-drop quantity
+client persistent item UID
+client pickup distance
+client pickup success
 ```
 
 El cliente solicita.
 
 El servidor valida y decide.
+
+Para pickup:
+
+```text
+cliente:
+entity_id
+
+Game Server:
+resuelve WorldDrop
+resuelve item_id
+resuelve quantity
+resuelve persistent_item_uid
+resuelve mapa
+calcula distancia
+resuelve espacio Inventory
+ordena persistencia
+consume drop después de confirmación
+```
+
+Laravel protege además:
+
+```text
+UID unique
+idempotent exact replay
+409 conflict
+transaction
+```
 
 ---
 
@@ -5503,10 +6430,13 @@ F17-D Basic Attack PvE        ✅
 F17-E Basic Attack execution  ✅
 F17-F Mob death transition    ✅
 F17-G Mob respawn foundation  ✅
+
 F18-A1 World Drop runtime     ✅
 F18-A2 Drop replication/UI    ✅
-F18-B Pickup                  ⏳ SIGUIENTE
-F18-C EXP / Level             ⏳
+F18-B1 Durable Inventory grant✅
+F18-B2 Authoritative Pickup   ✅
+F18-C EXP / Level             ⏳ SIGUIENTE
+
 F19 Vertical Slice            ⏳
 
 PERF-1                        ⏳ después de F19 estable
@@ -5519,7 +6449,7 @@ PERF-1                        ⏳ después de F19 estable
 Antes de implementar gameplay nuevo:
 
 ```text
-cerrar documentación/checkpoint F18-A
+cerrar documentación/checkpoint F18-B
 → reemplazar PROJECT_MEMORY.md
 → git status
 → commit
@@ -5530,73 +6460,87 @@ cerrar documentación/checkpoint F18-A
 Después abrir:
 
 ```text
-F18-B — Authoritative Pickup
+F18-C — Authoritative EXP / Level
 ```
 
 Dirección conceptual:
 
 ```text
-WorldDropActor
-→ pickup intention(entity_id)
-→ Game Server
+WorldMobRegistry.mob_died
+→ Progression / EXP coordinator
+→ identificar killer/source autoritativo
 → resolver PlayerWorldSession
-→ resolver WorldDropRegistry.get_drop(entity_id)
-→ validar mismo mapa
-→ validar rango
-→ validar item/quantity
-→ mutar/persistir Inventory autoritativamente
-→ consumir drop sólo si Inventory confirmó
-→ enviar Inventory snapshot
-→ replicar world_drop_removed
-→ todos los clientes eliminan el actor
+→ calcular recompensa EXP desde definición/reglas server-side
+→ mutar Experience runtime
+→ detectar level-up
+→ persistir progresión durable
+→ confirmar backend
+→ replicar EXP / Level autoritativos
+→ actualizar HUD/estado cliente
 ```
 
-Regla transaccional:
+Regla arquitectónica:
 
 ```text
-NO borrar primero el WorldDrop
-y después intentar Inventory.
+Combat NO debe calcular progresión.
+Drop NO debe otorgar EXP.
 ```
 
-Debe evitarse perder items si persistence/Inventory falla.
+Ambos pueden reaccionar independientemente al mismo evento:
 
-F18-B todavía NO debe incluir:
+```text
+mob_died
+├── WorldDropCoordinator
+├── Respawn scheduler
+└── future ProgressionCoordinator
+```
+
+F18-C no debe introducir todavía:
+
+```text
+skill points completos
+stat allocation manual
+prestige/reset
+party EXP
+quest EXP
+PvP EXP
+final balancing
+```
+
+Primero Foundation autoritativa de:
 
 ```text
 EXP
-level-up
-party loot
-ownership temporal complejo
-auto-loot
-drop lifetime/despawn
-stack split manual
-animaciones finales
+level
+persistencia
+replicación
 ```
-
-Si el pickup de una Health Potion apilable demuestra una necesidad real de stack merge/partial stack, se reevalúa el scope mínimo de F15-C en ese momento.
 
 ---
 
 # 67. CRITERIO DE ÉXITO DEL PRÓXIMO TEST
 
-F18-B deberá demostrar como mínimo:
+F18-C deberá demostrar como mínimo:
 
 ```text
-1. el cliente sólo envía entity_id/intención de pickup;
-2. el Game Server resuelve el WorldDrop real;
-3. drop inexistente se rechaza;
-4. drop de otro mapa se rechaza;
-5. pickup fuera de rango se rechaza;
-6. un pickup válido muta Inventory autoritativamente;
-7. el WorldDrop sólo se consume después de confirmar Inventory;
-8. el cliente recibe el Inventory actualizado;
-9. todos los clientes del mapa reciben la eliminación del drop;
-10. el WorldDropActor desaparece;
-11. reconnect ya no incluye un drop recogido;
-12. dos requests sobre el mismo drop no duplican el item;
-13. muerte/respawn/drop creation siguen sin regresiones;
-14. no aparecen warnings/errors nuevos.
+1. una muerte de mob emite progreso exactamente una vez por vida;
+2. Progression no depende de BasicAttackCoordinator;
+3. el Game Server identifica al killer por source autoritativo;
+4. Training Goblin tiene una recompensa EXP server-side;
+5. el cliente no decide cuánta EXP gana;
+6. EXP runtime aumenta autoritativamente;
+7. si se alcanza el threshold, Level aumenta autoritativamente;
+8. no se puede otorgar dos veces EXP por la misma muerte;
+9. EXP/Level se persisten de forma durable;
+10. reconnect conserva EXP/Level;
+11. cliente recibe estado actualizado;
+12. HUD/debug refleja el nuevo Level/EXP;
+13. drops y respawn siguen funcionando;
+14. pickup sigue funcionando;
+15. no aparecen warnings/errors nuevos.
 ```
+
+Para facilitar pruebas se puede usar temporalmente una recompensa/threshold pequeño, igual que con los 5000 HP del Training Goblin, siempre documentándolo como fixture de testing y no balance final.
 
 ---
 
@@ -5771,19 +6715,18 @@ Game Server F16-B:
 feat: receive authoritative skill cast intents
 ```
 
-El SHA definitivo de cierre de F16-C debe verificarse en `dev` después del push del checkpoint, porque este mismo archivo forma parte de ese commit.
-
-La etapa funcionalmente validada es:
+La etapa funcionalmente validada actual es:
 
 ```text
-F18-A — Authoritative World Drop Foundation
-├── F18-A1 Runtime / Loot ✅
-└── F18-A2 Replication / Visual ✅
+F18-B — Authoritative Pickup
+├── F18-B1 Durable Inventory Grant ✅
+└── F18-B2 Pickup end-to-end        ✅
 ```
 
-Contrato vigente:
+Contrato vigente de input:
 
 ```text
+LEFT CLICK WorldDrop      = PICKUP
 LEFT CLICK terreno        = MOVE
 LEFT CLICK NPC            = INTERACT
 LEFT CLICK mob hostil     = BASIC ATTACK PvE
@@ -5810,10 +6753,18 @@ Lifecycle de drop actual:
 mob_died
 → ServerMobDropCatalog
 → WorldDropRuntimeState
+    ├── entity_id runtime
+    └── persistent_item_uid UUID
 → WorldDropRegistry
 → world_drop_spawned
 → clients del mapa
 → WorldDropActor
+→ pickup intent(entity_id)
+→ Game Server validation
+→ Laravel durable grant
+→ consume_drop
+→ world_drop_removed
+→ WorldDropActor eliminado
 ```
 
 Presence actual:
@@ -5831,7 +6782,8 @@ Training fixture:
 Training Goblin
 HP: 5000
 Respawn: 3.0 s
-Drop de testing: Health Potion x1, 100%
+Drop testing: Health Potion x1, 100%
+Pickup range foundation: 2.0
 ```
 
 Checkpoints F18-A:
@@ -5850,30 +6802,62 @@ a043ac76478256f36f6a17002629c9c3733c7f46
 feat: render authoritative world drops
 ```
 
-Próximo checkpoint después del cierre documental:
+Checkpoints F18-B:
 
 ```text
-F18-B — Authoritative Pickup
+Backend B1:
+d54dead554ec8e22f770fd9c429164da83dde922
+feat: add idempotent inventory item grants
+
+Game Server B2:
+60ab01625dc9f0014cdeefb1387640712a68f80a
+feat: add authoritative world drop pickup
+
+Cliente B2:
+89dae7d9a5b25f0d668e671bd838740d66290726
+feat: add authoritative world drop pickup flow
 ```
 
-Principio de seguridad:
+Prueba F18-B validada:
 
 ```text
-Inventory confirmado
-→ recién entonces consumir WorldDrop
+pickup fuera de rango
+→ rejected: out_of_range
+→ drop permanece
+
+pickup válido
+→ persistencia
+→ drop consumido
+→ Inventory 1 → 2
+→ actor eliminado
+
+reconnect
+→ item persiste
+→ drop no reaparece
+```
+
+Siguiente checkpoint después del cierre documental:
+
+```text
+F18-C — Authoritative EXP / Level
 ```
 
 No implementar todavía:
 
 ```text
-EXP
-level
-party loot
+party EXP
+quest EXP
+PvP EXP
+stat allocation completo
+skill points completos
+auto-loot
 ownership complejo
 drop lifetime
-auto-loot
 spots
 AI completa
 ```
 
-**No avanzar a F18-B hasta commitear, pushear y confirmar la actualización canónica de F18-A.**
+**No avanzar a F18-C hasta commitear, pushear y confirmar la actualización canónica de F18-B.**
+
+---
+
