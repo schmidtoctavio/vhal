@@ -4,7 +4,7 @@
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama de desarrollo habitual:** `dev`  
-**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B/F17-C/F17-D/F17-E/F17-F cerrados y validados; siguiente paso: decision gate para definir si F17 continúa con Respawn Foundation antes de abrir F18 Drop/Pickup/EXP.
+**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B/F17-C/F17-D/F17-E/F17-F/F17-G cerrados y validados; próximo bloque F18, comenzando por una foundation autoritativa de World Drops antes de Pickup/EXP.
 
 > Este archivo es la **fuente canónica única de contexto del proyecto VHAL**.
 >
@@ -3802,6 +3802,33 @@ auto-chase
 
 La muerte autoritativa ya posee el hook que esos sistemas podrán consumir.
 
+### Ajuste posterior del fixture de pruebas
+
+Después del cierre de F17-F se redujo el HP temporal del `Training Goblin`:
+
+```text
+50000 → 5000 HP
+```
+
+Motivo:
+
+```text
+bronze_sword = 1000 damage
+→ 5 golpes para matar
+
+unarmed = 500 damage
+→ 10 golpes para matar
+```
+
+Esto acelera pruebas repetitivas de death/respawn/drop/EXP sin representar balance definitivo.
+
+Checkpoint Game Server:
+
+```text
+c5f30da621ca2dc4080496c79884f81cb6a9b8db
+chore: reduce training goblin test hp
+```
+
 **Siguiente paso:** decision gate de roadmap para decidir entre:
 
 ```text
@@ -3862,6 +3889,354 @@ Pecador
 y “auto defense”.
 
 Estos sistemas se implementarán sobre el combat runtime autoritativo, no como lógica local del cliente.
+
+
+## F17-G — AUTHORITATIVE MOB RESPAWN FOUNDATION
+
+**Estado:** ✅ COMPLETADO, PROBADO Y VALIDADO.
+
+F17-G hace repetible el lifecycle del mob sin reiniciar el Game Server.
+
+Flujo cerrado:
+
+```text
+SPAWN
+→ ALIVE
+→ DAMAGE
+→ DEATH
+→ respawn_delay
+→ RESPAWN
+→ ALIVE
+→ nuevamente combatible
+```
+
+### Respawn como regla de definición
+
+`WorldMobDefinition` incorpora:
+
+```text
+respawn_delay_seconds
+```
+
+Para el `Training Goblin` de testing:
+
+```text
+max_hp = 5000
+respawn_delay_seconds = 3.0
+```
+
+Estos valores son temporales de Foundation y no representan balance final.
+
+### Runtime de respawn
+
+`WorldMobRuntimeState` ya conservaba:
+
+```text
+spawn_position
+spawn_rotation_y
+position actual
+rotation actual
+vitals
+```
+
+Se incorporó una operación de lifecycle:
+
+```text
+respawn_at_spawn()
+```
+
+La misma instancia runtime:
+
+```text
+mob_test_town_001
+```
+
+pasa:
+
+```text
+alive=false
+HP=0
+```
+
+a:
+
+```text
+alive=true
+HP=max_hp
+position=spawn_position
+rotation=spawn_rotation_y
+```
+
+sin cambiar `entity_id`.
+
+No se destruye/recrea arbitrariamente la entidad sólo para respawnear.
+
+### Scheduler centralizado
+
+`WorldMobRegistry` mantiene un scheduler único:
+
+```text
+pending_respawn_deadlines_msec
+RespawnTimer
+```
+
+No se crea un `Timer` por mob.
+
+La muerte:
+
+```text
+mob_died
+→ schedule respawn deadline
+→ armar próximo timeout
+```
+
+Al vencer:
+
+```text
+resolver entity_id
+→ verificar que siga muerto
+→ respawn_at_spawn()
+→ snapshot
+→ mob_respawned
+```
+
+Esto prepara mejor la arquitectura para muchos mobs concurrentes que un timer dedicado por entidad.
+
+### Evento autoritativo de respawn
+
+`WorldMobRegistry` emite:
+
+```text
+mob_respawned(
+    entity_id,
+    map_id,
+    mob_snapshot
+)
+```
+
+`WorldPresenceCoordinator` escucha ese evento y replica el snapshot mediante el mensaje ya existente:
+
+```text
+mob_state_updated
+```
+
+No se creó un protocolo paralelo de respawn.
+
+### Reutilización total del cliente
+
+F17-G no requirió cambios del cliente.
+
+El `MobActor` creado en F17-F ya sabe representar ambos estados.
+
+Dead:
+
+```text
+alive=false
+HP=0
+→ placeholder acostado
+→ [DEAD]
+→ collider / TargetArea deshabilitados
+```
+
+Respawn:
+
+```text
+alive=true
+HP=5000
+→ VisualRoot vuelve a posición normal
+→ desaparece [DEAD]
+→ collider / TargetArea se reactivan
+→ vuelve a ser targetable
+```
+
+La misma instancia visual recibe el nuevo snapshot.
+
+### Test real validado
+
+Golpe letal:
+
+```text
+WorldMobRegistry | Muerte autoritativa confirmada
+| Entity: mob_test_town_001
+| HP: 0/5000
+```
+
+Scheduler:
+
+```text
+WorldMobRegistry | Respawn programado
+| Entity: mob_test_town_001
+| Delay: 3.0 s
+```
+
+Resultado final del ataque:
+
+```text
+Accepted: true
+Reason: ok
+Damage: 1000
+HP restante: 0/5000
+Killed: true
+```
+
+Después del delay:
+
+```text
+WorldMobRegistry | Respawn autoritativo confirmado
+| Entity: mob_test_town_001
+| Mapa: test_town
+| Posición: (4.0, 0.0, 4.0)
+| HP: 5000/5000
+```
+
+Replicación:
+
+```text
+WorldPresenceCoordinator | Respawn de mob replicado
+| Entity: mob_test_town_001
+| Mapa: test_town
+| Recipients: 1
+```
+
+Cliente:
+
+```text
+GameServerClient | Estado de mob actualizado
+| Entity: mob_test_town_001
+| HP: 5000/5000
+
+MobActor | Preparado
+| Entity: mob_test_town_001
+| HP: 5000/5000
+```
+
+### Targeting posterior al respawn
+
+Después del respawn:
+
+```text
+Fire Ball
+→ vuelve a resolver entity target
+→ Game Server valida target vivo
+→ skill_not_implemented
+```
+
+y Basic Attack vuelve a ejecutarse:
+
+```text
+5000 → 4000
+```
+
+Esto prueba que el lifecycle no deja al mob bloqueado en estado dead ni rompe el picking cliente.
+
+### Ciclo repetible
+
+Se validó además que el mob puede completar nuevamente el ciclo:
+
+```text
+alive
+→ death
+→ respawn
+→ alive
+→ death
+→ respawn
+```
+
+sin reiniciar el Game Server.
+
+La regla deseada es:
+
+```text
+un mob_died por cada vida
+un mob_respawned por cada respawn
+```
+
+### Checkpoint remoto
+
+Game Server:
+
+```text
+28097de12d55b021b1a2834339f948612d22e069
+feat: add authoritative mob respawn foundation
+```
+
+Cliente:
+
+```text
+sin cambios requeridos en F17-G
+```
+
+### Dirección futura — spots estilo MU
+
+La arquitectura actual queda preparada para evolucionar a spots sin rehacer Combat ni Presence.
+
+Dirección prevista:
+
+```text
+WorldMobDefinition
+        ↓
+WorldMobSpawnSpotDefinition
+        ↓
+WorldMobSpawnSystem
+        ↓
+WorldMobRuntimeState
+        ↓
+WorldMobRegistry
+        ↓
+Combat / Skills / AI / Drops
+```
+
+Un spot podrá definir progresivamente:
+
+```text
+map_id
+área delimitada
+cantidad de slots
+mob types / pesos
+level_min / level_max
+respawn range
+posición random validada contra navegación
+```
+
+Ejemplo conceptual:
+
+```text
+Spot goblins_norte_01
+Map: test_town
+Cantidad: 8
+Área: X/Z delimitados
+Mob: goblin
+Level: 1..2
+Respawn: 5..8 s
+```
+
+No implementar esto todavía.
+
+Cuando se soporte level variable por instancia, la dirección arquitectónica es que el nivel concreto viva en `WorldMobRuntimeState` y que `WorldMobDefinition` describa el tipo/base del mob, evitando definiciones separadas `goblin_lv1`, `goblin_lv2`, etc.
+
+### Límite de F17-G
+
+F17-G NO implementa:
+
+```text
+spawn spots
+random spawn positions
+random level
+weighted mob variants
+AI
+aggro
+leash
+patrol
+drops
+pickup
+EXP
+loot tables
+```
+
+**Siguiente bloque:** `F18 — Drop / Pickup / EXP`.
+
+La apertura debe hacerse en checkpoints pequeños; el primer candidato es una Foundation de World Drop autoritativo conectada al `mob_died` existente.
+
 
 ---
 
@@ -4480,8 +4855,10 @@ F17-C Entity targeting        ✅
 F17-D Basic Attack PvE        ✅
 F17-E Basic Attack execution  ✅
 F17-F Mob death transition    ✅
-F17-G Mob respawn foundation  🟡 DECISION GATE
-F18 Drop / Pickup / EXP       ⏳
+F17-G Mob respawn foundation  ✅
+F18-A World Drop foundation   ⏳ SIGUIENTE
+F18-B Pickup                  ⏳
+F18-C EXP / Level             ⏳
 F19 Vertical Slice            ⏳
 
 PERF-1                        ⏳ después de F19 estable
@@ -4494,7 +4871,7 @@ PERF-1                        ⏳ después de F19 estable
 Antes de implementar gameplay nuevo:
 
 ```text
-cerrar documentación/checkpoint F17-F
+cerrar documentación/checkpoint F17-G
 → reemplazar PROJECT_MEMORY.md
 → git status
 → commit
@@ -4502,70 +4879,66 @@ cerrar documentación/checkpoint F17-F
 → confirmar "pusheado"
 ```
 
-Después realizar un **decision gate corto** sobre el roadmap.
-
-Opciones:
+Después abrir:
 
 ```text
-A) F17-G — Authoritative Mob Respawn Foundation
-
-B) abrir F18 — Drop / Pickup / EXP
+F18-A — Authoritative World Drop Foundation
 ```
 
-Criterio de decisión:
+Dirección del checkpoint:
 
 ```text
-¿necesitamos primero que el ciclo del mob sea repetible
-sin reiniciar el Game Server para poder probar muchas muertes,
-drops y EXP con fluidez?
+mob_died existente
+→ Drop Coordinator / World Drop domain
+→ decidir drop autoritativamente
+→ crear WorldDropRuntimeState
+→ registrar drop en mundo
+→ replicar drop a clientes del mapa
+→ representación visual mínima
 ```
 
-La recomendación arquitectónica preliminar es favorecer un checkpoint pequeño de respawn antes de F18 si puede mantenerse limitado a:
+F18-A todavía NO debe incluir:
 
 ```text
-dead
-→ timer autoritativo
-→ reset HP
-→ reset transform al spawn
-→ alive=true
-→ mob_state_updated
-```
-
-sin meter todavía:
-
-```text
-IA
-patrulla
-aggro
-loot
+pickup
+Inventory mutation
 EXP
-animaciones finales
+level-up
+loot ownership complejo
+party loot
+drop animations finales
+economía
 ```
 
-La decisión definitiva se toma después del push documental de F17-F y de revisar el estado real de los repositorios.
+La muerte y el respawn ya son independientes del futuro sistema de drops:
+
+```text
+mob_died
+├── futuro Drop system
+└── respawn scheduler
+```
+
+No acoplar Drop al `BasicAttackCoordinator`.
 
 ---
 
-# 67. CRITERIO DEL SIGUIENTE DECISION GATE
+# 67. CRITERIO DE ÉXITO DEL PRÓXIMO TEST
 
-Antes de abrir otro checkpoint se debe decidir si Respawn Foundation aporta suficiente valor inmediato.
-
-Si se elige F17-G, el criterio mínimo será:
+F18-A deberá demostrar como mínimo:
 
 ```text
-1. la muerte actual sigue funcionando exactamente una vez;
-2. el mob permanece dead durante un tiempo autoritativo;
-3. no puede ser targeteado durante dead;
-4. el Game Server restaura HP a max_hp al respawn;
-5. vuelve a spawn_position / spawn_rotation_y;
-6. alive vuelve a true;
-7. el nuevo snapshot se replica a clientes del mapa;
-8. MobActor vuelve a ser targetable;
-9. no aparecen drops ni EXP todavía;
-10. no aparecen warnings/errors nuevos.
+1. mob_died sigue ocurriendo exactamente una vez por vida;
+2. Drop system escucha ese evento sin depender de BasicAttackCoordinator;
+3. el Game Server decide si existe drop;
+4. el Game Server crea una identidad estable para el WorldDrop;
+5. el drop posee map_id y posición autoritativos;
+6. el drop se registra en un runtime registry de mundo;
+7. el drop se replica sólo a sesiones del mismo mapa;
+8. el cliente puede representarlo de forma mínima;
+9. todavía no existe pickup ni mutación de Inventory;
+10. el respawn del mob continúa funcionando sin regresión;
+11. no aparecen warnings/errors nuevos.
 ```
-
-Si se decide abrir F18 directamente, documentar explícitamente que el respawn queda diferido y que las pruebas de múltiples kills requieren reinicio/fixture temporal hasta implementar lifecycle repetible.
 
 ---
 
@@ -4745,7 +5118,7 @@ El SHA definitivo de cierre de F16-C debe verificarse en `dev` después del push
 La etapa funcionalmente validada es:
 
 ```text
-F17-F — Authoritative Mob Death Transition
+F17-G — Authoritative Mob Respawn Foundation
 ```
 
 Contrato vigente:
@@ -4759,37 +5132,52 @@ CTRL + LEFT CLICK player  = BASIC ATTACK PvP
 CTRL + RIGHT CLICK player = SELECTED SKILL PvP
 ```
 
-Combat lifecycle validado:
+Lifecycle de mob validado:
 
 ```text
-Basic Attack
-→ damage autoritativo
+SPAWN
+→ ALIVE
+→ DAMAGE
 → HP 0
-→ alive=false
-→ mob_died exactly-once por vida
-→ mob_state_updated
-→ MobActor dead
-→ targetability deshabilitada
+→ mob_died
+→ DEAD / no targeteable
+→ respawn_delay
+→ HP max
+→ spawn transform
+→ mob_respawned
+→ ALIVE / targeteable
 ```
 
-El cadáver:
+Training Goblin de testing:
 
 ```text
-LEFT CLICK
-→ ya no Basic Attack
-→ puede resolver terreno
-
-RIGHT CLICK Fire Ball
-→ entity_target_required
+HP: 5000
+Respawn: 3.0 s
 ```
 
-Siguiente paso después del checkpoint Git:
+Checkpoint F17-G:
 
 ```text
-DECISION GATE:
-F17-G Respawn Foundation
-vs.
-F18 Drop / Pickup / EXP
+Game Server:
+28097de12d55b021b1a2834339f948612d22e069
+feat: add authoritative mob respawn foundation
 ```
 
-**No implementar el siguiente checkpoint hasta commitear, pushear y confirmar la actualización canónica de F17-F.**
+Próximo checkpoint después del cierre documental:
+
+```text
+F18-A — Authoritative World Drop Foundation
+```
+
+Dirección futura confirmada para spots:
+
+```text
+WorldMobSpawnSpotDefinition
+→ WorldMobSpawnSystem
+→ WorldMobRuntimeState
+→ WorldMobRegistry
+```
+
+pero no implementarla todavía.
+
+**No avanzar a F18-A hasta commitear, pushear y confirmar la actualización canónica de F17-G.**
