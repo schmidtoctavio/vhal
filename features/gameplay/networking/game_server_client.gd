@@ -92,6 +92,10 @@ signal skill_cast_result_received(
 	effect: Dictionary
 )
 
+signal mob_state_updated(
+	mob: Dictionary
+)
+
 # =========================================================
 # CONFIGURACIÓN DE TRANSPORTE
 # =========================================================
@@ -406,6 +410,12 @@ func _bind_protocol_signals() -> void:
 			_on_protocol_character_equipment_snapshot_received
 		)
 
+	if not presence_protocol.mob_state_updated.is_connected(
+		_on_protocol_mob_state_updated
+	):
+		presence_protocol.mob_state_updated.connect(
+			_on_protocol_mob_state_updated
+		)
 
 # =========================================================
 # SIGNALS MULTIPLAYER
@@ -1295,6 +1305,12 @@ func _on_protocol_remote_player_left(
 		peer_id
 	)
 
+func _on_protocol_mob_state_updated(
+	mob: Dictionary
+) -> void:
+	mob_state_updated.emit(
+		mob
+	)
 
 # =========================================================
 # FORWARD — NPC

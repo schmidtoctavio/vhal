@@ -293,6 +293,12 @@ func _bind_services() -> void:
 			_on_game_session_failed
 		)
 
+	if not game_server_client.mob_state_updated.is_connected(
+		_on_mob_state_updated
+	):
+		game_server_client.mob_state_updated.connect(
+			_on_mob_state_updated
+		)
 
 # =========================================================
 # ENTRAR AL MUNDO
@@ -2073,3 +2079,23 @@ func _on_gameplay_basic_attack_intent_requested(
 
 
 	game_session_service.end_session()
+
+# =========================================================
+# MOB STATE → GAMEPLAY
+# =========================================================
+
+func _on_mob_state_updated(
+	mob: Dictionary
+) -> void:
+	var gameplay_screen := (
+		_get_gameplay_screen()
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	gameplay_screen.apply_mob_state_updated(
+		mob
+	)

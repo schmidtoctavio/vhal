@@ -935,6 +935,20 @@ func sync_world_mobs(
 		mob_actors.size()
 	)
 
+# =========================================================
+# ACTUALIZACIÓN AUTORITATIVA DE MOB
+# =========================================================
+
+func apply_mob_state_updated(
+	mob: Dictionary
+) -> void:
+	if mob.is_empty():
+		return
+
+
+	_spawn_or_update_mob(
+		mob
+	)
 
 # =========================================================
 # CREAR / ACTUALIZAR MOB

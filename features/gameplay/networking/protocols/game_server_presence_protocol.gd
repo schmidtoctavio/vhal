@@ -18,6 +18,9 @@ signal remote_player_left(
 	peer_id: int
 )
 
+signal mob_state_updated(
+	mob: Dictionary
+)
 
 # =========================================================
 # MENSAJES
@@ -35,6 +38,9 @@ const MESSAGE_PLAYER_PRESENCE_LEFT: String = (
 	"player_presence_left"
 )
 
+const MESSAGE_MOB_STATE_UPDATED: String = (
+	"mob_state_updated"
+)
 
 # =========================================================
 # DEPENDENCIAS
@@ -114,6 +120,20 @@ func process_message(
 
 				_process_player_presence_left(
 					left_data
+				)
+
+
+			return true
+
+		MESSAGE_MOB_STATE_UPDATED:
+			if typeof(data_value) == TYPE_DICTIONARY:
+				var mob_state_data: Dictionary = (
+					data_value
+				)
+
+
+				_process_mob_state_updated(
+					mob_state_data
 				)
 
 
@@ -776,6 +796,83 @@ func _process_player_presence_left(
 		peer_id
 	)
 
+# =========================================================
+# MOB STATE UPDATED
+# =========================================================
+
+func _process_mob_state_updated(
+	data: Dictionary
+) -> void:
+	var mob_value: Variant = (
+		data.get(
+			"mob",
+			null
+		)
+	)
+
+
+	var mob := (
+		_parse_world_mob_snapshot(
+			mob_value
+		)
+	)
+
+
+	if mob.is_empty():
+		return
+
+
+	var entity_id := String(
+		mob.get(
+			"entity_id",
+			""
+		)
+	).strip_edges().to_lower()
+
+
+	if entity_id.is_empty():
+		return
+
+
+	remote_mobs[
+		entity_id
+	] = mob
+
+
+	var vitals: Dictionary = (
+		mob.get(
+			"vitals",
+			{}
+		)
+	)
+
+
+	print(
+		"GameServerClient | Estado de mob actualizado",
+		" | Entity: ",
+		entity_id,
+		" | HP: ",
+		int(
+			vitals.get(
+				"hp",
+				0
+			)
+		),
+		"/",
+		int(
+			vitals.get(
+				"max_hp",
+				0
+			)
+		)
+	)
+
+
+	mob_state_updated.emit(
+		mob.duplicate(
+			true
+		)
+	)
 
 # =========================================================
 # CONSULTAS PARA MOVEMENT
