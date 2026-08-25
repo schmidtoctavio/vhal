@@ -38,7 +38,7 @@ var game_server_client: GameServerClient = null
 # =========================================================
 
 var game_session_service: GameSessionService = (
-	MockGameSessionService.new()
+	ClientGameSessionService.new()
 )
 
 var game_session_ticket_service: GameSessionTicketService = null
@@ -635,6 +635,13 @@ func _apply_authoritative_world_snapshot(
 		)
 	)
 
+	var skills_value: Variant = (
+		pending_world_snapshot.get(
+			"skills",
+			null
+		)
+	)
+
 	if typeof(vitals_value) != TYPE_DICTIONARY:
 		return false
 
@@ -651,6 +658,19 @@ func _apply_authoritative_world_snapshot(
 		progression_value
 	)
 
+	if typeof(skills_value) != TYPE_DICTIONARY:
+		return false
+
+
+	var skills_snapshot: Dictionary = (
+		skills_value
+	)
+
+
+	if not player_state.apply_skill_snapshot(
+		skills_snapshot
+	):
+		return false
 
 	if not player_state.apply_progression_snapshot(
 		progression_snapshot
@@ -808,11 +828,8 @@ func _on_game_session_started(
 	# -----------------------------------------------------
 	# IDENTIDAD DEL PERSONAJE
 	#
-	# El PlayerRuntimeState foundation todavía nace desde
-	# MockGameSessionService sin CharacterSummary.
-	#
-	# Progression necesita esa identidad ANTES de aplicar
-	# el snapshot autoritativo.
+	# El runtime necesita identidad antes de aplicar los
+	# snapshots autoritativos.
 	# -----------------------------------------------------
 
 	if player_state.character_summary == null:

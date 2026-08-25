@@ -204,6 +204,88 @@ func _process_world_snapshot(
 	)
 
 
+	# =====================================================
+	# SKILLS AUTORITATIVAS
+	# =====================================================
+
+	var skills_value: Variant = (
+		snapshot.get(
+			"skills",
+			null
+		)
+	)
+
+
+	if typeof(skills_value) != TYPE_DICTIONARY:
+		_fail_connection(
+			"El snapshot no posee Skills válidas."
+		)
+
+		return
+
+
+	var skills_data: Dictionary = (
+		skills_value
+	)
+
+
+	var learned_skill_ids_value: Variant = (
+		skills_data.get(
+			"learned_skill_ids",
+			null
+		)
+	)
+
+
+	if typeof(learned_skill_ids_value) != TYPE_ARRAY:
+		_fail_connection(
+			"El snapshot no posee learned_skill_ids válidas."
+		)
+
+		return
+
+
+	var learned_skill_ids: Array[String] = []
+
+	var learned_skill_ids_seen: Dictionary = {}
+
+
+	for skill_id_value: Variant in (
+		learned_skill_ids_value
+		as Array
+	):
+		var skill_id := String(
+			skill_id_value
+		).strip_edges().to_lower()
+
+
+		if skill_id.is_empty():
+			_fail_connection(
+				"El snapshot posee un Skill ID vacío."
+			)
+
+			return
+
+
+		if learned_skill_ids_seen.has(
+			skill_id
+		):
+			_fail_connection(
+				"El snapshot posee Skills duplicadas."
+			)
+
+			return
+
+
+		learned_skill_ids_seen[
+			skill_id
+		] = true
+
+
+		learned_skill_ids.append(
+			skill_id
+		)
+
 	var level := int(
 		progression_data.get(
 			"level",
@@ -461,6 +543,12 @@ func _process_world_snapshot(
 			),
 		},
 
+		"skills": {
+			"learned_skill_ids": (
+				learned_skill_ids.duplicate()
+			),
+		},
+
 		"vitals": {
 			"hp": hp,
 			"max_hp": max_hp,
@@ -505,6 +593,8 @@ func _process_world_snapshot(
 		experience,
 		"/",
 		experience_required,
+		" | Skills: ",
+		learned_skill_ids,
 	)
 
 

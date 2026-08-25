@@ -844,3 +844,134 @@ func apply_equipment_snapshot(
 
 
 	return true
+
+
+# =========================================================
+# SKILLS AUTORITATIVAS
+# =========================================================
+
+func apply_skill_snapshot(
+	snapshot: Dictionary
+) -> bool:
+	if skill_book == null:
+		return false
+
+
+	if skill_hotbar == null:
+		return false
+
+
+	var learned_skill_ids_value: Variant = (
+		snapshot.get(
+			"learned_skill_ids",
+			null
+		)
+	)
+
+
+	if typeof(learned_skill_ids_value) != TYPE_ARRAY:
+		return false
+
+
+	# -----------------------------------------------------
+	# El runtime recién creado debe estar limpio.
+	# -----------------------------------------------------
+
+	if skill_book.get_skill_count() != 0:
+		return false
+
+
+	var learned_definitions: Dictionary = {}
+
+
+	for skill_id_value: Variant in (
+		learned_skill_ids_value
+		as Array
+	):
+		var skill_id := String(
+			skill_id_value
+		).strip_edges().to_lower()
+
+
+		if skill_id.is_empty():
+			return false
+
+
+		if learned_definitions.has(
+			skill_id
+		):
+			return false
+
+
+		var definition := (
+			ClientSkillCatalog.get_definition(
+				skill_id
+			)
+		)
+
+
+		if definition == null:
+			return false
+
+
+		if not skill_book.learn_skill(
+			definition
+		):
+			return false
+
+
+		learned_definitions[
+			skill_id
+		] = definition
+
+
+	# -----------------------------------------------------
+	# HOTBAR DEFAULT FOUNDATION
+	#
+	# El orden de hotbar es preferencia del cliente,
+	# no autoridad de gameplay.
+	# -----------------------------------------------------
+
+	var hotbar_index: int = 0
+
+
+	for skill_id: String in (
+		ClientSkillCatalog.DEFAULT_HOTBAR_ORDER
+	):
+		if hotbar_index >= SkillHotbarData.SLOT_COUNT:
+			break
+
+
+		if not learned_definitions.has(
+			skill_id
+		):
+			continue
+
+
+		var definition: SkillDefinition = (
+			learned_definitions[
+				skill_id
+			]
+		)
+
+
+		if not skill_hotbar.set_skill(
+			hotbar_index,
+			definition
+		):
+			return false
+
+
+		hotbar_index += 1
+
+
+	print(
+		"PlayerRuntimeState | Skills autoritativas aplicadas",
+		" | Learned: ",
+		skill_book.get_skill_count(),
+		" | Hotbar slots: ",
+		hotbar_index
+	)
+
+
+	return true
