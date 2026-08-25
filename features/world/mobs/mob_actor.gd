@@ -30,6 +30,10 @@ var max_hp: int = 1
 # REFERENCIAS
 # =========================================================
 
+@onready var visual_root: Node3D = (
+	$VisualRoot
+)
+
 @onready var name_label: Label3D = (
 	$NameLabel
 )
@@ -40,6 +44,10 @@ var max_hp: int = 1
 
 @onready var target_area: Area3D = (
 	$TargetArea
+)
+
+@onready var target_collision_shape: CollisionShape3D = (
+	$TargetArea/CollisionShape3D
 )
 
 # =========================================================
@@ -138,6 +146,16 @@ func setup(
 	):
 		return false
 
+	var new_alive := bool(
+		snapshot.get(
+			"alive",
+			false
+		)
+	)
+
+
+	if new_alive != (new_hp > 0):
+		return false
 
 	var world_value: Variant = (
 		snapshot.get(
@@ -189,24 +207,15 @@ func setup(
 
 	level = new_level
 
-
-	alive = bool(
-		snapshot.get(
-			"alive",
-			false
-		)
-	)
-
+	alive = new_alive
 
 	hp = new_hp
 
 	max_hp = new_max_hp
 
-
 	position = world_position
 
 	rotation.y = world_rotation_y
-
 
 	name = (
 		"Mob_%s"
@@ -216,7 +225,7 @@ func setup(
 
 
 	_refresh_labels()
-
+	_refresh_lifecycle_state()
 
 	print(
 		"MobActor | Preparado",
@@ -246,14 +255,25 @@ func setup(
 
 func _refresh_labels() -> void:
 	if name_label != null:
-		name_label.text = (
-			"%s [Lv. %d]"
-			%
-			[
-				display_name,
-				level,
-			]
-		)
+		if alive:
+			name_label.text = (
+				"%s [Lv. %d]"
+				%
+				[
+					display_name,
+					level,
+				]
+			)
+
+		else:
+			name_label.text = (
+				"%s [Lv. %d] [DEAD]"
+				%
+				[
+					display_name,
+					level,
+				]
+			)
 
 
 	if vitals_label != null:
@@ -264,6 +284,58 @@ func _refresh_labels() -> void:
 				hp,
 				max_hp,
 			]
+		)
+
+# =========================================================
+# LIFECYCLE VISUAL
+# =========================================================
+
+func _refresh_lifecycle_state() -> void:
+	var targetable := (
+		is_targetable()
+	)
+
+
+	# -----------------------------------------------------
+	# REPRESENTACIÓN TEMPORAL DE MUERTE
+	#
+	# Todavía no tenemos animación real.
+	# Acostamos el placeholder para hacer visible el estado.
+	# -----------------------------------------------------
+
+	if visual_root != null:
+		if alive:
+			visual_root.rotation.z = 0.0
+
+		else:
+			visual_root.rotation.z = (
+				deg_to_rad(
+					90.0
+				)
+			)
+
+
+	# -----------------------------------------------------
+	# PICKING
+	# -----------------------------------------------------
+
+	if target_collision_shape != null:
+		target_collision_shape.set_deferred(
+			"disabled",
+			not targetable
+		)
+
+
+	if target_area != null:
+		target_area.set_deferred(
+			"monitoring",
+			targetable
+		)
+
+
+		target_area.set_deferred(
+			"monitorable",
+			targetable
 		)
 
 # =========================================================
