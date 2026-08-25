@@ -4,7 +4,7 @@
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama de desarrollo habitual:** `dev`  
-**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B/F17-C/F17-D cerrados y validados; próximo checkpoint F17-E para ejecución autoritativa del ataque básico PvE.
+**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B/F17-C/F17-D/F17-E cerrados y validados; próximo checkpoint F17-F para transición autoritativa de muerte del mob.
 
 > Este archivo es la **fuente canónica única de contexto del proyecto VHAL**.
 >
@@ -314,24 +314,24 @@ Cuando aparece ese patrón hay que revisar la abstracción.
 │ intención + UI      │
 │ representación      │
 └──────────┬──────────┘
-		   │
-		   │ ENet
-		   ▼
+           │
+           │ ENet
+           ▼
 ┌─────────────────────┐
 │  GODOT GAME SERVER  │
 │ autoridad gameplay  │
 │ estado runtime      │
 └──────────┬──────────┘
-		   │
-		   │ HTTP interno
-		   ▼
+           │
+           │ HTTP interno
+           ▼
 ┌─────────────────────┐
 │   LARAVEL BACKEND   │
 │ identidad + API     │
 │ persistencia        │
 └──────────┬──────────┘
-		   │
-		   ▼
+           │
+           ▼
 ┌─────────────────────┐
 │        MYSQL        │
 │ almacenamiento      │
@@ -503,11 +503,12 @@ Game Server:
 PlayerWorldSession
 ServerVitalsState
 ServerSkillRuntimeState
+ServerBasicAttackRuntimeState
+WorldMobRuntimeState
 movimiento autoritativo
 servicio NPC activo
 snapshots persistentes conocidos
-futuro combat state
-futuro mob runtime state
+combat runtime autoritativo
 ```
 
 ## UI / View
@@ -634,7 +635,8 @@ res://
 │   │   │       ├── game_server_movement_protocol.gd
 │   │   │       ├── game_server_npc_protocol.gd
 │   │   │       ├── game_server_item_protocol.gd
-│   │   │       └── game_server_skill_protocol.gd
+│   │   │       ├── game_server_skill_protocol.gd
+│   │   │       └── game_server_combat_protocol.gd
 │   │   └── ui/
 │   ├── inventory/
 │   ├── items/
@@ -680,7 +682,8 @@ GameSessionFlowCoordinator
 ├── movement/presence bridge
 ├── NPC/Warehouse bridge
 ├── Inventory/Vault/Equipment bridge
-└── Skills/Cast bridge
+├── Skills/Cast bridge
+└── Combat/Mob-state bridge
 ```
 
 `app/main.gd` no debe volver a transformarse en un monolito.
@@ -705,7 +708,8 @@ GameServerClient
 ├── GameServerMovementProtocol
 ├── GameServerNpcProtocol
 ├── GameServerItemProtocol
-└── GameServerSkillProtocol
+├── GameServerSkillProtocol
+└── GameServerCombatProtocol
 ```
 
 No crear sockets independientes por feature sin necesidad real.
@@ -744,7 +748,33 @@ target válido
 resultado
 ```
 
+## CombatProtocol
+
+Responsabilidad actual:
+
+```text
+serializar basic_attack_request
+asignar request_id independiente
+validar estructura del basic_attack_result
+correlacionar entity_id solicitado
+transportar resultado autoritativo
+```
+
+No decide:
+
+```text
+arma equipada
+attack mode
+range
+cooldown real
+damage
+HP del mob
+muerte
+```
+
 ---
+
+
 
 # 15. ESTRUCTURA CONCEPTUAL DEL GAME SERVER
 
@@ -763,22 +793,26 @@ res://
 │       ├── npc_service_coordinator.gd
 │       ├── movement_coordinator.gd
 │       ├── world_presence_coordinator.gd
-│       └── skill_cast_coordinator.gd
+│       ├── skill_cast_coordinator.gd
+│       └── basic_attack_coordinator.gd
 │
 └── core/
-	├── networking/
-	├── backend/
-	├── combat/
-	│   ├── server_vitals_state.gd
-	│   └── server_character_runtime_bootstrap.gd
-	├── skills/
-	│   ├── server_skill_definition.gd
-	│   ├── server_skill_catalog.gd
-	│   └── server_skill_runtime_state.gd
-	└── world/
-		├── movement/
-		├── navigation/
-		└── npcs/
+    ├── networking/
+    ├── backend/
+    ├── combat/
+    │   ├── server_vitals_state.gd
+    │   ├── server_character_runtime_bootstrap.gd
+    │   ├── server_basic_attack_profile_resolver.gd
+    │   └── server_basic_attack_runtime_state.gd
+    ├── skills/
+    │   ├── server_skill_definition.gd
+    │   ├── server_skill_catalog.gd
+    │   └── server_skill_runtime_state.gd
+    └── world/
+        ├── movement/
+        ├── navigation/
+        ├── npcs/
+        └── mobs/
 ```
 
 ## ServerMain
@@ -889,6 +923,27 @@ player left
 authoritative mob roster por mapa
 bootstrap de entidades de mundo replicadas
 ```
+
+
+## BasicAttackCoordinator
+
+```text
+basic attack intent
+request_id monotónico
+caster alive
+target mob autoritativo
+same-map validation
+target alive
+Equipment autoritativo
+attack profile
+range
+attack cooldown
+damage
+mutación de HP del mob
+replicación del mob actualizado
+```
+
+El cliente nunca decide damage, range ni arma real.
 
 ## AuthenticationCoordinator
 
@@ -2841,8 +2896,8 @@ El cliente sólo envía:
 {
   "request_id": 1,
   "target": {
-	"kind": "entity",
-	"entity_id": "mob_test_town_001"
+    "kind": "entity",
+    "entity_id": "mob_test_town_001"
   }
 }
 ```
@@ -3065,6 +3120,389 @@ EXP
 ```
 
 **Siguiente checkpoint:** `F17-E — Authoritative Basic Attack Execution`.
+
+
+## F17-E — AUTHORITATIVE BASIC ATTACK EXECUTION
+
+**Estado:** ✅ COMPLETADO, PROBADO Y VALIDADO.
+
+F17-E transforma el Basic Attack de una intención validada en una ejecución real de combate autoritativo.
+
+Flujo cerrado:
+
+```text
+LEFT CLICK sobre mob hostil
+→ basic_attack_request
+→ BasicAttackCoordinator
+→ resolver PlayerWorldSession
+→ resolver WorldMobRuntimeState
+→ resolver Equipment real
+→ derivar attack profile
+→ validar range
+→ validar attack cooldown
+→ calcular damage en Game Server
+→ mutar HP del mob
+→ basic_attack_result
+→ mob_state_updated
+→ clientes del mismo mapa
+→ MobActor actualizado
+```
+
+### ServerVitalsState
+
+Se incorporó damage real reutilizable:
+
+```text
+apply_damage(amount)
+```
+
+La primitive:
+
+```text
+clampa HP entre 0 y max_hp
+devuelve damage realmente aplicado
+```
+
+No existe mutación manual del tipo:
+
+```text
+mob.vitals.hp -= X
+```
+
+fuera del dominio de vitals/runtime.
+
+### Basic Attack runtime
+
+Se incorporó:
+
+```text
+ServerBasicAttackRuntimeState
+```
+
+Responsabilidad:
+
+```text
+cooldown_until_msec
+cooldown remaining
+cooldown active
+start cooldown
+reset
+```
+
+La cadence de Basic Attack queda separada del runtime de cooldowns de Skills.
+
+`PlayerWorldSession` posee su runtime autoritativo de Basic Attack.
+
+### Attack profile autoritativo
+
+`ServerBasicAttackProfileResolver` continúa resolviendo Equipment real y ahora además entrega:
+
+```text
+mode
+weapon_item_id
+weapon_uid
+base_damage
+attack_range
+cooldown_duration_seconds
+```
+
+Valores temporales de Foundation:
+
+```text
+UNARMED
+damage:   500
+range:    1.5
+cooldown: 1.0 s
+
+BRONZE SWORD
+mode:     melee
+damage:   1000
+range:    2.0
+cooldown: 0.9 s
+```
+
+Estos números NO representan balance definitivo.
+
+La fuente real del arma sigue siendo:
+
+```text
+PlayerWorldSession.equipment_snapshot
+→ ServerItemCatalog
+→ ServerBasicAttackProfileResolver
+```
+
+El cliente no declara arma, damage, range ni cooldown.
+
+### Range autoritativo
+
+El Game Server calcula distancia XZ entre:
+
+```text
+PlayerWorldSession.position
+WorldMobRuntimeState.position
+```
+
+Un request fuera de rango:
+
+```text
+Accepted: false
+Reason: out_of_range
+```
+
+y no muta HP.
+
+Test real validado:
+
+```text
+Distancia: 5.65685415267944
+Rango: 2.0
+Accepted: false
+Reason: out_of_range
+```
+
+Training Goblin permaneció:
+
+```text
+50000 / 50000 HP
+```
+
+### Damage melee real
+
+Con `bronze_sword` persistida en `main_hand`:
+
+```text
+Mode: melee
+Weapon: bronze_sword
+Damage: 1000
+```
+
+Ataques autoritativos validados:
+
+```text
+50000 → 49000
+49000 → 48000
+```
+
+Game Server:
+
+```text
+BasicAttackCoordinator | Ataque ejecutado
+| Entity: mob_test_town_001
+| Mode: melee
+| Weapon: bronze_sword
+| Damage: 1000
+| HP restante: 49000/50000
+```
+
+y luego:
+
+```text
+HP restante: 48000/50000
+```
+
+### Cooldown melee
+
+Un ataque enviado demasiado pronto fue rechazado:
+
+```text
+BasicAttackCoordinator | Cooldown activo
+| Request: 4
+| Restante: 0.324
+
+Accepted: false
+Reason: attack_cooldown_active
+```
+
+No hubo damage adicional durante ese request.
+
+### Damage unarmed real
+
+Después de Unequip autoritativo:
+
+```text
+Equipment persistente cargado
+| Items: 0
+```
+
+el mismo pipeline cambió automáticamente a:
+
+```text
+Mode: unarmed
+Weapon:
+Damage: 500
+```
+
+Resultado:
+
+```text
+48000 → 47500
+```
+
+Game Server:
+
+```text
+BasicAttackCoordinator | Ataque ejecutado
+| Mode: unarmed
+| Damage: 500
+| HP restante: 47500/50000
+```
+
+También se validó cooldown unarmed:
+
+```text
+Request: 6
+Reason: attack_cooldown_active
+Restante: 0.4
+```
+
+### Replicación autoritativa del HP del mob
+
+Se incorporó:
+
+```text
+mob_state_updated
+```
+
+como evento:
+
+```text
+Game Server
+→ todos los PlayerWorldSession del mismo map_id
+```
+
+`WorldSessionRegistry.get_sessions_in_map()` se reutiliza como fuente de recipients.
+
+En el test:
+
+```text
+BasicAttackCoordinator | Estado de mob replicado
+| Entity: mob_test_town_001
+| Recipients: 1
+| HP: 49000/50000
+```
+
+El cliente procesa el snapshot mediante el parser existente de `GameServerPresenceProtocol`, conserva `remote_mobs` actualizado y emite `mob_state_updated`.
+
+`GameplayScreen` reutiliza:
+
+```text
+_spawn_or_update_mob()
+```
+
+y el mismo `MobActor.setup()`.
+
+Cliente validado:
+
+```text
+GameServerClient | Estado de mob actualizado
+| Entity: mob_test_town_001
+| HP: 49000/50000
+
+MobActor | Preparado
+| HP: 49000/50000
+```
+
+Luego:
+
+```text
+48000/50000
+47500/50000
+```
+
+Esto confirma que no existe un HP visual paralelo al runtime autoritativo.
+
+### Trust boundary validado
+
+Cliente envía:
+
+```text
+request_id
+target.kind = entity
+target.entity_id
+```
+
+Game Server decide:
+
+```text
+Equipment real
+attack mode
+range
+cooldown
+damage
+HP resultante
+alive
+replicación
+```
+
+No aceptar en el futuro `damage`, `range` o `weapon` enviados por cliente como datos confiables.
+
+### Regresiones / estabilidad
+
+Durante las pruebas continuaron operativos:
+
+```text
+login
+world bootstrap
+Inventory
+Equipment
+movement
+mob targeting
+Basic Attack intent
+mob replication
+```
+
+No se observaron:
+
+```text
+Parser Errors
+warnings nuevos
+runtime errors inesperados
+```
+
+La desconexión final fue posterior a detener manualmente el proceso de debugging.
+
+### Checkpoints remotos
+
+Cliente:
+
+```text
+c6b7dc03b163094dabb19ab6c05378dfe6985148
+feat: apply authoritative mob combat updates
+```
+
+Game Server:
+
+```text
+5be09fadc6d0f58af7a1797c7c5d0224a063c91d
+feat: execute authoritative basic attack damage
+```
+
+### Límite de F17-E
+
+F17-E implementa damage real de Basic Attack, pero todavía NO formaliza:
+
+```text
+transición de muerte del mob
+death event
+representación visual dead
+desactivar picking/collider al morir
+respawn
+auto-chase
+orientación automática
+animaciones
+hit reaction
+damage numbers
+defensa
+critical/block/miss
+stats STR/DEX/etc.
+aggro
+IA
+retaliación
+drops
+EXP
+```
+
+**Siguiente checkpoint:** `F17-F — Authoritative Mob Death Transition`.
 
 ---
 
@@ -3728,7 +4166,8 @@ F17-A Mob runtime             ✅
 F17-B Mob replication         ✅
 F17-C Entity targeting        ✅
 F17-D Basic Attack PvE        ✅
-F17-E Basic Attack execution  ⏳ SIGUIENTE
+F17-E Basic Attack execution  ✅
+F17-F Mob death transition    ⏳ SIGUIENTE
 F18 Drop / Pickup / EXP       ⏳
 F19 Vertical Slice            ⏳
 
@@ -3742,7 +4181,7 @@ PERF-1                        ⏳ después de F19 estable
 Antes de comenzar una etapa nueva:
 
 ```text
-cerrar documentación/checkpoint F17-D
+cerrar documentación/checkpoint F17-E
 → reemplazar PROJECT_MEMORY.md
 → git status
 → commit
@@ -3753,48 +4192,58 @@ cerrar documentación/checkpoint F17-D
 Después:
 
 ```text
-F17-E — Authoritative Basic Attack Execution
+F17-F — Authoritative Mob Death Transition
 ```
 
 Dirección del checkpoint:
 
 ```text
-basic_attack_intent ya validado
-→ determinar reglas runtime reales del ataque
-→ validar rango autoritativo
-→ aplicar cadence/cooldown de ataque
-→ calcular damage en Game Server
-→ mutar HP del mob
-→ devolver resultado autoritativo
+damage autoritativo ya existente
+→ HP llega a 0
+→ detectar transición alive → dead exactamente una vez
+→ consolidar death state del WorldMobRuntimeState
+→ replicar alive=false + HP=0
+→ cliente representa mob muerto
+→ desactivar targetability/picking de combate
+→ rechazar ataques/skills posteriores
+→ exponer una señal/evento autoritativo de muerte
 ```
 
-No mezclar todavía en el mismo checkpoint:
+Ese evento de muerte será el hook que F18 podrá reutilizar para:
 
 ```text
-auto-chase completo
-animaciones finales
-aggro/IA completa
-muerte + respawn completos
+drop
+EXP
+pickup
+```
+
+Todavía no mezclar en F17-F:
+
+```text
 drops
 EXP
+loot tables
+respawn completo
+aggro/IA completa
+animaciones finales
 ```
 
 ---
 
 # 67. CRITERIO DE ÉXITO DEL PRÓXIMO TEST
 
-F17-E deberá demostrar progresivamente:
+F17-F deberá demostrar como mínimo:
 
 ```text
-1. un Basic Attack válido puede ejecutarse realmente;
-2. el Game Server decide el rango;
-3. un atacante fuera de rango no aplica damage;
-4. el Game Server decide el damage;
-5. el cliente no envía damage confiable;
-6. el HP del mob sólo muta en Game Server;
-7. unarmed y melee pueden usar perfiles distintos;
-8. el resultado autoritativo vuelve al cliente;
-9. Skills, Movement, NPC y Equipment no regresionan;
+1. un mob puede pasar de HP > 0 a HP = 0 por damage autoritativo;
+2. la transición alive → dead ocurre una sola vez;
+3. el snapshot replicado queda HP=0 y alive=false;
+4. MobActor deja de ser targetable al morir;
+5. el picking/target de combate no acepta al mob muerto;
+6. un request posterior no vuelve a aplicar damage;
+7. el Game Server devuelve target_not_alive para requests válidos estructuralmente;
+8. existe un hook/evento autoritativo de muerte reutilizable por F18;
+9. no se implementan todavía drops ni EXP dentro de F17-F;
 10. no aparecen warnings/errors nuevos.
 ```
 
@@ -3849,9 +4298,27 @@ bronze_sword en main_hand
 → melee
 ```
 
-La siguiente ejecución real debe reutilizar este perfil; no crear un segundo modelo de arma para Combat.
+F17-E ya reutilizó ese mismo perfil para ejecución real.
 
-No implementar daño fuera del pipeline autoritativo de entidad/mob.
+Validado:
+
+```text
+bronze_sword
+→ melee
+→ range 2.0
+→ cooldown 0.9 s
+→ damage 1000
+
+sin arma
+→ unarmed
+→ range 1.5
+→ cooldown 1.0 s
+→ damage 500
+```
+
+El HP del mob se muta exclusivamente en Game Server y se replica mediante `mob_state_updated`.
+
+No crear un segundo modelo de arma ni implementar damage fuera del pipeline autoritativo de entidad/mob.
 
 Fire Ball necesitará:
 
@@ -3949,7 +4416,7 @@ El SHA definitivo de cierre de F16-C debe verificarse en `dev` después del push
 La etapa funcionalmente validada es:
 
 ```text
-F17-D — Basic Attack PvE Foundation
+F17-E — Authoritative Basic Attack Execution
 ```
 
 Contrato vigente:
@@ -3963,20 +4430,35 @@ CTRL + LEFT CLICK player  = BASIC ATTACK PvP
 CTRL + RIGHT CLICK player = SELECTED SKILL PvP
 ```
 
-Basic Attack Foundation validada:
+Basic Attack real validado:
 
 ```text
-sin arma
-→ unarmed
-
 bronze_sword
 → melee
+→ 1000 damage
+→ range 2.0
+→ cooldown 0.9 s
+
+sin arma
+→ unarmed
+→ 500 damage
+→ range 1.5
+→ cooldown 1.0 s
+```
+
+Estado del mob:
+
+```text
+Game Server HP
+→ mob_state_updated
+→ clientes del mapa
+→ MobActor
 ```
 
 Próxima etapa después del checkpoint Git:
 
 ```text
-F17-E — Authoritative Basic Attack Execution
+F17-F — Authoritative Mob Death Transition
 ```
 
-**No avanzar a F17-E hasta commitear, pushear y confirmar la actualización canónica de F17-D.**
+**No avanzar a F17-F hasta commitear, pushear y confirmar la actualización canónica de F17-E.**
