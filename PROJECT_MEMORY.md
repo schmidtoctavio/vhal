@@ -4,7 +4,7 @@
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama de desarrollo habitual:** `dev`  
-**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B/F17-C cerrados y validados; próximo checkpoint F17-D para ataque básico autoritativo PvE.
+**Estado general:** Foundation avanzada, F15-R cerrado, F15-C evaluado/diferido, F16-A/F16-B/F16-BR/F16-C/F16-D/F17-A/F17-B/F17-C/F17-D cerrados y validados; próximo checkpoint F17-E para ejecución autoritativa del ataque básico PvE.
 
 > Este archivo es la **fuente canónica única de contexto del proyecto VHAL**.
 >
@@ -314,24 +314,24 @@ Cuando aparece ese patrón hay que revisar la abstracción.
 │ intención + UI      │
 │ representación      │
 └──────────┬──────────┘
-		   │
-		   │ ENet
-		   ▼
+           │
+           │ ENet
+           ▼
 ┌─────────────────────┐
 │  GODOT GAME SERVER  │
 │ autoridad gameplay  │
 │ estado runtime      │
 └──────────┬──────────┘
-		   │
-		   │ HTTP interno
-		   ▼
+           │
+           │ HTTP interno
+           ▼
 ┌─────────────────────┐
 │   LARAVEL BACKEND   │
 │ identidad + API     │
 │ persistencia        │
 └──────────┬──────────┘
-		   │
-		   ▼
+           │
+           ▼
 ┌─────────────────────┐
 │        MYSQL        │
 │ almacenamiento      │
@@ -766,19 +766,19 @@ res://
 │       └── skill_cast_coordinator.gd
 │
 └── core/
-	├── networking/
-	├── backend/
-	├── combat/
-	│   ├── server_vitals_state.gd
-	│   └── server_character_runtime_bootstrap.gd
-	├── skills/
-	│   ├── server_skill_definition.gd
-	│   ├── server_skill_catalog.gd
-	│   └── server_skill_runtime_state.gd
-	└── world/
-		├── movement/
-		├── navigation/
-		└── npcs/
+    ├── networking/
+    ├── backend/
+    ├── combat/
+    │   ├── server_vitals_state.gd
+    │   └── server_character_runtime_bootstrap.gd
+    ├── skills/
+    │   ├── server_skill_definition.gd
+    │   ├── server_skill_catalog.gd
+    │   └── server_skill_runtime_state.gd
+    └── world/
+        ├── movement/
+        ├── navigation/
+        └── npcs/
 ```
 
 ## ServerMain
@@ -2783,6 +2783,289 @@ EXP
 
 **Siguiente checkpoint:** `F17-D — Basic Attack PvE Foundation`.
 
+
+## F17-D — BASIC ATTACK PvE FOUNDATION
+
+**Estado:** ✅ COMPLETADO Y VALIDADO.
+
+Objetivo cerrado:
+
+```text
+LEFT CLICK sobre mob hostil
+→ resolver entity_id
+→ basic_attack_intent
+→ Game Server
+→ resolver PlayerWorldSession
+→ resolver WorldMobRuntimeState
+→ validar target autoritativo
+→ resolver Equipment autoritativo
+→ derivar attack profile
+→ responder sin ejecutar todavía damage
+```
+
+### Input PvE validado
+
+El click izquierdo es contextual:
+
+```text
+LEFT CLICK terreno
+→ MOVE
+
+LEFT CLICK NPC
+→ INTERACT
+
+LEFT CLICK mob hostil
+→ BASIC ATTACK PvE
+```
+
+`CTRL + LEFT CLICK` continúa reservado para Basic Attack PvP futuro y no se convierte accidentalmente en movimiento ni ataque PvE.
+
+### Protocolo independiente de Skills
+
+Se incorporó un protocolo específico de combate:
+
+```text
+GameServerCombatProtocol
+```
+
+Mensajes:
+
+```text
+basic_attack_request
+basic_attack_result
+```
+
+El cliente sólo envía:
+
+```json
+{
+  "request_id": 1,
+  "target": {
+    "kind": "entity",
+    "entity_id": "mob_test_town_001"
+  }
+}
+```
+
+No envía como autoridad:
+
+```text
+weapon
+attack mode
+damage
+range
+hit
+```
+
+### Game Server
+
+Se incorporó:
+
+```text
+BasicAttackCoordinator
+```
+
+Responsabilidad del coordinator:
+
+```text
+resolver sesión autoritativa
+validar request_id
+validar caster alive
+resolver mob mediante WorldMobRegistry
+validar mismo mapa
+validar target alive
+resolver Equipment autoritativo
+derivar attack profile
+devolver resultado autoritativo
+```
+
+Todavía no ejecuta damage.
+
+### Equipment → attack profile
+
+Se incorporó:
+
+```text
+ServerBasicAttackProfileResolver
+```
+
+El perfil se deriva desde:
+
+```text
+PlayerWorldSession.equipment_snapshot
+```
+
+y `ServerItemCatalog`.
+
+Modos foundation:
+
+```text
+unarmed
+melee
+ranged
+```
+
+El catálogo autoritativo agrega:
+
+```text
+basic_attack_mode_id
+```
+
+para definiciones que afectan combate.
+
+### Test 1 — sin arma
+
+Equipment:
+
+```text
+Items: 0
+```
+
+Resultado autoritativo validado:
+
+```text
+BasicAttackCoordinator | Intent autoritativo validado
+| Entity: mob_test_town_001
+| Mob HP: 50000/50000
+| Mode: unarmed
+| Weapon:
+```
+
+Resultado:
+
+```text
+Accepted: false
+Reason: basic_attack_not_implemented
+Mode: unarmed
+```
+
+Cliente:
+
+```text
+GameServerClient | Resultado autoritativo de Basic Attack
+| Entity: mob_test_town_001
+| Accepted: false
+| Reason: basic_attack_not_implemented
+| Mode: unarmed
+| Weapon:
+```
+
+### Test 2 — bronze_sword equipada
+
+La espada se equipó mediante el pipeline autoritativo existente:
+
+```text
+EquipmentCoordinator
+→ main_hand
+→ persistencia
+→ Inventory snapshot
+→ Equipment snapshot
+```
+
+Game Server:
+
+```text
+BasicAttackCoordinator | Intent autoritativo validado
+| Personaje: Atilio
+| Entity: mob_test_town_001
+| Mob HP: 50000/50000
+| Mode: melee
+| Weapon: bronze_sword
+```
+
+Cliente:
+
+```text
+GameServerClient | Resultado autoritativo de Basic Attack
+| Entity: mob_test_town_001
+| Accepted: false
+| Reason: basic_attack_not_implemented
+| Mode: melee
+| Weapon: bronze_sword
+```
+
+Esto prueba que el cliente no elige el arma ni el modo de ataque.
+
+El Game Server los obtiene desde Equipment real.
+
+### Regresiones validadas
+
+Continuaron funcionando:
+
+```text
+LEFT CLICK terreno
+→ movimiento autoritativo
+
+LEFT CLICK Warehouse Keeper
+→ interacción NPC
+→ Vault autorizada
+
+RIGHT CLICK Training Goblin
+→ Fire Ball
+→ entity target
+→ skill_not_implemented
+
+Heal
+→ self
+→ mana
+→ cooldown
+```
+
+Se corrigió además el warning:
+
+```text
+CONFUSABLE_LOCAL_DECLARATION
+```
+
+separando semánticamente:
+
+```text
+skill_target_entity_id
+basic_attack_target_entity_id
+```
+
+La ejecución final quedó sin warnings/errors nuevos.
+
+### Checkpoints remotos
+
+Cliente:
+
+```text
+4be6c087d209975a38fa6a08328415018bc63669
+feat: add basic attack pve intent foundation
+```
+
+Game Server:
+
+```text
+bbc6f4e378938581db0be31d00b2cbd51f50bac1
+feat: validate authoritative basic attack intents
+```
+
+### Límite de F17-D
+
+F17-D valida intención, target y perfil de ataque.
+
+Todavía NO incluye:
+
+```text
+attack range real
+attack speed / cooldown
+damage
+mutación de HP del mob
+orientación al target
+animación
+auto-chase
+aggro
+retaliación
+muerte
+respawn
+drops
+EXP
+```
+
+**Siguiente checkpoint:** `F17-E — Authoritative Basic Attack Execution`.
+
 ---
 
 # 43. PvP — DIRECCIÓN CANÓNICA
@@ -3444,7 +3727,8 @@ F16-D Cooldown visual/UI      ✅
 F17-A Mob runtime             ✅
 F17-B Mob replication         ✅
 F17-C Entity targeting        ✅
-F17-D Basic Attack PvE        ⏳ SIGUIENTE
+F17-D Basic Attack PvE        ✅
+F17-E Basic Attack execution  ⏳ SIGUIENTE
 F18 Drop / Pickup / EXP       ⏳
 F19 Vertical Slice            ⏳
 
@@ -3458,7 +3742,7 @@ PERF-1                        ⏳ después de F19 estable
 Antes de comenzar una etapa nueva:
 
 ```text
-cerrar documentación/checkpoint F17-C
+cerrar documentación/checkpoint F17-D
 → reemplazar PROJECT_MEMORY.md
 → git status
 → commit
@@ -3469,40 +3753,49 @@ cerrar documentación/checkpoint F17-C
 Después:
 
 ```text
-F17-D — Basic Attack PvE Foundation
+F17-E — Authoritative Basic Attack Execution
 ```
 
-Objetivo:
+Dirección del checkpoint:
 
 ```text
-LEFT CLICK sobre mob hostil
-→ resolver entity_id
-→ basic_attack_intent
-→ Game Server
-→ resolver PlayerWorldSession
-→ resolver WorldMobRuntimeState
-→ validar identidad/mapa/alive
-→ identificar modalidad de ataque desde Equipment autoritativo
+basic_attack_intent ya validado
+→ determinar reglas runtime reales del ataque
+→ validar rango autoritativo
+→ aplicar cadence/cooldown de ataque
+→ calcular damage en Game Server
+→ mutar HP del mob
+→ devolver resultado autoritativo
 ```
 
-Todavía sin mezclar damage completo, auto-chase, animaciones, aggro, muerte, respawn, drops o EXP.
+No mezclar todavía en el mismo checkpoint:
+
+```text
+auto-chase completo
+animaciones finales
+aggro/IA completa
+muerte + respawn completos
+drops
+EXP
+```
 
 ---
 
 # 67. CRITERIO DE ÉXITO DEL PRÓXIMO TEST
 
-F17-D deberá demostrar:
+F17-E deberá demostrar progresivamente:
 
 ```text
-1. LEFT CLICK sobre terreno sigue moviendo;
-2. LEFT CLICK sobre NPC sigue interactuando;
-3. LEFT CLICK sobre Training Goblin produce basic_attack_intent;
-4. el intent usa entity_id estable;
-5. el Game Server resuelve el mob autoritativo;
-6. el Game Server resuelve el estado/equipment autoritativo del atacante;
-7. el cliente no envía damage confiable;
-8. RIGHT CLICK mantiene Skills;
-9. no aparecen warnings/errors nuevos.
+1. un Basic Attack válido puede ejecutarse realmente;
+2. el Game Server decide el rango;
+3. un atacante fuera de rango no aplica damage;
+4. el Game Server decide el damage;
+5. el cliente no envía damage confiable;
+6. el HP del mob sólo muta en Game Server;
+7. unarmed y melee pueden usar perfiles distintos;
+8. el resultado autoritativo vuelve al cliente;
+9. Skills, Movement, NPC y Equipment no regresionan;
+10. no aparecen warnings/errors nuevos.
 ```
 
 ---
@@ -3546,7 +3839,19 @@ CTRL + RIGHT CLICK sobre player
 
 El Game Server resolverá el ataque según Equipment autoritativo.
 
-No implementar daño real antes de tener entidad/mob autoritativo.
+F17-D ya validó:
+
+```text
+Equipment vacío
+→ unarmed
+
+bronze_sword en main_hand
+→ melee
+```
+
+La siguiente ejecución real debe reutilizar este perfil; no crear un segundo modelo de arma para Combat.
+
+No implementar daño fuera del pipeline autoritativo de entidad/mob.
 
 Fire Ball necesitará:
 
@@ -3644,7 +3949,7 @@ El SHA definitivo de cierre de F16-C debe verificarse en `dev` después del push
 La etapa funcionalmente validada es:
 
 ```text
-F17-C — Entity Targeting Foundation
+F17-D — Basic Attack PvE Foundation
 ```
 
 Contrato vigente:
@@ -3658,10 +3963,20 @@ CTRL + LEFT CLICK player  = BASIC ATTACK PvP
 CTRL + RIGHT CLICK player = SELECTED SKILL PvP
 ```
 
+Basic Attack Foundation validada:
+
+```text
+sin arma
+→ unarmed
+
+bronze_sword
+→ melee
+```
+
 Próxima etapa después del checkpoint Git:
 
 ```text
-F17-D — Basic Attack PvE Foundation
+F17-E — Authoritative Basic Attack Execution
 ```
 
-**No avanzar a F17-D hasta commitear, pushear y confirmar la actualización canónica de F17-C.**
+**No avanzar a F17-E hasta commitear, pushear y confirmar la actualización canónica de F17-D.**
