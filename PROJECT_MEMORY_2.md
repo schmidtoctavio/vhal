@@ -1,18 +1,18 @@
 # VHAL — PROJECT MEMORY 2 / CONTINUIDAD CANÓNICA
 
 **Volumen:** 2  
-**Última actualización:** 25/08/2026  
+**Última actualización:** 26/08/2026  
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama habitual:** `dev`  
-**Estado general:** F19 Vertical Slice cerrado y F20 Durable Character Runtime cerrado, probado y pusheado.  
-**Siguiente bloque recomendado:** F21-A — Durable Skill Ownership Foundation.
+**Estado general:** F19 Vertical Slice ✅, F20 Durable Character Runtime ✅, F21-A Durable Skill Ownership ✅.  
+**Siguiente bloque recomendado:** F21-B — Durable Skill Learning Foundation (Scroll/Book + requisitos + Trainer + persistencia autoritativa).
 
 ---
 
-# 0. CÓMO FUNCIONAN LOS PROJECT MEMORY POR VOLÚMENES
+# 0. REGLA DE MEMORIA CANÓNICA POR VOLÚMENES
 
-A partir de este punto VHAL usa memoria canónica por volúmenes para evitar que un único `PROJECT_MEMORY.md` crezca indefinidamente y se vuelva difícil de mantener.
+VHAL usa memoria canónica por volúmenes.
 
 Archivos actuales:
 
@@ -27,67 +27,52 @@ PROJECT_MEMORY_2.md
 → estado canónico actual
 ```
 
-## Orden obligatorio de lectura
-
-Al retomar VHAL en una conversación nueva:
+Orden obligatorio al retomar el proyecto:
 
 ```text
 1. leer PROJECT_MEMORY.md
 2. leer PROJECT_MEMORY_2.md
-3. revisar repositorios reales en dev
-4. continuar desde el último volumen
+3. si existe, leer PROJECT_MEMORY_3.md
+4. continuar en orden creciente
+5. revisar los repositorios reales en branch dev
 ```
 
-## Regla de precedencia
+Regla de precedencia:
 
-Si existe una contradicción entre volúmenes:
+> El volumen más nuevo prevalece para el estado operativo actual si existe una contradicción con uno anterior.
 
-> **El volumen más nuevo prevalece para el estado actual.**
+Los volúmenes anteriores conservan historia; el más reciente conserva la verdad operativa actual.
 
-Esto permite conservar historia sin reescribirla.
+## Política de tamaño
 
-Ejemplo:
+Los `.md` canónicos se entregan siempre completos para reemplazar.
+
+Cuando un volumen se acerque aproximadamente a:
 
 ```text
-PROJECT_MEMORY.md dice:
-Position / HP / MP todavía no son durables
-
-PROJECT_MEMORY_2.md dice:
-F20 ya implementó esa persistencia
-
-→ prevalece PROJECT_MEMORY_2.md
+~5000 líneas
 ```
 
-El volumen anterior sigue siendo válido como historia de cómo evolucionó el proyecto.
+no se sigue inflando indefinidamente.
 
-## Futuro PROJECT_MEMORY_3.md
-
-Cuando este archivo se vuelva demasiado largo:
+Se crea:
 
 ```text
-PROJECT_MEMORY.md
-PROJECT_MEMORY_2.md
 PROJECT_MEMORY_3.md
 ```
 
-Lectura:
+y luego, si hiciera falta:
 
 ```text
-1 → 2 → 3
+PROJECT_MEMORY_4.md
+...
 ```
 
-Y nuevamente:
-
-```text
-el volumen más reciente
-→ autoridad sobre estado actual / roadmap / decisiones nuevas
-```
-
-No borrar los volúmenes anteriores salvo una decisión explícita de archivo histórico.
+No reescribir miles de líneas históricas en cada volumen nuevo.
 
 ---
 
-# 1. WORKFLOW OBLIGATORIO — SE MANTIENE SIN CAMBIOS
+# 1. WORKFLOW OBLIGATORIO
 
 VHAL continúa usando estrictamente:
 
@@ -102,6 +87,8 @@ CORREGIR WARNINGS / ERRORES
 ↓
 GIT STATUS
 ↓
+REVISAR SCOPE
+↓
 COMMIT
 ↓
 PUSH
@@ -115,22 +102,29 @@ SIGUIENTE ETAPA
 
 Reglas:
 
-- no avanzar a la siguiente etapa antes de `pusheado`;
+- no avanzar de etapa antes de `pusheado`;
 - preferir etapas pequeñas;
 - probar antes de commit;
-- revisar `git status` antes de commit;
+- corregir warnings/errors antes de cerrar;
+- revisar `git status` antes del commit;
 - no mezclar scope ajeno;
-- mantener objetivo habitual de `0 warnings / 0 errors`;
-- revisar siempre el repositorio real antes de indicar cambios concretos;
-- GitHub actual prevalece sobre recuerdos anteriores.
+- GitHub actual prevalece sobre recuerdos anteriores;
+- revisar siempre el código real antes de indicar cambios concretos;
+- cuando una escena/nodo/Inspector sea razonablemente manual, el usuario lo hace en Godot;
+- no convertir cada etapa en un refactor general si no lo necesita.
 
-Cuando una modificación de escena/nodos/Inspector es razonablemente manual, el usuario la realiza en Godot para conservar aprendizaje y control.
+Objetivo habitual:
+
+```text
+0 warnings
+0 errors
+```
 
 ---
 
-# 2. REPOSITORIOS Y BASELINES ACTUALES
+# 2. REPOSITORIOS
 
-Rama activa habitual:
+Branch habitual:
 
 ```text
 dev
@@ -149,25 +143,38 @@ Backend:
 schmidtoctavio/vhal_backend
 ```
 
-Baselines confirmados al cierre de F20:
+---
 
-## Cliente / memoria canónica
+# 3. BASELINES CANÓNICOS ACTUALES
+
+## Cliente / memoria
+
+Baseline previo al próximo commit documental:
+
+```text
+cc9d528add6976cb53d6108a67ac9ff313d68298
+Project memory 2
+```
+
+Padre relevante:
 
 ```text
 557bee80258d09cfbc9084e42213d14caefd9b85
 docs: close F19 vertical slice and record future systems
 ```
 
-En F20 el cliente no necesitó cambios de gameplay porque el contrato `world_snapshot` ya podía representar `world` y `vitals` autoritativos.
+F20 y F21-A no requirieron cambios de gameplay en el cliente para ownership durable porque el contrato de skills autoritativas y `PlayerRuntimeState.apply_skill_snapshot()` ya soportaban listas vacías y ownership parcial.
 
 ## Game Server
 
+Baseline actual:
+
 ```text
-2623eb60985b0af6070d137bda086c9c53dae1c4
-feat: add periodic character runtime autosave
+598d993eeff80aaf5fd84ca7413a04772ee4faab
+feat: bootstrap skills from durable ownership
 ```
 
-Cadena F20 del Game Server:
+Cadena reciente:
 
 ```text
 f329f4fe854a416fd684322567951ee023f14606
@@ -178,25 +185,36 @@ feat: persist character runtime on disconnect
 
 2623eb60985b0af6070d137bda086c9c53dae1c4
 feat: add periodic character runtime autosave
+
+598d993eeff80aaf5fd84ca7413a04772ee4faab
+feat: bootstrap skills from durable ownership
 ```
 
 ## Backend
 
+Baseline actual:
+
 ```text
-55d69f7b63e853c2aa66b49570bd490d358aa9ca
-feat: add durable character runtime persistence
+29c2426077788225779674652ba6712dcc13231a
+feat: add durable character skill ownership
 ```
 
-Commit anterior importante ya incluido en su historia:
+Cadena reciente relevante:
 
 ```text
-1ae3036031bd8d2e8fb6289c94df4d2869c6e23c
+1ae3036031bd8d2e8fb6289c94df4d2869c6e23
 fix: include experience in game session ticket
+
+55d69f7b63e853c2aa66b49570bd490d358aa9ca
+feat: add durable character runtime persistence
+
+29c2426077788225779674652ba6712dcc13231a
+feat: add durable character skill ownership
 ```
 
 ---
 
-# 3. ARQUITECTURA CANÓNICA — CONTINÚA VIGENTE
+# 4. ARQUITECTURA CANÓNICA
 
 ```text
 ┌─────────────────────┐
@@ -204,28 +222,28 @@ fix: include experience in game session ticket
 │ intención + UI      │
 │ representación      │
 └──────────┬──────────┘
-           │ ENet
-           ▼
+		   │ ENet
+		   ▼
 ┌─────────────────────┐
 │  GODOT GAME SERVER  │
 │ autoridad gameplay  │
 │ estado runtime      │
 └──────────┬──────────┘
-           │ HTTP interno
-           ▼
+		   │ HTTP interno
+		   ▼
 ┌─────────────────────┐
 │   LARAVEL BACKEND   │
 │ identidad + API     │
 │ persistencia        │
 └──────────┬──────────┘
-           ▼
+		   ▼
 ┌─────────────────────┐
 │        MYSQL        │
 │ durable storage     │
 └─────────────────────┘
 ```
 
-Regla:
+Responsabilidades:
 
 ```text
 Cliente
@@ -235,7 +253,7 @@ Game Server
 = autoridad inmediata de gameplay/runtime
 
 Backend
-= identidad + API + persistencia durable
+= identidad + API + operaciones durables
 
 MySQL
 = almacenamiento durable
@@ -249,20 +267,21 @@ MP
 damage
 cooldown
 posición autoritativa
-item placement definitiva
+item placement definitivo
 EXP
 level
 loot
 pickup success
 skill ownership
+skill learning success
 estado PvP
 ```
 
 ---
 
-# 4. REGLA CRÍTICA — BACKEND NO ENTRA EN EL HOT LOOP DE COMBAT
+# 5. BACKEND FUERA DEL HOT LOOP
 
-Continúa vigente:
+Regla crítica:
 
 ```text
 Client intent
@@ -274,28 +293,37 @@ Client intent
 Incorrecto:
 
 ```text
-cada attack/cast
+cada frame / attack / cast
 → Laravel
 → MySQL
 → esperar
 → gameplay
 ```
 
-Laravel se utiliza para persistencia durable con políticas apropiadas, no como autoridad síncrona de cada frame/ataque/cast.
+Laravel participa cuando debe existir durabilidad o una operación transaccional durable.
 
-F20 refuerza esta dirección:
+Ejemplos:
 
 ```text
-movimiento y Vitals
-→ runtime inmediato Game Server
+movement runtime
+→ Game Server
 
-checkpoint periódico / disconnect
-→ persistencia durable Backend
+HP/MP runtime
+→ Game Server
+
+autosave runtime
+→ Backend
+
+inventory durable mutation
+→ Backend
+
+learned skill durable mutation
+→ Backend
 ```
 
 ---
 
-# 5. INPUT CANÓNICO ESTILO MU — NO CAMBIAR
+# 6. INPUT CANÓNICO ESTILO MU
 
 ```text
 LEFT CLICK drop
@@ -320,7 +348,7 @@ CTRL + RIGHT CLICK player
 → SELECTED SKILL PvP futuro
 ```
 
-Basic Attack sigue siendo weapon-aware y resuelto por Game Server:
+Basic Attack weapon-aware:
 
 ```text
 sin arma
@@ -333,30 +361,44 @@ bow futuro
 → ranged
 ```
 
-No renombrar el modo protocolar `unarmed`.
-
-`bronze_sword` continúa resolviendo modo:
+No renombrar protocolo:
 
 ```text
-melee
+unarmed
 ```
 
-El cliente sólo solicita entidad/acción. El Game Server decide arma, modalidad, rango, damage y cooldown.
+`bronze_sword`:
 
-Auto-chase sigue diferido a un checkpoint dedicado.
+```text
+mode = melee
+```
+
+El cliente sólo solicita acción/entidad.
+
+El Game Server resuelve:
+
+```text
+arma
+modalidad
+rango
+damage
+cooldown
+```
+
+Auto-chase permanece diferido a un checkpoint dedicado.
 
 ---
 
-# 6. ESTADO HEREDADO DEL VOLUMEN 1 — F19
+# 7. F19 — VERTICAL SLICE HEREDADO
 
-F19 cerró el primer vertical slice MMORPG real del proyecto.
+**Estado:** ✅ CERRADO.
 
-Flujo ya validado antes de F20:
+F19 dejó funcionalmente probado:
 
 ```text
 Login
 → Character Select
-→ Ticket
+→ Game Session Ticket
 → Game Server
 → World
 → Movement
@@ -372,27 +414,32 @@ Login
 → Logout / Reconnect
 ```
 
-Al cierre F19 estaban comprobados:
+Durable al cierre F19:
 
 ```text
-Inventory persistente
-Equipment persistente
-Vault persistente
-Level / EXP persistentes
-Skills autoritativas runtime
-WorldDrop autoritativo mientras vive el GS
-Pickup durable
-Mob death / respawn
-Heal / mana / cooldown
-Basic Attack melee / unarmed
+Inventory
+Equipment
+Vault
+Level
+Experience
 ```
 
-F19 dejó deliberadamente pendientes:
+Runtime autoritativo ya existente:
 
 ```text
-Position/map durable
-HP/MP durable
-Skill ownership durable
+Skills
+Vitals
+Combat
+Mobs
+Drops mientras vive el GS
+```
+
+Pendientes que F19 dejó para después:
+
+```text
+Character Runtime durable
+Skill Ownership durable
+Skill Learning real
 Economy
 PvP/PK
 WorldDrop durability tras restart GS
@@ -401,22 +448,13 @@ Stats completos
 más mapas/contenido
 ```
 
-F20 resolvió el primer grupo:
-
-```text
-Position/map/rotation durable
-HP/MP durable
-```
-
 ---
 
-# 7. F20 — DURABLE CHARACTER RUNTIME
+# 8. F20 — DURABLE CHARACTER RUNTIME
 
-**Estado:** ✅ COMPLETADO, PROBADO, COMMITEADO Y PUSHEADO.
+**Estado:** ✅ COMPLETADO, PROBADO Y PUSHEADO.
 
-F20 resolvió la persistencia durable del runtime fundamental del personaje sin duplicar sistemas ya existentes.
-
-Estado durable agregado:
+F20 hizo durable:
 
 ```text
 map_id
@@ -426,50 +464,44 @@ hp
 mp
 ```
 
-Estado que NO se duplicó:
+No duplicó:
 
 ```text
 level
 experience
 ```
 
-porque ya pertenece a Character Progression.
+porque pertenecen a Character Progression.
 
-También NO se persiste:
+No persiste:
 
 ```text
 max_hp
 max_mp
 ```
 
-porque se derivan de reglas autoritativas actuales del Game Server.
+porque el Game Server los rederiva de sus reglas actuales.
 
 Sub-etapas:
 
 ```text
-F20-A  Durable Runtime Backend           ✅
-F20-B1 Runtime Restore                  ✅
-F20-B2 Disconnect Checkpoint            ✅
-F20-C  Periodic Autosave / Crash        ✅
+F20-A  Durable Runtime Backend        ✅
+F20-B1 Runtime Restore                ✅
+F20-B2 Disconnect Checkpoint          ✅
+F20-C  Periodic Autosave / Crash      ✅
 ```
 
 ---
 
-# 8. F20-A — DURABLE RUNTIME BACKEND
+# 9. F20-A — BACKEND RUNTIME DURABLE
 
-**Estado:** ✅ COMPLETADO.
-
-## Decisión de modelo
-
-No se agregaron campos mutables de sesión directamente a `characters`.
-
-Se creó una relación 1:1:
+Relación:
 
 ```text
 characters
-    1
-    │
-    1
+	1
+	│
+	1
 character_runtime_states
 ```
 
@@ -488,6 +520,171 @@ revision
 timestamps
 ```
 
+Endpoint:
+
+```text
+PUT /api/internal/accounts/{accountId}/characters/{characterId}/runtime-state
+```
+
+Revisionado:
+
+```text
+no existe runtime
+expected_revision = 0
+→ create revision 1
+
+existe revision N
+expected_revision = N
+→ update revision N+1
+
+expected_revision stale
+→ 409
+```
+
+Idempotencia:
+
+```text
+mismo estado / replay válido
+→ idempotent = true
+→ no bump artificial
+```
+
+Concurrencia:
+
+```text
+DB transaction
+Character lock
+Runtime lock cuando existe
+```
+
+Ticket incluye:
+
+```text
+character.runtime
+├── revision
+├── world
+│   ├── map_id
+│   ├── position
+│   └── rotation_y
+└── vitals
+	├── hp
+	└── mp
+```
+
+Personaje sin checkpoint:
+
+```text
+runtime = null
+```
+
+Tests:
+
+```text
+InternalCharacterRuntimeStateTest
+5 passed / 63 assertions
+
+InternalCharacterProgressionTest
+5 passed / 23 assertions
+```
+
+Commit:
+
+```text
+55d69f7b63e853c2aa66b49570bd490d358aa9ca
+feat: add durable character runtime persistence
+```
+
+---
+
+# 10. F20-B1 — RESTORE
+
+`PlayerWorldSession` construye foundation y después aplica override durable.
+
+```text
+foundation
+→ durable override
+```
+
+Restaura:
+
+```text
+map_id
+position
+rotation_y
+hp
+mp
+runtime_revision
+```
+
+HP/MP se aplican con primitives de `ServerVitalsState`, por lo que quedan clampados contra máximos actuales.
+
+Diferencia crítica:
+
+```text
+runtime = null
+→ válido
+→ usar foundation
+
+runtime presente pero malformado
+→ bootstrap inválido
+```
+
+Prueba real:
+
+```text
+revision 1
+position (1,0,1)
+rotation_y 1.25
+hp 87654
+mp 222
+```
+
+restauró exactamente en GS y cliente.
+
+Commit:
+
+```text
+f329f4fe854a416fd684322567951ee023f14606
+feat: restore durable character runtime
+```
+
+---
+
+# 11. F20-B2 — DISCONNECT CHECKPOINT
+
+Flujo:
+
+```text
+peer disconnect
+→ capturar snapshot durable inmediatamente
+→ iniciar persistencia async
+→ notify_presence_left
+→ remove_session
+→ Backend confirma copia capturada
+```
+
+No dejar PlayerWorldSession fantasma esperando HTTP.
+
+Componentes principales:
+
+```text
+core/backend/backend_character_runtime_state_repository.gd
+app/coordinators/character_runtime_state_coordinator.gd
+```
+
+Snapshot persistente:
+
+```text
+world
+├── map_id
+├── position
+└── rotation_y
+
+vitals
+├── hp
+└── mp
+```
+
 No incluye:
 
 ```text
@@ -497,401 +694,24 @@ level
 experience
 ```
 
-## Contrato durable
-
-Endpoint interno:
+Prueba real B2:
 
 ```text
-PUT /api/internal/accounts/{accountId}/characters/{characterId}/runtime-state
-```
-
-Payload conceptual:
-
-```json
-{
-  "expected_revision": 0,
-  "state": {
-    "world": {
-      "map_id": "test_town",
-      "position": {
-        "x": 4.5,
-        "y": 0,
-        "z": 7.25
-      },
-      "rotation_y": 1.5
-    },
-    "vitals": {
-      "hp": 85000,
-      "mp": 290
-    }
-  }
-}
-```
-
-## Revisionado
-
-Primer persist:
-
-```text
-runtime no existe
-expected_revision = 0
-→ create
-→ revision = 1
-```
-
-Update:
-
-```text
-expected_revision = N
-estado válido
-→ revision N + 1
-```
-
-Stale:
-
-```text
-expected_revision != current_revision
-→ HTTP 409
-→ current snapshot
-```
-
-## Idempotencia
-
-Se soporta retry después de pérdida de respuesta.
-
-Si el estado persistido coincide exactamente con el solicitado y la revisión corresponde al expected válido/replay:
-
-```text
-idempotent = true
-→ no bump artificial de revision
-```
-
-## Concurrencia
-
-Laravel utiliza:
-
-```text
-transaction
-lock del Character
-lock del runtime cuando existe
-```
-
-El lock del Character también serializa el caso en que todavía no existe fila runtime.
-
-## Ticket de sesión
-
-`InternalGameSessionTicketController` entrega ahora:
-
-```text
-character
-├── id
-├── name
-├── class_id
-├── level
-├── experience
-└── runtime
-    ├── revision
-    ├── world
-    │   ├── map_id
-    │   ├── position
-    │   └── rotation_y
-    └── vitals
-        ├── hp
-        └── mp
-```
-
-Si nunca se persistió runtime:
-
-```text
-runtime = null
-```
-
-## Tests Backend
-
-```text
-InternalCharacterRuntimeStateTest
-5 passed
-63 assertions
-```
-
-Casos:
-
-```text
-primer checkpoint
-retry idempotente
-update
-stale rejection
-session ticket incluye progression + runtime
-```
-
-Regresión de Progression:
-
-```text
-InternalCharacterProgressionTest
-5 passed
-23 assertions
-```
-
-Checkpoint:
-
-```text
-55d69f7b63e853c2aa66b49570bd490d358aa9ca
-feat: add durable character runtime persistence
-```
-
----
-
-# 9. F20-B1 — RESTORE DURABLE RUNTIME
-
-**Estado:** ✅ COMPLETADO.
-
-`PlayerWorldSession` continúa construyendo primero foundation:
-
-```text
-vitals max/current foundation
-skills foundation temporal
-basic attack runtime
-foundation map/spawn
-```
-
-Luego, si `character.runtime` existe, se aplica el estado durable.
-
-Orden:
-
-```text
-foundation
-→ durable override
-```
-
-Esto permite que un personaje que todavía nunca tuvo checkpoint siga entrando normalmente.
-
-## runtime_revision
-
-`PlayerWorldSession` mantiene:
-
-```text
-runtime_revision
-```
-
-Si no existe runtime durable:
-
-```text
-runtime_revision = 0
-```
-
-Si existe:
-
-```text
-runtime_revision = revision persistida
-```
-
-## Restore world
-
-Se restauran:
-
-```text
-map_id
-position
-rotation_y
-```
-
-## Restore vitals
-
-Se restauran:
-
-```text
-hp
-mp
-```
-
-mediante las primitives de `ServerVitalsState`.
-
-Esto clampa contra los máximos actuales del Game Server.
-
-Por ejemplo:
-
-```text
-checkpoint viejo hp > max_hp actual
-→ restore clamp
-→ nunca HP por encima del máximo actual
-```
-
-## Runtime malformado
-
-Diferenciar:
-
-```text
-runtime = null
-→ válido
-→ usar foundation
-
-runtime presente pero estructuralmente inválido
-→ bootstrap inválido
-→ no aceptar silenciosamente
-```
-
-## Test real B1
-
-Checkpoint manual:
-
-```text
-revision = 1
-map = test_town
-position = (1, 0, 1)
-rotation_y = 1.25
-hp = 87654
-mp = 222
-```
-
-Game Server restauró:
-
-```text
-Posición: (1,0,1)
-HP: 87654/100000
-MP: 222/350
-Runtime revision: 1
-```
-
-Cliente/HUD mostró los mismos valores.
-
-Sin cambios de cliente.
-
-Checkpoint:
-
-```text
-f329f4fe854a416fd684322567951ee023f14606
-feat: restore durable character runtime
-```
-
----
-
-# 10. F20-B2 — DISCONNECT CHECKPOINT
-
-**Estado:** ✅ COMPLETADO.
-
-Objetivo:
-
-```text
-logout / disconnect
-→ persistir estado final
-```
-
-Decisión importante:
-
-> No mantener una `PlayerWorldSession` fantasma en el mundo esperando a Laravel.
-
-Flujo real:
-
-```text
-peer disconnect
-→ resolver PlayerWorldSession
-→ capturar snapshot durable INMEDIATAMENTE
-→ iniciar HTTP async
-→ notify_presence_left
-→ remove_session
-→ Laravel confirma utilizando la copia capturada
-```
-
-## Nuevos componentes
-
-Game Server:
-
-```text
-core/backend/backend_character_runtime_state_repository.gd
-app/coordinators/character_runtime_state_coordinator.gd
-```
-
-`AuthenticationCoordinator` coordina teardown pero no contiene HTTP ni reglas de persistencia.
-
-## Snapshot persistente de sesión
-
-`PlayerWorldSession.to_persistent_runtime_state()` contiene sólo:
-
-```text
-world
-├── map_id
-├── position x/y/z
-└── rotation_y
-
-vitals
-├── hp
-└── mp
-```
-
-No contiene:
-
-```text
-max_hp
-max_mp
-level
-experience
-```
-
-## Test real B2
-
-Inicio:
-
-```text
-Revision 1
-Position: (1,0,1)
-HP: 87654
-MP: 222
-```
-
-Gameplay:
-
-```text
-movimiento
-→ (-2.420902, 0, 1.101203)
-
+revision 1
+↓
+movement (-2.420902,0,1.101203)
 Heal
-→ HP 100000
-→ MP 182
+HP 100000
+MP 182
+↓
+disconnect
+↓
+revision 2
+↓
+reconnect exacto
 ```
 
-Disconnect:
-
-```text
-Checkpoint iniciado
-Reason: disconnect
-Revision esperada: 1
-Position: (-2.420902, 0, 1.101203)
-HP: 100000
-MP: 182
-
-Checkpoint confirmado
-Revision: 1 → 2
-Idempotent: false
-```
-
-MySQL:
-
-```text
-position_x = -2.4209017753601
-position_y = 0
-position_z = 1.1012027263641
-rotation_y = 1.6003711054053
-hp = 100000
-mp = 182
-revision = 2
-```
-
-Reconnect:
-
-```text
-Runtime revision: 2
-Position: (-2.420902, 0, 1.101203)
-HP: 100000/100000
-MP: 182/350
-Level: 123
-EXP: 50/100
-Inventory: 5
-Equipment: 1
-```
-
-Esto confirmó independencia entre dominios.
-
-Checkpoint:
+Commit:
 
 ```text
 fe41377ba59c38d4c19e40388bb937799163a450
@@ -900,15 +720,9 @@ feat: persist character runtime on disconnect
 
 ---
 
-# 11. F20-C — PERIODIC AUTOSAVE + CRASH RECOVERY
+# 12. F20-C — PERIODIC AUTOSAVE + CRASH RECOVERY
 
-**Estado:** ✅ COMPLETADO.
-
-Objetivo:
-
-> No depender únicamente del logout/disconnect para conservar horas de gameplay.
-
-## Política actual
+Política:
 
 ```text
 AUTOSAVE_INTERVAL_MSEC = 30000
@@ -920,185 +734,79 @@ AUTOSAVE_RETRY_DELAY_MSEC = 5000
 Conceptualmente:
 
 ```text
-cada ~30–35 s por sesión
+cada ~30–35 segundos por sesión
 → considerar autosave
 ```
 
-El jitter evita que todos los jugadores conectados al mismo tiempo disparen HTTP exactamente en el mismo instante.
+No escribe sin cambios.
 
-## No guardar sin cambios
-
-Se conserva un baseline del último runtime confirmado.
-
-Se compara:
+Compara:
 
 ```text
 map_id
-position x/y/z
+position
 rotation_y
 hp
 mp
 ```
 
-Si no cambió:
+Sin cambio:
 
 ```text
 NO HTTP
-NO write MySQL
+NO MySQL write
 ```
 
-Si cambió:
+Con cambio:
 
 ```text
 autosave
 → persist
 → revision N → N+1
-→ actualizar session.runtime_revision
-→ nuevo baseline
+→ actualizar baseline
 ```
 
-No se persiste movimiento por frame/tick.
-
-## Race autosave + disconnect
-
-Caso crítico cubierto:
-
-```text
-autosave HTTP pendiente
-↓
-jugador desconecta
-↓
-disconnect intenta checkpoint
-```
-
-No se pierde el estado final.
-
-Flujo:
+Race autosave + disconnect:
 
 ```text
 autosave pendiente
 +
 disconnect
-→ capturar snapshot FINAL del disconnect
-→ queued_disconnect_checkpoints
-→ remover presencia/sesión normalmente
-→ autosave confirma
+→ capturar snapshot final
+→ encolar final checkpoint
+→ quitar sesión/presencia normalmente
+→ confirmar autosave
 → usar nueva revision
 → persistir snapshot final encolado
 ```
 
-Esto evita que un `ERR_BUSY` descarte el estado final.
-
-## Stale recovery
-
-Cuando Backend responde con una revisión actual distinta, el coordinator puede actualizar la revisión conocida y realizar el recovery necesario según el caso.
-
-Para disconnect existe un retry acotado contra la revisión actual informada por Backend.
-
-## Test real de autosave
-
-Baseline:
+Prueba explícita de hard crash:
 
 ```text
-Revision 2
-Position: (-2.420902, 0, 1.101203)
-MP: 182
+autosave revision 5 → 6
+position guardada (-0.363776,0,1.591599)
+↓
+movimiento posterior (-5.691637,0,-1.650471)
+↓
+Game Server hard-stop
+↓
+restart
+↓
+revision 6
+position (-0.363776,0,1.591599)
 ```
 
-Gameplay:
-
-```text
-Position → (1.086995, 0, 5.266978)
-Heal
-MP → 142
-```
-
-Sin salir del juego:
-
-```text
-Checkpoint iniciado
-Reason: autosave
-Revision esperada: 2
-HP: 100000
-MP: 142
-
-Checkpoint confirmado
-Revision: 2 → 3
-```
-
-MySQL confirmó:
-
-```text
-position_x = 1.0869946479797
-position_y = 0
-position_z = 5.2669777870178
-rotation_y = -2.4417133449578
-hp = 100000
-mp = 142
-revision = 3
-```
-
-## Test real de crash del Game Server
-
-Se realizó posteriormente una prueba explícita de hard-stop.
-
-Autosave confirmado:
-
-```text
-Movement:
-(-0.363776, 0, 1.591599)
-
-Autosave:
-Revision 5 → 6
-```
-
-Después del autosave:
-
-```text
-movimiento nuevo:
-(-5.691637, 0, -1.650471)
-```
-
-Antes de otro autosave se finalizó abruptamente el proceso del Game Server:
-
-```text
---- Debugging process stopped ---
-```
-
-No hubo disconnect checkpoint porque el proceso servidor murió.
-
-Al reiniciar:
-
-```text
-Runtime revision: 6
-Position: (-0.363776, 0, 1.591599)
-HP: 100000/100000
-MP: 142/350
-```
-
-La posición posterior no guardada:
-
-```text
-(-5.691637, 0, -1.650471)
-```
-
-no apareció después del restart.
-
-Esto prueba correctamente:
+Resultado correcto:
 
 ```text
 último autosave confirmado
 → durable
 
-cambios posteriores al autosave
+cambios posteriores
 → pueden perderse ante crash abrupto
 ```
 
-Ese es el comportamiento esperado.
-
-Con la política actual, la ventana de pérdida aproximada de runtime ante crash queda acotada al tiempo desde el último autosave.
-
-Checkpoint:
+Commit:
 
 ```text
 2623eb60985b0af6070d137bda086c9c53dae1c4
@@ -1107,59 +815,9 @@ feat: add periodic character runtime autosave
 
 ---
 
-# 12. CICLO DURABLE REAL DESPUÉS DE F20
+# 13. DURABILIDAD ACTUAL DESPUÉS DE F20 + F21-A
 
-Ahora VHAL posee:
-
-```text
-MySQL
-↓
-Login
-↓
-Game Session Ticket
-↓
-Game Server
-↓
-Durable Runtime Restore
-↓
-Gameplay Runtime
-↓
-Movement / Vitals
-↓
-Periodic Autosave
-↓
-MySQL
-↓
-Disconnect
-↓
-Final Checkpoint
-↓
-MySQL
-↓
-Login
-↓
-Exact Durable Reconstruction
-```
-
-Y ante crash:
-
-```text
-Gameplay
-↓
-último autosave confirmado
-↓
-Game Server crash
-↓
-restart
-↓
-restore último autosave
-```
-
----
-
-# 13. ESTADO DURABLE ACTUAL DEL PERSONAJE
-
-Al cierre F20 existe persistencia durable real de:
+Durable real por personaje/cuenta según dominio:
 
 ```text
 Inventory
@@ -1172,9 +830,10 @@ Position
 Rotation Y
 HP
 MP
+Learned Skill Ownership
 ```
 
-Separación:
+Separación de dominios:
 
 ```text
 Inventory / Equipment / Vault
@@ -1185,15 +844,18 @@ Level / EXP
 
 Map / Position / Rotation / HP / MP
 → Character Runtime State domain
+
+Learned Skills
+→ Character Skill Ownership domain
 ```
 
-No fusionar estos dominios sólo porque pertenecen al mismo personaje.
+No fusionar dominios sólo porque pertenecen al mismo Character.
 
 ---
 
 # 14. ESTADO DELIBERADAMENTE RUNTIME-ONLY
 
-Todavía NO es durable tras restart completo del Game Server:
+Todavía NO sobrevive a un restart completo del Game Server:
 
 ```text
 WorldDrops no recogidos
@@ -1201,257 +863,662 @@ mob runtime actual
 mob HP actual
 cooldowns activos
 combat temporal
-NPC service activo
+NPC service runtime
 movement path activo
 runtime request IDs
 ```
 
-Por ejemplo:
+WorldDrop actual:
 
 ```text
-WorldDrop no recogido
-→ reaparece tras reconnect mientras GS sigue vivo
-→ NO reaparece tras restart del GS
+reconnect mientras GS vive
+→ persiste en runtime
+
+restart GS
+→ desaparece
 ```
 
-Esto continúa siendo una limitación deliberada, no un bug de F20.
+Limitación aceptada por diseño actual.
 
 ---
 
-# 15. GAME SERVER — COMPONENTES NUEVOS DE F20
+# 15. F21-A — DURABLE SKILL OWNERSHIP
 
-Estructura relevante:
+**Estado:** ✅ COMPLETADO, PROBADO Y PUSHEADO.
 
-```text
-app/
-├── main.gd
-├── main.tscn
-└── coordinators/
-    ├── authentication_coordinator.gd
-    ├── character_item_state_coordinator.gd
-    ├── character_progression_coordinator.gd
-    ├── character_runtime_state_coordinator.gd
-    ├── equipment_coordinator.gd
-    ├── inventory_coordinator.gd
-    ├── vault_coordinator.gd
-    ├── item_container_transfer_coordinator.gd
-    ├── npc_service_coordinator.gd
-    ├── movement_coordinator.gd
-    ├── world_presence_coordinator.gd
-    ├── world_drop_coordinator.gd
-    ├── world_drop_pickup_coordinator.gd
-    ├── skill_cast_coordinator.gd
-    └── basic_attack_coordinator.gd
+Objetivo cumplido:
 
-core/
-├── backend/
-│   ├── backend_character_runtime_state_repository.gd
-│   ├── backend_character_progression_repository.gd
-│   ├── backend_character_inventory_repository.gd
-│   ├── backend_character_equipment_repository.gd
-│   ├── backend_vault_repository.gd
-│   └── ...
-└── world/
-    └── player_world_session.gd
-```
+> retirar el bootstrap temporal que concedía todas las foundation skills a todos los personajes y reemplazarlo por ownership durable real por Character.
 
-## CharacterRuntimeStateCoordinator
-
-Responsabilidad actual:
+Sub-etapas:
 
 ```text
-checkpoint durable de PlayerWorldSession
-periodic autosave
-change detection
-revision tracking
-race autosave + disconnect
-queued final disconnect snapshot
-stale recovery foundation
-cleanup tracking por peer
+F21-A1 Backend durable ownership           ✅
+F21-A2 Game Server bootstrap ownership     ✅
+F21-A3 Reconnect/per-character audit       ✅
 ```
-
-No debe convertirse en un persistence manager global para todos los dominios.
-
-## BackendCharacterRuntimeStateRepository
-
-Responsabilidad:
-
-```text
-HTTP interno del runtime durable
-serialization
-response parsing
-success/failure signals
-```
-
-No contiene gameplay.
-
-## PlayerWorldSession
-
-Ahora compone también:
-
-```text
-runtime_revision
-runtime bootstrap validity
-persistent runtime snapshot helper
-```
-
-Regla sigue vigente:
-
-```text
-Session almacena/compone estado
-Coordinators orquestan
-Domain classes validan
-Systems ejecutan lógica especializada
-```
-
-No convertir `PlayerWorldSession` en God Object.
 
 ---
 
-# 16. BACKEND — COMPONENTES NUEVOS DE F20
+# 16. F21-A1 — BACKEND DURABLE SKILL OWNERSHIP
 
-Conceptualmente:
+## Modelo
 
-```text
-Character
-└── hasOne CharacterRuntimeState
-```
-
-Componentes:
+No se usan columnas por skill:
 
 ```text
-app/Models/CharacterRuntimeState.php
-app/Application/Runtime/CharacterRuntimeStatePersistence.php
-app/Application/Runtime/CharacterRuntimeStatePersistenceException.php
-app/Http/Controllers/Api/InternalCharacterRuntimeStateController.php
-database/migrations/...create_character_runtime_states_table.php
-tests/Feature/InternalCharacterRuntimeStateTest.php
+fire_ball = true
+heal = false
+...
 ```
 
-El ticket de sesión incluye runtime opcional.
+Tampoco JSON de ownership dentro de `characters`.
 
-El Backend no decide reglas de movimiento, max HP ni gameplay.
+Modelo normalizado:
+
+```text
+characters
+	1
+	│
+	N
+character_skills
+```
+
+Tabla:
+
+```text
+id
+character_id FK → characters.id
+skill_id varchar(64)
+timestamps
+UNIQUE(character_id, skill_id)
+```
+
+Un row significa:
+
+```text
+este Character posee/aprendió este skill_id
+```
+
+Delete Character:
+
+```text
+ON DELETE CASCADE
+→ elimina ownerships
+```
+
+## Autoridades
+
+Laravel persiste:
+
+```text
+stable skill_id ownership
+```
+
+Laravel NO duplica el catálogo semántico del Game Server.
+
+El Game Server sigue siendo autoridad de:
+
+```text
+si skill_id existe
+qué target_kind tiene
+MP cost
+cooldown
+efecto
+requisitos de gameplay futuros
+```
+
+## Endpoint interno
+
+```text
+POST /api/internal/accounts/{accountId}/characters/{characterId}/skills
+```
+
+Payload:
+
+```json
+{
+  "skill_id": "heal"
+}
+```
+
+Primer grant:
+
+```text
+201
+idempotent = false
+```
+
+Retry exacto:
+
+```text
+200
+idempotent = true
+```
+
+La unique constraint es defensa final contra duplicados.
+
+## Componentes Backend
+
+```text
+app/Models/CharacterSkill.php
+app/Application/Skills/CharacterSkillOwnershipPersistence.php
+app/Http/Controllers/Api/InternalCharacterSkillController.php
+database/migrations/2026_08_26_165645_create_character_skills_table.php
+tests/Feature/InternalCharacterSkillTest.php
+```
+
+`Character.php` agrega:
+
+```text
+hasMany CharacterSkill
+```
+
+## Ticket de sesión
+
+El ticket incluye ahora:
+
+```json
+"skills": {
+  "learned_skill_ids": ["heal", "poison"]
+}
+```
+
+Ordenado/canónico.
+
+Forma conceptual actual:
+
+```text
+character
+├── id
+├── slot_index
+├── name
+├── class_id
+├── level
+├── experience
+├── skills
+│   └── learned_skill_ids
+└── runtime
+```
+
+## Tests F21-A1
+
+```text
+InternalCharacterSkillTest
+6 passed / 23 assertions
+```
+
+Casos validados:
+
+```text
+persist learned skill
+retry idempotente
+mismo skill en Characters distintos
+auth/account-character boundary
+ticket contiene ownership durable
+cascade delete ownership
+```
+
+Regresiones:
+
+```text
+InternalCharacterRuntimeStateTest
+5 passed / 63 assertions
+
+InternalCharacterProgressionTest
+5 passed / 23 assertions
+```
+
+Migración real aplicada:
+
+```text
+2026_08_26_165645_create_character_skills_table
+DONE
+```
+
+Commit Backend:
+
+```text
+29c2426077788225779674652ba6712dcc13231a
+feat: add durable character skill ownership
+```
 
 ---
 
-# 17. VITALS — REGLA ACTUAL
+# 17. F21-A2 — GAME SERVER BOOTSTRAP FROM OWNERSHIP
 
-Game Server es autoridad runtime de:
+**Estado:** ✅ COMPLETADO.
 
-```text
-HP
-MP
-max HP
-max MP
-```
-
-Backend persiste solamente:
+Antes:
 
 ```text
-current HP
-current MP
+ServerCharacterRuntimeBootstrap
+→ ServerSkillCatalog.get_all_skill_ids()
+→ aprende todas las skills
+→ todos los personajes reciben todo
 ```
 
-Game Server deriva máximos.
+Eso fue eliminado.
 
-Consumidores futuros deben reutilizar el mismo pipeline:
+Ahora:
 
 ```text
-Heal
-damage
-Health Potion
-regen
-mob attacks
-PvP
-death
-respawn
+MySQL character_skills
+↓
+Laravel ticket
+↓
+character.skills.learned_skill_ids
+↓
+PlayerWorldSession
+↓
+ServerCharacterRuntimeBootstrap
+↓
+ServerSkillRuntimeState.learn_skill(skill_id)
+↓
+world_snapshot
+↓
+cliente
 ```
 
-No crear estados paralelos de HP/MP por feature.
+Archivos modificados:
+
+```text
+core/combat/server_character_runtime_bootstrap.gd
+core/world/player_world_session.gd
+```
+
+## Validación
+
+`PlayerWorldSession` requiere estructura válida:
+
+```text
+skills
+└── learned_skill_ids Array
+```
+
+Cada ID se:
+
+```text
+trim
+lowercase
+reject empty
+reject duplicate
+```
+
+Luego:
+
+```text
+ServerSkillRuntimeState.learn_skill()
+→ valida contra ServerSkillCatalog
+```
+
+Un skill desconocido no se convierte silenciosamente en autoridad válida.
+
+## Estado con cero skills
+
+Es válido:
+
+```text
+learned_skill_ids = []
+```
+
+Produce:
+
+```text
+ServerSkillRuntimeState vacío
+world_snapshot Skills: []
+cliente SkillBook vacío
+Hotbar vacía
+```
+
+No es error.
+
+## Cliente
+
+No se necesitó cambio.
+
+`PlayerRuntimeState.apply_skill_snapshot()` ya soportaba:
+
+```text
+[]
+["heal"]
+subsets del catálogo
+```
+
+Reconstruye únicamente definitions conocidas por `ClientSkillCatalog`.
+
+Hotbar default sólo coloca skills realmente aprendidas.
+
+## Primer test A2 — ownership vacío
+
+DB:
+
+```text
+character_skills count = 0
+```
+
+Game Server:
+
+```text
+Atilio
+Skills: []
+```
+
+Cliente:
+
+```text
+Skills: []
+Learned: 0
+Hotbar slots: 0
+Hotbar seleccionada: VACÍA
+```
+
+Y continuaron correctos:
+
+```text
+Runtime revision 6
+HP 100000/100000
+MP 142/350
+Level 123
+EXP 50/100
+Inventory 5
+Equipment 1
+```
+
+## Segundo test A2 — ownership Heal
+
+Se persistió manualmente por la capa durable:
+
+```text
+Character 1
+→ heal
+```
+
+DB:
+
+```text
+character_id = 1
+skill_id = heal
+```
+
+Nuevo login:
+
+```text
+Game Server
+Skills: ["heal"]
+
+Cliente
+Learned: 1
+Hotbar slots: 1
+Hotbar: Heal
+```
+
+## Cast real de Heal
+
+Antes:
+
+```text
+MP 142/350
+```
+
+Cast:
+
+```text
+Skill: heal
+Target: self
+Accepted: true
+Reason: ok
+Cooldown: 4.0
+```
+
+Después:
+
+```text
+MP 102/350
+```
+
+HP ya estaba full:
+
+```text
+Heal amount = 0
+```
+
+Correcto.
+
+F20 autosave capturó la mutación:
+
+```text
+Reason: autosave
+Revision 6 → 7
+MP 102
+```
+
+Commit Game Server:
+
+```text
+598d993eeff80aaf5fd84ca7413a04772ee4faab
+feat: bootstrap skills from durable ownership
+```
 
 ---
 
-# 18. MAPAS / POSICIÓN — REGLA ACTUAL
+# 18. F21-A3 — RECONNECT + OWNERSHIP PER CHARACTER
 
-`test_town` continúa siendo el mapa foundation.
+**Estado:** ✅ COMPLETADO.
 
-Desde F20:
+No requirió código nuevo.
 
-```text
-logout / reconnect
-→ conserva map_id
-→ conserva position
-→ conserva rotation_y
-```
+Fue una auditoría funcional integrada.
 
-Persistencia:
+## Character 1 — Atilio
 
 ```text
-disconnect
-→ checkpoint inmediato
-
-sesión activa con cambios
-→ autosave ~30–35 s
-
-cada frame
-→ NO persistir
+id: 1
+class: warrior
+level: 123
+experience: 50
+skills: ["heal"]
 ```
 
-## Fallbacks todavía pendientes
-
-A futuro deben resolverse explícitamente:
+Reconnect después del commit A2:
 
 ```text
-map_id inexistente
-map deshabilitado
-posición corrupta
-posición fuera de NavMesh
-map migration
-spawn seguro
+WorldSessionRegistry
+Skills: ["heal"]
+Runtime revision: 7
+
+Client
+Skills: ["heal"]
+Learned: 1
+Hotbar slots: 1
+Hotbar: Heal
 ```
 
-La dirección deseada es:
+Esto demostró que Heal no vivía accidentalmente sólo en memoria del GS.
 
-> un checkpoint inválido nunca debe dejar a un personaje permanentemente incapaz de entrar; debe existir fallback seguro.
+## Character 2 — Lyra
 
-No implementar estos fallbacks fuera de un checkpoint específico si todavía no hay necesidad real.
+Personaje existente de la misma cuenta:
+
+```text
+id: 2
+class: archer
+level: 85
+experience: 0
+```
+
+Inicialmente:
+
+```text
+skills: []
+```
+
+Login:
+
+```text
+Game Server
+Skills: []
+
+Client
+Learned: 0
+Hotbar slots: 0
+Hotbar: VACÍA
+```
+
+Esto demostró:
+
+```text
+ownership por Character
+≠ ownership por Account
+```
+
+## Ownership distinto para Lyra
+
+Se persistió:
+
+```text
+Character 2
+→ poison
+```
+
+DB final del audit:
+
+```text
+Character 1 → heal
+Character 2 → poison
+```
+
+Login Lyra:
+
+```text
+Game Server
+Skills: ["poison"]
+
+Client
+Learned: 1
+Hotbar slots: 1
+Hotbar: Poison
+```
+
+## Poison cast audit
+
+Primer intento sin target:
+
+```text
+Cast omitido
+Reason: entity_target_required
+```
+
+Correcto según target_kind.
+
+Con Training Goblin seleccionado:
+
+```text
+Skill: poison
+Target: entity
+```
+
+Game Server:
+
+```text
+Target autoritativo validado
+Entity: mob_test_town_001
+Type: mob
+HP: 5000/5000
+```
+
+Resultado:
+
+```text
+Accepted: false
+Reason: skill_not_implemented
+Cooldown: 0
+```
+
+Esto es CORRECTO para la etapa.
+
+Significa:
+
+```text
+ownership pasó validación
+entity target pasó validación
+↓
+el efecto todavía no está implementado
+```
+
+No devolvió:
+
+```text
+skill_not_learned
+```
+
+porque Lyra sí posee Poison durablemente.
+
+MP permaneció:
+
+```text
+350/350
+```
+
+El audit final Atilio volvió a confirmar sólo:
+
+```text
+["heal"]
+```
+
+sin contaminación desde Lyra.
 
 ---
 
-# 19. F15-C — SIGUE DIFERIDO
+# 19. RESULTADO CANÓNICO DE F21-A
 
-Continúan diferidas hasta necesidad funcional concreta:
-
-```text
-stack merge autoritativo
-stack split
-partial quantity transfer
-sort autoritativo
-consumibles
-durability
-item-specific state avanzado
-```
-
-Health Potion existe, pero el uso real debe apoyarse en Vitals autoritativos.
-
-Flujo futuro correcto:
+F21-A queda cerrado con este comportamiento:
 
 ```text
-use item intent
-→ Game Server
-→ validate item/quantity
-→ apply effect through shared vitals/effects pipeline
-→ persist quantity mutation
-→ replicate inventory + vitals
+Character A
+DB ownership A
+→ Ticket A
+→ GS Runtime A
+→ Client SkillBook A
+
+Character B
+DB ownership B
+→ Ticket B
+→ GS Runtime B
+→ Client SkillBook B
 ```
 
-No aplicar HP desde UI local.
+Misma cuenta puede contener personajes con ownership completamente distinto.
+
+Ejemplo auditado:
+
+```text
+Account 1
+├── Atilio / Character 1
+│   └── heal
+└── Lyra / Character 2
+	└── poison
+```
+
+No existen auto-grants de todas las foundation skills en flujo normal.
+
+Estado:
+
+```text
+Skill Runtime authority           ✅
+Skill IDs enviados por GS         ✅
+Client no auto-concede            ✅
+Skill Ownership durable real      ✅
+Per-character isolation           ✅
+Reconnect ownership               ✅
+Skill Learning real               ❌ siguiente bloque
+```
 
 ---
 
-# 20. SKILLS — ESTADO ACTUAL DESPUÉS DE F20
+# 20. SKILLS FOUNDATION ACTUALES
 
-Skills foundation existentes:
+Definitions foundation:
 
 ```text
 fire_ball
@@ -1459,81 +1526,48 @@ poison
 heal
 ```
 
-El cliente ya no inventa ownership desde debug.
-
-Actual:
+Estado funcional:
 
 ```text
-Game Server
-→ learned_skill_ids
-→ world_snapshot
-→ ClientSkillCatalog
-→ SkillBook / Hotbar
+Heal
+→ implementado autoritativamente
+→ self target
+→ consume MP
+→ cooldown autoritativo
+→ replica vitals
+
+Fire Ball
+→ definition/runtime/protocol foundation
+→ efecto todavía skill_not_implemented
+
+Poison
+→ definition/runtime/protocol foundation
+→ entity target validado
+→ efecto todavía skill_not_implemented
 ```
 
-Pero todavía existe bootstrap temporal:
-
-```text
-ServerCharacterRuntimeBootstrap
-→ concede las tres foundation skills
-→ a todos los personajes de desarrollo
-```
-
-Por lo tanto:
-
-```text
-Skill Runtime authority           ✅
-Skill IDs enviados por GS         ✅
-Client no auto-concede            ✅
-Skill Ownership durable real      ❌
-Skill Learning durable real       ❌
-```
-
-Esto es ahora el gap foundation más natural.
+No expandir Fire Ball/Poison por inercia mientras se trabaja F21-B.
 
 ---
 
-# 21. DIRECCIÓN CANÓNICA — SKILL OWNERSHIP / LEARNING
+# 21. F21-B — SIGUIENTE BLOQUE RECOMENDADO
 
-No mezclar:
-
-```text
-Character Progression
-Skill Ownership
-Skill Learning
-Skill Runtime
-```
-
-Son dominios distintos.
-
-## Ownership durable futuro
-
-Backend debe almacenar learned skills por personaje.
-
-Bootstrap esperado:
+Nombre:
 
 ```text
-Backend
-→ game session ticket
-→ learned skills
-→ Game Server
-→ ServerSkillRuntimeState
-→ world_snapshot
-→ Client
+F21-B — Durable Skill Learning Foundation
 ```
 
-El cliente nunca envía como hecho consumado:
+Objetivo:
 
-```text
-"aprendí fire_ball"
-```
+> permitir que un personaje aprenda realmente una skill mediante una acción de gameplay validada por el Game Server y persistida de forma durable, reutilizando el ownership de F21-A.
 
-## Learning canónico futuro
-
-Una Skill se aprende mediante:
+Dirección canónica:
 
 ```text
 Skill Scroll / Book
++
+compatible Trainer NPC
 +
 class requirement
 +
@@ -1541,83 +1575,190 @@ minimum level
 +
 minimum stats
 +
-compatible Trainer NPC
-→ Game Server validation
-→ durable learned skill
+skill not already learned
+↓
+Game Server validation
+↓
+durable learned skill
+↓
+ServerSkillRuntimeState
+↓
+Client SkillBook / Hotbar
 ```
 
-El Trainer puede servir:
+No permitir:
+
+```text
+Client
+→ "ya aprendí esta skill"
+```
+
+como verdad consumada.
+
+## División recomendada de F21-B
+
+No implementar todo de golpe.
+
+Propuesta:
+
+```text
+F21-B1 — Skill learning definitions / requirements contract
+F21-B2 — Scroll/Book item foundation
+F21-B3 — Trainer compatibility + learn request protocol
+F21-B4 — Durable learn transaction
+F21-B5 — Runtime replication after learn
+F21-B6 — Integrated reconnect audit
+```
+
+La división exacta debe confirmarse revisando repositorios antes de programar.
+
+---
+
+# 22. REQUISITOS CANÓNICOS DE SKILL LEARNING
+
+Una skill futura puede requerir:
+
+```text
+skill_id
+required_scroll_item_id
+allowed_classes
+minimum_level
+minimum_stats
+compatible_trainer_service / trainer tags
+```
+
+No duplicar requisitos en UI.
+
+Fuente deseada:
+
+```text
+ServerSkillCatalog / server-side definitions
+```
+
+o un catálogo autoritativo equivalente.
+
+Cliente puede tener metadata visual, pero no autoridad final.
+
+## Stats
+
+El sistema de stats completos todavía no está implementado.
+
+Por eso F21-B debe diseñarse para soportar requisitos futuros sin obligarnos a construir todo Stats ahora.
+
+Se puede empezar con foundation como:
+
+```text
+class
+level
+scroll
+trainer
+```
+
+y reservar estructura para stats si corresponde.
+
+No inventar un sistema de stats paralelo sólo para aprender skills.
+
+---
+
+# 23. SCROLL / BOOK — DIRECCIÓN CANÓNICA
+
+Un Skill Scroll/Book debe ser un ItemDefinition / ItemInstance real.
+
+Flujo deseado:
+
+```text
+Drop/content
+→ Skill Scroll ItemInstance
+→ Inventory durable
+→ Trainer interaction
+→ Learn Skill request
+```
+
+No crear una lista de scrolls separada del sistema de items.
+
+Debe convivir con:
+
+```text
+InventoryData
+ItemDefinition
+ItemInstance
+persistent UID
+```
+
+Decisión pendiente a resolver durante F21-B:
+
+```text
+¿el scroll se consume siempre?
+¿se consume sólo si learn durable confirma?
+¿hay scrolls reusables?
+```
+
+Regla transaccional recomendada si es consumible:
+
+```text
+VALIDAR
+→ PERSISTIR OWNERSHIP + CONSUMIR ITEM de forma segura
+→ recién después confirmar aprendizaje
+```
+
+Nunca:
+
+```text
+consumir scroll
+→ falla persistencia ownership
+→ jugador pierde item sin aprender
+```
+
+---
+
+# 24. TRAINER — DIRECCIÓN CANÓNICA
+
+Trainer puede servir:
 
 ```text
 una clase
 varias clases
 ```
 
-No obligar a un NPC por clase.
+No obligar un NPC por clase.
 
-## Trainer como guía
-
-Deberá poder informar:
+Un Trainer debería poder informar:
 
 ```text
-skills disponibles para tu clase
+skills compatibles
 scroll requerido
 level requerido
 stats requeridos
-si cumplís o no
-mapas donde puede encontrarse el scroll
-mobs que pueden dropearlo
+si el personaje cumple
+mapas donde obtener scroll
+mobs/content que pueden dropearlo
 ```
 
-Esos datos deben provenir de definitions/catalogs/drop content, no de strings duplicados en UI.
+La información debe derivarse de catálogos/definitions/drop content.
 
-## Flujo futuro completo
+No hardcodear textos divergentes en UI.
 
-```text
-Mob / content
-↓
-Drop table
-↓
-Skill Scroll ItemInstance
-↓
-Inventory
-↓
-Trainer
-↓
-Game Server valida:
-  scroll
-  class
-  level
-  stats
-  trainer compatibility
-  skill not learned
-↓
-Backend durable ownership
-↓
-si corresponde consumir scroll
-↓
-ServerSkillRuntimeState
-↓
-Client SkillBook
-```
+## Importante
 
-El detalle `scroll se consume o no` todavía puede decidirse cuando se diseñe el sistema real.
+F21-A NO construyó Trainer.
+
+Trainer comienza recién en F21-B cuando el contrato de learning esté definido.
 
 ---
 
-# 22. ECONOMÍA — DIRECCIÓN CANÓNICA
+# 25. ECONOMÍA — DIRECCIÓN CANÓNICA
 
-Regla explícita:
+No usar como nombre final:
 
 ```text
-NO usar "Zen" como nombre final.
+Zen
 ```
 
-Nombre/lore de moneda VHAL todavía pendiente.
+`CurrencyState` sigue siendo placeholder técnico genérico.
 
-El modelo genérico técnico `CurrencyState` puede existir mientras se decide identidad final.
+Nombre/iconografía/lore final pendiente.
 
-La economía futura deberá soportar:
+Economía futura:
 
 ```text
 saldo durable
@@ -1644,11 +1785,11 @@ Backend
 → operación durable/atómica
 ```
 
-No mezclar economía con F21-A.
+No mezclar Economy automáticamente dentro de F21-B si no es necesaria para el primer learning slice.
 
 ---
 
-# 23. PvP / PK / SIN — DIRECCIÓN CANÓNICA
+# 26. PvP / PK / SIN — DIRECCIÓN CANÓNICA
 
 Estados previstos:
 
@@ -1659,156 +1800,212 @@ Inocente
 → Pecador / Sinner
 ```
 
-Thresholds/balance todavía no fijados.
+Thresholds definitivos pendientes.
 
-## Auto-defense
-
-Dirección:
+Auto-defense:
 
 ```text
-A ataca primero a B
-→ Game Server registra agresión
-→ B obtiene contexto temporal de auto-defense
-→ B puede defenderse/matar A sin penalización PK válido
+A agrede primero a B
+→ GS registra aggression context
+→ B puede defenderse según reglas
 ```
 
-Auto-defense es runtime del Game Server.
-
-## Pecador
-
-Dirección:
+Auto-defense:
 
 ```text
-otros jugadores pueden atacarlo sin penalización
+runtime Game Server
 ```
 
-Representación visual futura:
+Estado criminal:
 
 ```text
-body
-armor
-weapon
-wings
-main appearance
-→ tint rojo según criminal state autoritativo
+durable Backend
 ```
 
-## Redención
-
-Sacerdote/Priest:
+Sinner futuro:
 
 ```text
-confession
-→ costo en currency
-→ costo escala con severidad / kills / sin points
+tint rojo autoritativo
+body/armor/weapon/wings/main appearance
 ```
 
-Alternativa gratuita/lenta:
+Redención:
 
 ```text
-matar mobs PvE válidos
-→ reducir pecado progresivamente
+Priest confession
+→ costo currency
 ```
 
-Estado criminal durable:
+y alternativa más lenta:
 
 ```text
-Backend
+PvE válido
+→ reduce pecado progresivamente
 ```
 
-agresión/auto-defense temporal:
+PvP debe construirse sobre Combat como dominio propio.
 
-```text
-Game Server
-```
-
-PvP debe construirse sobre Combat, no meter todo dentro de `BasicAttackCoordinator`.
-
-No mezclar PvP con F21-A.
+No meter toda la lógica dentro de `BasicAttackCoordinator`.
 
 ---
 
-# 24. WORLD DROPS — LIMITACIÓN ACTUAL ACEPTADA
+# 27. WORLD DROPS
 
-WorldDrop actual:
+Actual:
 
 ```text
-runtime autoritativo Game Server
-persistent item UID interno para grant
-roster same-map
+runtime autoritativo GS
+persistent server-only item UID
+same-map replication
 pickup durable
-```
-
-Pero:
-
-```text
-restart Game Server
-→ drops runtime desaparecen
-```
-
-Esto continúa aceptado.
-
-No convertir WorldDrop a DB sólo por anticipación.
-
-Reevaluar cuando exista una necesidad concreta:
-
-```text
-long-lived loot
-server restart preservation
-multi-server ownership
-loot ownership timers
-world persistence
-```
-
----
-
-# 25. COMBAT — LÍMITES ACTUALES
-
-Basic Attack ya es real:
-
-```text
-unarmed
-→ 500 foundation damage
-→ range 1.5
-→ cooldown 1.0
-
-bronze_sword melee
-→ 1000 foundation damage
-→ range 2.0
-→ cooldown 0.9
 ```
 
 Training Goblin foundation:
 
 ```text
-HP 5000
-EXP reward 50
 Health Potion x1
 100% drop para testing
-respawn 3 s
 ```
 
-Fire Ball / Poison todavía no deben expandirse por inercia dentro de F21-A.
-
-Dirección:
+Pickup durable mantiene regla:
 
 ```text
-Fire Ball
-→ entity target
-→ damage pipeline compartido
-
-Poison
-→ status effect runtime
-→ duration/ticks/stack policy
+PERSIST INVENTORY
+→ confirmación
+→ CONSUME WORLD DROP
 ```
 
-No crear damage separado fuera de `WorldMobRegistry.apply_damage_to_mob()` / pipeline autoritativo equivalente.
+No invertir ese orden.
+
+Tras restart GS:
+
+```text
+world drops runtime desaparecen
+```
+
+Aceptado por ahora.
 
 ---
 
-# 26. UI — REGLAS QUE CONTINÚAN VIGENTES
+# 28. COMBAT FOUNDATION
 
-Ventanas como Inventory/Vault/Skills:
+Basic Attack:
+
+```text
+unarmed
+→ damage 500 foundation
+→ range 1.5
+→ cooldown 1.0
+
+bronze_sword melee
+→ damage 1000 foundation
+→ range 2.0
+→ cooldown 0.9
+```
+
+Training Goblin:
+
+```text
+HP 5000
+EXP reward 50
+Health Potion x1
+respawn 3 s
+```
+
+Rango:
+
+```text
+XZ center-to-center
+```
+
+Cliente nunca decide:
+
+```text
+weapon mode
+range
+damage
+cooldown
+```
+
+Future chase/out-of-range click:
+
+```text
+checkpoint dedicado
+```
+
+---
+
+# 29. PROGRESSION FOUNDATION
+
+Regla foundation actual:
+
+```text
+100 EXP por level
+```
+
+Training Goblin:
+
+```text
++50 EXP
+```
+
+F18 validó level-up durable.
+
+Ejemplo histórico:
+
+```text
+Level 122 / EXP 50
++50
+→ Level 123 / EXP 0
+```
+
+F21-A regression mantuvo Progression intacta.
+
+No mezclar skill ownership con level/EXP persistence.
+
+---
+
+# 30. INVENTORY / EQUIPMENT / VAULT
+
+Foundation durable:
+
+```text
+Inventory ✅
+Equipment ✅
+Vault ✅
+```
+
+F15-C sigue diferido para:
+
+```text
+stack merge autoritativo
+stack split
+partial quantity transfer
+sort autoritativo
+consumables
+durability
+item-specific state avanzado
+```
+
+No construirlos sin necesidad funcional concreta.
+
+Health Potion existe pero todavía debe obtener un pipeline real de `use item` apoyado en Vitals autoritativos.
+
+Flujo futuro correcto:
+
+```text
+use item intent
+→ GS validate item/quantity
+→ shared vitals/effects pipeline
+→ durable quantity mutation
+→ replicate inventory + vitals
+```
+
+---
+
+# 31. UI — REGLAS VIGENTES
+
+Ventanas principales:
 
 ```text
 tamaño fijo
@@ -1816,6 +2013,8 @@ draggable
 no resize
 no salir del viewport
 ```
+
+No volver al plan antiguo de resize/expand/contract.
 
 Inventario:
 
@@ -1826,24 +2025,26 @@ celdas/gaps pequeños
 Equipment compacto
 ```
 
-No volver al plan viejo de resize/expand/contract de ventanas.
+Inspiración funcional MU no significa copiar identidad visual.
 
-La UI final debe tener identidad propia VHAL, no copiar visualmente MU.
+VHAL debe mantener identidad propia.
 
 ---
 
-# 27. PERFORMANCE — REGLA ACTUAL
+# 32. PERFORMANCE
+
+Regla:
 
 ```text
 Refactor ≠ Optimization
 ```
 
-No optimizar prematuramente sin medición.
+No optimizar sin medir.
 
-F20 ya evita una mala práctica crítica:
+F20 ya evitó una mala práctica crítica:
 
 ```text
-NO guardar posición por frame
+NO persistir position por frame
 ```
 
 Usa:
@@ -1854,7 +2055,7 @@ runtime in-memory
 checkpoint periódico
 ```
 
-Cuando llegue PERF-1:
+PERF-1 futuro:
 
 ```text
 measure
@@ -1863,7 +2064,7 @@ measure
 → measure again
 ```
 
-Posibles métricas:
+Métricas posibles:
 
 ```text
 Client → GS RTT
@@ -1872,14 +2073,80 @@ GS → Backend RTT
 Laravel time
 DB transaction time
 serialization
-packet sizes
-HTTP checkpoint rate
+packet size
+checkpoint rate
 concurrent autosave distribution
 ```
 
 ---
 
-# 28. ROADMAP RESUMIDO ACTUAL
+# 33. ARQUITECTURA DE COMPONENTES — GAME SERVER
+
+Estructura conceptual vigente:
+
+```text
+PlayerWorldSession
+→ almacena/compone estado de la sesión
+
+Coordinators
+→ orquestan flujos
+
+Domain/runtime state classes
+→ invariantes/estado especializado
+
+Repositories
+→ HTTP Backend
+
+Registries
+→ entidades/runtime de mundo
+```
+
+No convertir:
+
+```text
+PlayerWorldSession
+main.gd
+BasicAttackCoordinator
+```
+
+en God Objects.
+
+F20 agregó/reafirmó:
+
+```text
+CharacterRuntimeStateCoordinator
+BackendCharacterRuntimeStateRepository
+```
+
+F21-A reutilizó la composición existente sin crear un SkillOwnershipManager gigante.
+
+---
+
+# 34. CRITERIO DE SISTEMA “REAL”
+
+Un sistema se considera real cuando:
+
+```text
+la intención nace donde corresponde
+la autoridad está definida
+GS valida gameplay
+runtime muta correctamente
+persistencia ocurre donde corresponde
+resultado vuelve al cliente
+reconnect/recovery funciona cuando aplica
+edge cases principales están probados
+no depende de shortcut debug en flujo normal
+```
+
+F20 cumple este criterio para Character Runtime durable.
+
+F21-A cumple este criterio para Skill Ownership durable.
+
+F21-B deberá cumplirlo para Skill Learning.
+
+---
+
+# 35. ROADMAP CANÓNICO ACTUAL
 
 ```text
 F00-F14 Foundation               ✅
@@ -1920,136 +2187,164 @@ F20-B2 Disconnect checkpoint    ✅
 F20-C Periodic autosave         ✅
 F20 Durable Character Runtime   ✅
 
-POST-F20
-F21-A Durable Skill Ownership   ⏳ recomendado siguiente
-Skill Scroll + Trainers         ⏳ evolución posterior
+F21-A1 Backend Skill Ownership  ✅
+F21-A2 GS Ownership Bootstrap   ✅
+F21-A3 Per-character Audit      ✅
+F21-A Durable Skill Ownership   ✅
+
+F21-B Durable Skill Learning    ⏳ SIGUIENTE
+
+Skill Scroll content            ⏳ dentro/evolución F21-B
+Trainer learning flow           ⏳ dentro/evolución F21-B
 Economy / VHAL currency         ⏳ futuro
-PvP / PK / Sin system           ⏳ futuro
+PvP / PK / Sin                  ⏳ futuro
 World/content expansion         ⏳ futuro
 Merchant                        ⏳ futuro
 Stats completos                 ⏳ futuro
+WorldDrop durability            ⏳ futuro si se necesita
 
 PERF-1                          ⏳ después de base estable
 ```
 
-No abrir varios bloques post-F20 simultáneamente.
+No abrir simultáneamente varios bloques grandes post-F21-A.
 
 ---
 
-# 29. F21-A — SIGUIENTE CHECKPOINT RECOMENDADO
+# 36. CHECKPOINTS IMPORTANTES
 
-Nombre:
-
-```text
-F21-A — Durable Skill Ownership Foundation
-```
-
-Objetivo:
-
-> Retirar el bootstrap temporal que concede las tres skills a todos y reemplazarlo por ownership durable por personaje.
-
-## Scope inicial recomendado
-
-Backend:
+## F19 docs / vertical slice
 
 ```text
-persistir learned skill IDs por Character
-exponerlos al bootstrap/ticket
-operación durable preparada para learning futuro
+557bee80258d09cfbc9084e42213d14caefd9b85
+docs: close F19 vertical slice and record future systems
 ```
 
-Game Server:
+## F20 Backend
 
 ```text
-leer ownership real del ticket
-reconstruir ServerSkillRuntimeState
-NO auto-conceder todas las skills
-validar skill IDs contra ServerSkillCatalog
+55d69f7b63e853c2aa66b49570bd490d358aa9ca
+feat: add durable character runtime persistence
 ```
 
-Client:
+## F20 Game Server restore
 
 ```text
-continuar recibiendo learned_skill_ids
-representar exactamente ownership autoritativo
+f329f4fe854a416fd684322567951ee023f14606
+feat: restore durable character runtime
 ```
 
-No hace falta cambiar UI si el contrato actual ya lo soporta.
-
-## Criterio de éxito de F21-A
-
-Debe demostrar:
+## F20 Game Server disconnect
 
 ```text
-1. Character A tiene ownership durable concreto;
-2. login entrega esas learned skills;
-3. Game Server reconstruye ServerSkillRuntimeState;
-4. no existen skills concedidas fuera del ownership;
-5. cliente muestra SkillBook/Hotbar coherente;
-6. logout/login conserva exactamente ownership;
-7. Character B puede tener ownership distinto;
-8. skill inexistente/corrupta no se convierte en autoridad válida;
-9. Level/EXP/Inventory/Equipment/Runtime F20 no sufren regresión;
-10. 0 warnings/errors.
+fe41377ba59c38d4c19e40388bb937799163a450
+feat: persist character runtime on disconnect
 ```
 
-## Fuera de scope F21-A
-
-No mezclar todavía:
+## F20 Game Server autosave
 
 ```text
-Scroll consumption
-Trainer UI
-Trainer NPC completo
-class requirement final
-stats requirement final
-Economy
-PvP
-Fire Ball damage
-Poison status runtime
-Merchant
-más mapas
+2623eb60985b0af6070d137bda086c9c53dae1c4
+feat: add periodic character runtime autosave
 ```
 
-Después de ownership durable se podrá diseñar el flujo de learning real con una base correcta.
+## PROJECT MEMORY 2 inicial
+
+```text
+cc9d528add6976cb53d6108a67ac9ff313d68298
+Project memory 2
+```
+
+## F21-A Backend ownership
+
+```text
+29c2426077788225779674652ba6712dcc13231a
+feat: add durable character skill ownership
+```
+
+## F21-A Game Server bootstrap
+
+```text
+598d993eeff80aaf5fd84ca7413a04772ee4faab
+feat: bootstrap skills from durable ownership
+```
+
+F21-A3 fue auditoría sin código adicional.
 
 ---
 
-# 30. CRITERIO DE “REAL” — SIGUE VIGENTE
+# 37. PRUEBAS CLAVE ACTUALES
 
-Un sistema se considera real cuando:
+## Backend F21-A
 
 ```text
-la intención nace donde corresponde
-la autoridad está definida
-Game Server valida gameplay
-runtime muta correctamente
-persistencia ocurre donde corresponde
-resultado vuelve al cliente
-reconnect/recovery funciona cuando aplica
-edge cases principales están probados
-no depende de shortcut debug en flujo normal
+InternalCharacterSkillTest
+6 passed / 23 assertions
+
+InternalCharacterRuntimeStateTest
+5 passed / 63 assertions
+
+InternalCharacterProgressionTest
+5 passed / 23 assertions
 ```
 
-F20 cumple este criterio para el Character Runtime durable.
+## Ownership vacío
+
+```text
+DB []
+→ GS Skills []
+→ Client Learned 0
+→ Hotbar 0
+```
+
+## Ownership Atilio
+
+```text
+DB Character 1 → heal
+→ GS ["heal"]
+→ Client Learned 1
+→ Heal cast Accepted true
+→ MP 142 → 102
+→ Runtime autosave revision 6 → 7
+```
+
+## Ownership Lyra
+
+```text
+DB Character 2 → poison
+→ GS ["poison"]
+→ Client Learned 1
+→ target mob validado
+→ skill_not_implemented
+```
+
+Correcto porque Poison todavía no implementa efecto.
+
+## Isolation audit
+
+```text
+Atilio → heal
+Lyra   → poison
+```
+
+Cambiar entre Characters no mezcló SkillBook/Hotbar/ownership.
 
 ---
 
-# 31. ESTADO FUNCIONAL CANÓNICO AL CIERRE F20
+# 38. ESTADO FUNCIONAL CANÓNICO ACTUAL
 
-Vertical slice durable actual:
+Vertical slice actual:
 
 ```text
 Login
 → Character Select
 → Game Session Ticket
-→ Game Server
+→ Durable Skill Ownership bootstrap
 → Durable Character Runtime Restore
-→ World
+→ Game Server World
 → Movement
 → Warehouse
 → Inventory / Vault / Equipment
-→ Skill
+→ Skill Runtime
 → Mob
 → Combat
 → Death
@@ -2058,14 +2353,14 @@ Login
 │   → ItemInstance MySQL
 │   → Inventory
 └── EXP
-    → Level
-    → MySQL
-    → HUD
+	→ Level
+	→ MySQL
+	→ HUD
 → Respawn
 → Periodic Runtime Autosave
 → Disconnect
 → Final Runtime Checkpoint
-→ Login
+→ Reconnect
 → Durable Reconstruction
 ```
 
@@ -2082,237 +2377,126 @@ Position
 Rotation
 HP
 MP
+Skill Ownership
 ```
 
-Autoritativo runtime pero todavía no durable real:
+Runtime pero no durable tras GS restart:
 
 ```text
-Skill Ownership
-WorldDrops tras restart GS
-mob runtime tras restart
+WorldDrops
+mob runtime
 cooldowns activos
 combat temporal
-NPC service temporal
+NPC service runtime
+```
+
+No implementado todavía:
+
+```text
+real Skill Learning
+Fire Ball effect
+Poison effect
+consumable use
+Economy
+PvP/PK
+Merchant real
+full Stats
+multi-map content real
 ```
 
 ---
 
-# 32. PRUEBAS CLAVE DE F20 — RESUMEN
+# 39. DECISIONES QUE NO DEBEN REGRESIONAR
 
-Backend:
-
-```text
-InternalCharacterRuntimeStateTest
-5 passed / 63 assertions
-
-InternalCharacterProgressionTest
-5 passed / 23 assertions
-```
-
-Restore B1:
+No volver a:
 
 ```text
-Revision 1
-Position (1,0,1)
-HP 87654
-MP 222
-→ cliente y GS exactos
+auto-conceder todas las skills
 ```
 
-Disconnect B2:
+No mover ownership al cliente.
 
-```text
-movement + Heal
-→ Position (-2.420902,0,1.101203)
-→ HP 100000
-→ MP 182
-→ Revision 1 → 2
-→ reconnect exacto
-```
+No almacenar ownership como columnas booleanas por skill.
 
-Autosave C:
+No duplicar ServerSkillCatalog en Laravel.
 
-```text
-sin disconnect
-→ Position (1.086995,0,5.266978)
-→ MP 142
-→ Revision 2 → 3
-→ MySQL confirmado
-```
+No meter Backend en cada cast/attack.
 
-Crash recovery C:
+No persistir movement por frame.
 
-```text
-Autosave Revision 5 → 6
-Position guardada (-0.363776,0,1.591599)
-↓
-movimiento posterior (-5.691637,0,-1.650471)
-↓
-Game Server hard-stop
-↓
-restart
-↓
-Revision 6
-Position (-0.363776,0,1.591599)
-```
+No guardar max_hp/max_mp como verdad durable actual.
 
-Comportamiento correcto.
+No mezclar Character Progression con Runtime State.
+
+No mezclar Skill Ownership con Skill Runtime.
+
+No convertir `PlayerWorldSession` en monolito.
+
+No usar `Zen` como moneda final.
+
+No reactivar resize de ventanas.
+
+No hacer auto-chase dentro de otro scope accidentalmente.
+
+No convertir WorldDrops a DB sin necesidad concreta.
 
 ---
 
-# 33. CHECKPOINTS F20
+# 40. SIGUIENTE PASO EXACTO
 
-Backend:
+F21-A quedó funcionalmente cerrado.
 
-```text
-55d69f7b63e853c2aa66b49570bd490d358aa9ca
-feat: add durable character runtime persistence
-```
-
-Game Server — restore:
+Antes de abrir F21-B:
 
 ```text
-f329f4fe854a416fd684322567951ee023f14606
-feat: restore durable character runtime
-```
-
-Game Server — disconnect:
-
-```text
-fe41377ba59c38d4c19e40388bb937799163a450
-feat: persist character runtime on disconnect
-```
-
-Game Server — autosave:
-
-```text
-2623eb60985b0af6070d137bda086c9c53dae1c4
-feat: add periodic character runtime autosave
-```
-
----
-
-# 34. REGLAS PARA CONTINUAR DESDE ESTE VOLUMEN
-
-Al retomar VHAL:
-
-```text
-1. leer PROJECT_MEMORY.md;
-2. leer PROJECT_MEMORY_2.md;
-3. revisar GitHub dev real;
-4. confirmar SHAs/baselines;
-5. identificar etapa activa;
-6. continuar sólo esa etapa;
-7. test;
-8. corregir warnings/errors;
-9. git status;
-10. commit;
-11. push;
-12. esperar "pusheado".
-```
-
-No asumir que un bloque futuro ya fue implementado sólo porque está descrito como dirección.
-
-Distinguir siempre:
-
-```text
-IMPLEMENTADO
-VALIDADO
-FUTURO / DIRECCIÓN
-```
-
----
-
-# 35. PRÓXIMO PASO EXACTO
-
-El código de F20 ya está committeado y pusheado.
-
-Antes de abrir F21-A falta cerrar la memoria canónica de F20.
-
-Paso actual:
-
-```text
-agregar PROJECT_MEMORY_2.md al repo cliente/canónico
+reemplazar PROJECT_MEMORY_2.md completo
 ↓
-git status
+git status en cliente vhal
 ↓
-verificar que el único cambio documental esperado sea este archivo
+confirmar que sólo cambió PROJECT_MEMORY_2.md
 ↓
-commit
+commit documental
 ↓
-push
+push dev
 ↓
 esperar "pusheado"
 ↓
 verificar remoto
 ↓
-recién entonces abrir F21-A
+recién entonces abrir F21-B
 ```
 
 Commit documental sugerido:
 
 ```text
-docs: add project memory volume 2 and close F20
+docs: close F21 durable skill ownership
 ```
 
-**NO abrir F21-A antes de confirmar este checkpoint documental.**
+No abrir código de F21-B antes del checkpoint documental pusheado.
 
 ---
 
-# 36. POLÍTICA PARA FUTUROS VOLÚMENES
+# 41. ESTADO FINAL DEL VOLUMEN 2 EN ESTE CHECKPOINT
 
-Cuando `PROJECT_MEMORY_2.md` crezca demasiado:
-
-crear:
+Últimas etapas cerradas:
 
 ```text
-PROJECT_MEMORY_3.md
+F19 — Vertical Slice                    ✅
+F20 — Durable Character Runtime         ✅
+F21-A — Durable Skill Ownership         ✅
+├── F21-A1 Backend ownership            ✅
+├── F21-A2 Game Server bootstrap        ✅
+└── F21-A3 Reconnect/per-character      ✅
 ```
 
-El nuevo volumen debe comenzar con:
+Siguiente etapa:
 
 ```text
-qué volúmenes lo preceden
-qué etapa inicia/cierra
-baselines actuales
-regla de precedencia
-roadmap actual
+F21-B — Durable Skill Learning          ⏳
 ```
 
-No copiar miles de líneas históricas sin necesidad.
+Regla operativa:
 
-Objetivo de cada volumen nuevo:
-
-```text
-preservar historia
-+
-mantener continuidad suficiente
-+
-evitar un archivo monolítico inmanejable
-```
-
-Regla final:
-
-> **Los volúmenes anteriores conservan la historia; el volumen más reciente conserva la verdad operativa actual.**
-
----
-
-# 37. ESTADO FINAL DE ESTE VOLUMEN
-
-Etapa funcionalmente cerrada más reciente:
-
-```text
-F20 — Durable Character Runtime             ✅
-├── F20-A  Durable Runtime Backend          ✅
-├── F20-B1 Restore Durable Runtime          ✅
-├── F20-B2 Disconnect Checkpoint            ✅
-└── F20-C  Periodic Autosave / Crash        ✅
-```
-
-Siguiente etapa recomendada, todavía NO abierta:
-
-```text
-F21-A — Durable Skill Ownership Foundation  ⏳
-```
+> Primero cerrar y pushear este documento canónico. Después revisar repositorios reales y diseñar F21-B en etapas pequeñas antes de modificar código.
 
 ---
