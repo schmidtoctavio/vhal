@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://ca7bi3fqxvlfw"]
+
+[ext_resource type="Script" uid="uid://dtvmrylljplgs" path="res://features/items/definitions/item_definition.gd" id="1_1rjky"]
+[ext_resource type="Texture2D" uid="uid://sh5fj2ywxpfb" path="res://icon.svg" id="1_ysghs"]
+
+[resource]
+script = ExtResource("1_1rjky")
+item_id = &"skill_scroll_poison"
+display_name = "Poison Scroll"
+description = "Scroll utilizado para aprender Poison con un Skill Trainer."
+icon = ExtResource("1_ysghs")
+grid_height = 2
+metadata/_custom_type_script = "uid://dtvmrylljplgs"

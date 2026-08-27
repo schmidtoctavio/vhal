@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ItemDefinition" format=3 uid="uid://c27lfyd17y18e"]
+
+[ext_resource type="Texture2D" uid="uid://sh5fj2ywxpfb" path="res://icon.svg" id="1_awbps"]
+[ext_resource type="Script" uid="uid://dtvmrylljplgs" path="res://features/items/definitions/item_definition.gd" id="1_v2txr"]
+
+[resource]
+script = ExtResource("1_v2txr")
+item_id = &"skill_scroll_fire_ball"
+display_name = "Fire Ball Scroll"
+description = "Scroll utilizado para aprender Fire Ball con un Skill Trainer."
+icon = ExtResource("1_awbps")
+grid_height = 2
+metadata/_custom_type_script = "uid://dtvmrylljplgs"

@@ -18,6 +18,17 @@ const LEATHER_HELMET: ItemDefinition = preload(
 	"res://features/items/definitions/catalog/leather_helmet.tres"
 )
 
+const SKILL_SCROLL_FIRE_BALL: ItemDefinition = preload(
+	"res://features/items/definitions/catalog/skill_scroll_fire_ball.tres"
+)
+
+const SKILL_SCROLL_POISON: ItemDefinition = preload(
+	"res://features/items/definitions/catalog/skill_scroll_poison.tres"
+)
+
+const SKILL_SCROLL_HEAL: ItemDefinition = preload(
+	"res://features/items/definitions/catalog/skill_scroll_heal.tres"
+)
 
 # =========================================================
 # CATÁLOGO
@@ -40,6 +51,15 @@ static func get_definition(
 
 		"leather_helmet":
 			return LEATHER_HELMET
+
+		"skill_scroll_fire_ball":
+			return SKILL_SCROLL_FIRE_BALL
+
+		"skill_scroll_poison":
+			return SKILL_SCROLL_POISON
+
+		"skill_scroll_heal":
+			return SKILL_SCROLL_HEAL
 
 		_:
 			return null
