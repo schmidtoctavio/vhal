@@ -16,6 +16,15 @@ signal skill_cast_result_received(
 	effect: Dictionary
 )
 
+signal skill_learning_result_received(
+	request_id: int,
+	accepted: bool,
+	skill_id: String,
+	scroll_uid: String,
+	reason: String,
+	learned_skill_ids: PackedStringArray,
+	idempotent: bool
+)
 
 # =========================================================
 # MENSAJES
@@ -29,6 +38,13 @@ const MESSAGE_SKILL_CAST_RESULT: String = (
 	"skill_cast_result"
 )
 
+const MESSAGE_SKILL_LEARNING_REQUEST: String = (
+	"skill_learning_request"
+)
+
+const MESSAGE_SKILL_LEARNING_RESULT: String = (
+	"skill_learning_result"
+)
 
 # =========================================================
 # DEPENDENCIAS
@@ -49,6 +65,11 @@ var latest_skill_cast_request_id: int = 0
 
 var pending_skill_id_by_request: Dictionary = {}
 
+var next_skill_learning_request_id: int = 1
+
+var latest_skill_learning_request_id: int = 0
+
+var pending_skill_learning_by_request: Dictionary = {}
 
 # =========================================================
 # SETUP
@@ -82,13 +103,17 @@ func process_message(
 	message_type: String,
 	data_value: Variant
 ) -> bool:
-	if message_type != MESSAGE_SKILL_CAST_RESULT:
+	if (
+		message_type != MESSAGE_SKILL_CAST_RESULT
+		and
+		message_type != MESSAGE_SKILL_LEARNING_RESULT
+	):
 		return false
 
 
 	if typeof(data_value) != TYPE_DICTIONARY:
 		_fail_connection(
-			"El resultado de skill recibido es inválido."
+			"El resultado de Skills recibido es inválido."
 		)
 
 
@@ -100,7 +125,16 @@ func process_message(
 	)
 
 
-	_process_skill_cast_result(
+	if message_type == MESSAGE_SKILL_CAST_RESULT:
+		_process_skill_cast_result(
+			data
+		)
+
+
+		return true
+
+
+	_process_skill_learning_result(
 		data
 	)
 
@@ -235,6 +269,98 @@ func send_skill_cast_request(
 
 	return OK
 
+
+# =========================================================
+# INTENCIÓN DE APRENDIZAJE
+# =========================================================
+
+func send_skill_learning_request(
+	skill_id: String,
+	scroll_uid: String
+) -> Error:
+	var normalized_skill_id := (
+		skill_id
+		.strip_edges()
+		.to_lower()
+	)
+
+
+	var normalized_scroll_uid := (
+		scroll_uid
+		.strip_edges()
+		.to_lower()
+	)
+
+
+	if (
+		normalized_skill_id.is_empty()
+		or
+		normalized_skill_id.length() > 64
+	):
+		return ERR_INVALID_PARAMETER
+
+
+	if (
+		normalized_scroll_uid.is_empty()
+		or
+		normalized_scroll_uid.length() > 64
+	):
+		return ERR_INVALID_PARAMETER
+
+
+	var request_id := (
+		next_skill_learning_request_id
+	)
+
+
+	var result := int(
+		send_message.call(
+			MESSAGE_SKILL_LEARNING_REQUEST,
+			{
+				"request_id": request_id,
+
+				"skill_id": normalized_skill_id,
+
+				"scroll_uid": normalized_scroll_uid,
+			}
+		)
+	)
+
+
+	if result != OK:
+		return result as Error
+
+
+	pending_skill_learning_by_request[
+		request_id
+	] = {
+		"skill_id": normalized_skill_id,
+
+		"scroll_uid": normalized_scroll_uid,
+	}
+
+
+	latest_skill_learning_request_id = (
+		request_id
+	)
+
+	next_skill_learning_request_id += 1
+
+
+	print(
+		"GameServerClient | "
+		+
+		"Intención de aprendizaje enviada",
+		" | Request: ",
+		request_id,
+		" | Skill: ",
+		normalized_skill_id,
+		" | Scroll UID: ",
+		normalized_scroll_uid
+	)
+
+
+	return OK
 
 # =========================================================
 # RESULTADO AUTORITATIVO
@@ -475,6 +601,416 @@ func _process_skill_cast_result(
 		effect
 	)
 
+# =========================================================
+# RESULTADO AUTORITATIVO DE APRENDIZAJE
+# =========================================================
+
+func _process_skill_learning_result(
+	data: Dictionary
+) -> void:
+	# -----------------------------------------------------
+	# REQUEST ID
+	# -----------------------------------------------------
+
+	var request_id := int(
+		data.get(
+			"request_id",
+			0
+		)
+	)
+
+
+	if request_id <= 0:
+		_fail_connection(
+			(
+				"Resultado de aprendizaje "
+				+
+				"sin Request ID válido."
+			)
+		)
+
+
+		return
+
+
+	if not pending_skill_learning_by_request.has(
+		request_id
+	):
+		_fail_connection(
+			(
+				"Se recibió un resultado de aprendizaje "
+				+
+				"desconocido."
+			)
+		)
+
+
+		return
+
+
+	var pending_value: Variant = (
+		pending_skill_learning_by_request[
+			request_id
+		]
+	)
+
+
+	if typeof(pending_value) != TYPE_DICTIONARY:
+		_fail_connection(
+			"Estado pendiente de aprendizaje inválido."
+		)
+
+
+		return
+
+
+	var pending: Dictionary = (
+		pending_value
+	)
+
+
+	# -----------------------------------------------------
+	# SKILL ID
+	# -----------------------------------------------------
+
+	var skill_id_value: Variant = (
+		data.get(
+			"skill_id",
+			null
+		)
+	)
+
+
+	if typeof(skill_id_value) != TYPE_STRING:
+		_fail_connection(
+			(
+				"Resultado de aprendizaje "
+				+
+				"sin Skill ID válido."
+			)
+		)
+
+
+		return
+
+
+	var skill_id := String(
+		skill_id_value
+	).strip_edges().to_lower()
+
+
+	var expected_skill_id := String(
+		pending.get(
+			"skill_id",
+			""
+		)
+	)
+
+
+	if (
+		skill_id.is_empty()
+		or
+		skill_id != expected_skill_id
+	):
+		_fail_connection(
+			(
+				"El resultado de aprendizaje "
+				+
+				"no corresponde a la Skill solicitada."
+			)
+		)
+
+
+		return
+
+
+	# -----------------------------------------------------
+	# SCROLL UID
+	# -----------------------------------------------------
+
+	var scroll_uid_value: Variant = (
+		data.get(
+			"scroll_uid",
+			null
+		)
+	)
+
+
+	if typeof(scroll_uid_value) != TYPE_STRING:
+		_fail_connection(
+			(
+				"Resultado de aprendizaje "
+				+
+				"sin Scroll UID válido."
+			)
+		)
+
+
+		return
+
+
+	var scroll_uid := String(
+		scroll_uid_value
+	).strip_edges().to_lower()
+
+
+	var expected_scroll_uid := String(
+		pending.get(
+			"scroll_uid",
+			""
+		)
+	)
+
+
+	if (
+		scroll_uid.is_empty()
+		or
+		scroll_uid != expected_scroll_uid
+	):
+		_fail_connection(
+			(
+				"El resultado de aprendizaje "
+				+
+				"no corresponde al Scroll solicitado."
+			)
+		)
+
+
+		return
+
+
+	# -----------------------------------------------------
+	# ACCEPTED
+	# -----------------------------------------------------
+
+	var accepted_value: Variant = (
+		data.get(
+			"accepted",
+			null
+		)
+	)
+
+
+	if typeof(accepted_value) != TYPE_BOOL:
+		_fail_connection(
+			(
+				"Resultado de aprendizaje "
+				+
+				"sin accepted válido."
+			)
+		)
+
+
+		return
+
+
+	var accepted: bool = (
+		accepted_value
+	)
+
+
+	# -----------------------------------------------------
+	# REASON
+	# -----------------------------------------------------
+
+	var reason_value: Variant = (
+		data.get(
+			"reason",
+			null
+		)
+	)
+
+
+	if typeof(reason_value) != TYPE_STRING:
+		_fail_connection(
+			(
+				"Resultado de aprendizaje "
+				+
+				"sin reason válido."
+			)
+		)
+
+
+		return
+
+
+	var reason := String(
+		reason_value
+	).strip_edges()
+
+
+	if reason.is_empty():
+		_fail_connection(
+			(
+				"Resultado de aprendizaje "
+				+
+				"con reason vacío."
+			)
+		)
+
+
+		return
+
+
+	# -----------------------------------------------------
+	# LEARNED SKILLS AUTORITATIVAS
+	# -----------------------------------------------------
+
+	var learned_skill_ids_value: Variant = (
+		data.get(
+			"learned_skill_ids",
+			null
+		)
+	)
+
+
+	if typeof(learned_skill_ids_value) != TYPE_ARRAY:
+		_fail_connection(
+			(
+				"Resultado de aprendizaje "
+				+
+				"sin learned_skill_ids válidos."
+			)
+		)
+
+
+		return
+
+
+	var learned_skill_ids := PackedStringArray()
+
+	var seen_skill_ids: Dictionary = {}
+
+
+	for learned_skill_id_value: Variant in (
+		learned_skill_ids_value as Array
+	):
+		if typeof(learned_skill_id_value) != TYPE_STRING:
+			_fail_connection(
+				(
+					"Resultado de aprendizaje "
+					+
+					"con Skill aprendida inválida."
+				)
+			)
+
+
+			return
+
+
+		var learned_skill_id := String(
+			learned_skill_id_value
+		).strip_edges().to_lower()
+
+
+		if (
+			learned_skill_id.is_empty()
+			or
+			learned_skill_id.length() > 64
+		):
+			_fail_connection(
+				(
+					"Resultado de aprendizaje "
+					+
+					"con Skill aprendida inválida."
+				)
+			)
+
+
+			return
+
+
+		if seen_skill_ids.has(
+			learned_skill_id
+		):
+			_fail_connection(
+				(
+					"Resultado de aprendizaje "
+					+
+					"con Skills duplicadas."
+				)
+			)
+
+
+			return
+
+
+		seen_skill_ids[
+			learned_skill_id
+		] = true
+
+
+		learned_skill_ids.append(
+			learned_skill_id
+		)
+
+
+	# -----------------------------------------------------
+	# IDEMPOTENT
+	# -----------------------------------------------------
+
+	var idempotent_value: Variant = (
+		data.get(
+			"idempotent",
+			null
+		)
+	)
+
+
+	if typeof(idempotent_value) != TYPE_BOOL:
+		_fail_connection(
+			(
+				"Resultado de aprendizaje "
+				+
+				"sin idempotent válido."
+			)
+		)
+
+
+		return
+
+
+	var idempotent: bool = (
+		idempotent_value
+	)
+
+
+	pending_skill_learning_by_request.erase(
+		request_id
+	)
+
+
+	print(
+		"GameServerClient | "
+		+
+		"Resultado autoritativo de aprendizaje",
+		" | Request: ",
+		request_id,
+		" | Skill: ",
+		skill_id,
+		" | Scroll UID: ",
+		scroll_uid,
+		" | Accepted: ",
+		accepted,
+		" | Reason: ",
+		reason,
+		" | Learned: ",
+		learned_skill_ids,
+		" | Idempotent: ",
+		idempotent
+	)
+
+
+	skill_learning_result_received.emit(
+		request_id,
+		accepted,
+		skill_id,
+		scroll_uid,
+		reason,
+		learned_skill_ids,
+		idempotent
+	)
+
 
 # =========================================================
 # ERROR
@@ -502,3 +1038,10 @@ func reset() -> void:
 	latest_skill_cast_request_id = 0
 
 	pending_skill_id_by_request.clear()
+
+
+	next_skill_learning_request_id = 1
+
+	latest_skill_learning_request_id = 0
+
+	pending_skill_learning_by_request.clear()

@@ -92,6 +92,16 @@ signal skill_cast_result_received(
 	effect: Dictionary
 )
 
+signal skill_learning_result_received(
+	request_id: int,
+	accepted: bool,
+	skill_id: String,
+	scroll_uid: String,
+	reason: String,
+	learned_skill_ids: PackedStringArray,
+	idempotent: bool
+)
+
 signal mob_state_updated(
 	mob: Dictionary
 )
@@ -388,6 +398,13 @@ func _bind_protocol_signals() -> void:
 	):
 		skill_protocol.skill_cast_result_received.connect(
 			_on_protocol_skill_cast_result_received
+		)
+
+	if not skill_protocol.skill_learning_result_received.is_connected(
+		_on_protocol_skill_learning_result_received
+	):
+		skill_protocol.skill_learning_result_received.connect(
+			_on_protocol_skill_learning_result_received
 		)
 
 	if not presence_protocol.world_presence_snapshot_received.is_connected(
@@ -1135,6 +1152,23 @@ func send_skill_cast_request(
 		target
 	)
 
+func send_skill_learning_request(
+	skill_id: String,
+	scroll_uid: String
+) -> Error:
+	if not connected:
+		return ERR_UNAVAILABLE
+
+
+	if skill_protocol == null:
+		return ERR_UNAVAILABLE
+
+
+	return skill_protocol.send_skill_learning_request(
+		skill_id,
+		scroll_uid
+	)
+
 # =========================================================
 # API PÚBLICA — NPC
 # =========================================================
@@ -1295,6 +1329,25 @@ func _on_protocol_skill_cast_result_received(
 		vitals_snapshot,
 		cooldown_remaining_seconds,
 		effect
+	)
+
+func _on_protocol_skill_learning_result_received(
+	request_id: int,
+	accepted: bool,
+	skill_id: String,
+	scroll_uid: String,
+	reason: String,
+	learned_skill_ids: PackedStringArray,
+	idempotent: bool
+) -> void:
+	skill_learning_result_received.emit(
+		request_id,
+		accepted,
+		skill_id,
+		scroll_uid,
+		reason,
+		learned_skill_ids,
+		idempotent
 	)
 
 # =========================================================
