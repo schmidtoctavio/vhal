@@ -3,6 +3,7 @@
 [ext_resource type="NavigationMesh" uid="uid://bx7heuxko88xl" path="res://features/world/maps/test_town/navigation/test_town_navigation.tres" id="1_cv8rl"]
 [ext_resource type="PackedScene" uid="uid://k70gqpgejvec" path="res://features/world/npcs/npc_actor.tscn" id="2_ticbt"]
 [ext_resource type="Resource" uid="uid://dt1kfd05r25mw" path="res://features/world/definitions/catalog/npcs/warehouse_keeper.tres" id="3_lrqfp"]
+[ext_resource type="Resource" uid="uid://pcmv7h64stc4" path="res://features/world/definitions/catalog/npcs/skill_trainer.tres" id="5_p2c7f"]
 
 [sub_resource type="Environment" id="Environment_4ny0v"]
 background_mode = 1
@@ -59,6 +60,10 @@ navigation_mesh = ExtResource("1_cv8rl")
 [node name="WarehouseKeeper" parent="NpcSpawns" unique_id=755687868 instance=ExtResource("2_ticbt")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -3)
 definition = ExtResource("3_lrqfp")
+
+[node name="SkillTrainer" parent="NpcSpawns" unique_id=2036966076 instance=ExtResource("2_ticbt")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, -3)
+definition = ExtResource("5_p2c7f")
 
 [node name="MobSpawns" type="Node3D" parent="." unique_id=995085205]
 

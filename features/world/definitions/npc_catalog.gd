@@ -10,6 +10,10 @@ const WAREHOUSE_KEEPER: NpcDefinition = preload(
 	"res://features/world/definitions/catalog/npcs/warehouse_keeper.tres"
 )
 
+const SKILL_TRAINER: NpcDefinition = preload(
+	"res://features/world/definitions/catalog/npcs/skill_trainer.tres"
+)
+
 const GENERAL_MERCHANT: NpcDefinition = preload(
 	"res://features/world/definitions/catalog/npcs/general_merchant.tres"
 )
@@ -33,6 +37,9 @@ static func get_definition(
 
 		"general_merchant":
 			return GENERAL_MERCHANT
+
+		"skill_trainer":
+			return SKILL_TRAINER
 
 		_:
 			return null

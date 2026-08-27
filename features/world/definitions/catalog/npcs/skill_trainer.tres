@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="NpcDefinition" format=3 uid="uid://pcmv7h64stc4"]
+
+[ext_resource type="Script" uid="uid://b7rknie3pw8xr" path="res://features/world/definitions/npc_definition.gd" id="1_vjqv7"]
+
+[resource]
+script = ExtResource("1_vjqv7")
+npc_id = "skill_trainer"
+display_name = "Skill Trainer"
+service_id = "skill_trainer"
+metadata/_custom_type_script = "uid://b7rknie3pw8xr"
