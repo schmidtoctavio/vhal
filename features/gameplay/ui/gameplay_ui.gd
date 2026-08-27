@@ -41,6 +41,11 @@ signal equipment_item_unequip_requested(
 	new_position: Vector2i
 )
 
+signal inventory_item_activation_requested(
+	uid: String,
+	item_id: String
+)
+
 # =========================================================
 # BARRAS
 # =========================================================
@@ -560,6 +565,13 @@ func _ready() -> void:
 	):
 		inventory_window.inventory_item_move_requested.connect(
 			_on_inventory_item_move_requested
+		)
+
+	if not inventory_window.inventory_item_activation_requested.is_connected(
+		_on_inventory_item_activation_requested
+	):
+		inventory_window.inventory_item_activation_requested.connect(
+			_on_inventory_item_activation_requested
 		)
 
 	if not inventory_window.item_container_transfer_requested.is_connected(
@@ -1128,6 +1140,15 @@ func _on_vault_item_move_requested(
 		uid,
 		current_position,
 		new_position
+	)
+
+func _on_inventory_item_activation_requested(
+	uid: String,
+	item_id: String
+) -> void:
+	inventory_item_activation_requested.emit(
+		uid,
+		item_id
 	)
 
 # =========================================================

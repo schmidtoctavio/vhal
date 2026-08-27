@@ -44,6 +44,11 @@ signal skill_cast_intent_requested(
 	target: Dictionary
 )
 
+signal skill_learning_intent_requested(
+	skill_id: String,
+	scroll_uid: String
+)
+
 signal basic_attack_intent_requested(
 	target: Dictionary
 )
@@ -91,6 +96,7 @@ signal equipment_item_unequip_requested(
 signal world_drop_pickup_intent_requested(
 	entity_id: String
 )
+
 
 # =========================================================
 # REFERENCIAS
@@ -149,6 +155,8 @@ var pending_authorized_npc_id: String = ""
 var pending_authorized_service_id: String = ""
 
 var authorized_vault_active: bool = false
+var authorized_skill_trainer_active: bool = false
+var authorized_skill_trainer_npc_id: String = ""
 
 # =========================================================
 # ESTADO DEL MUNDO
@@ -252,6 +260,13 @@ func _ready() -> void:
 	):
 		gameplay_ui.equipment_item_unequip_requested.connect(
 			_on_equipment_item_unequip_requested
+		)
+
+	if not gameplay_ui.inventory_item_activation_requested.is_connected(
+		_on_inventory_item_activation_requested
+	):
+		gameplay_ui.inventory_item_activation_requested.connect(
+			_on_inventory_item_activation_requested
 		)
 
 	_apply_states()
@@ -1507,12 +1522,16 @@ func apply_authorized_npc_service(
 	service_id: String
 ) -> bool:
 	var normalized_npc_id := (
-		npc_id.strip_edges()
+		npc_id
+		.strip_edges()
+		.to_lower()
 	)
 
 
 	var normalized_service_id := (
-		service_id.strip_edges()
+		service_id
+		.strip_edges()
+		.to_lower()
 	)
 
 
@@ -1525,10 +1544,16 @@ func apply_authorized_npc_service(
 
 
 	match normalized_service_id:
+
+		# =================================================
+		# WAREHOUSE
+		# =================================================
+
 		"warehouse":
 			pending_authorized_npc_id = (
 				normalized_npc_id
 			)
+
 
 			pending_authorized_service_id = (
 				normalized_service_id
@@ -1546,6 +1571,34 @@ func apply_authorized_npc_service(
 
 
 			return true
+
+
+		# =================================================
+		# SKILL TRAINER
+		#
+		# No necesita snapshot extra para abrir una sesión.
+		# La autorización ya vino del Game Server.
+		# =================================================
+
+		"skill_trainer":
+			authorized_skill_trainer_active = true
+
+			authorized_skill_trainer_npc_id = (
+				normalized_npc_id
+			)
+
+
+			print(
+				"GameplayScreen | Skill Trainer autorizado",
+				" | NPC: ",
+				authorized_skill_trainer_npc_id,
+				" | Servicio: ",
+				normalized_service_id
+			)
+
+
+			return true
+
 
 		_:
 			print(
@@ -1608,6 +1661,22 @@ func apply_authoritative_npc_service_end(
 
 			print(
 				"GameplayScreen | Servicio NPC cerrado autoritativamente",
+				" | NPC: ",
+				npc_id,
+				" | Servicio: ",
+				service_id,
+				" | Motivo: ",
+				reason
+			)
+
+		"skill_trainer":
+			authorized_skill_trainer_active = false
+
+			authorized_skill_trainer_npc_id = ""
+
+
+			print(
+				"GameplayScreen | Skill Trainer cerrado autoritativamente",
 				" | NPC: ",
 				npc_id,
 				" | Servicio: ",
@@ -1726,6 +1795,133 @@ func refresh_authoritative_vault() -> bool:
 
 
 	return true
+
+# =========================================================
+# ACTIVACIÓN DE ITEM AUTORITATIVO
+# =========================================================
+
+func _on_inventory_item_activation_requested(
+	uid: String,
+	item_id: String
+) -> void:
+	if player_state == null:
+		return
+
+
+	if player_state.inventory == null:
+		return
+
+
+	var normalized_uid := (
+		uid
+		.strip_edges()
+		.to_lower()
+	)
+
+
+	var normalized_item_id := (
+		item_id
+		.strip_edges()
+		.to_lower()
+	)
+
+
+	if normalized_uid.is_empty():
+		return
+
+
+	if normalized_item_id.is_empty():
+		return
+
+
+	# -----------------------------------------------------
+	# ¿ES UN SKILL SCROLL?
+	#
+	# Items normales simplemente no tienen handler todavía.
+	# -----------------------------------------------------
+
+	var skill_id := (
+		ClientSkillLearningCatalog.get_skill_id_for_scroll(
+			normalized_item_id
+		)
+	)
+
+
+	if skill_id.is_empty():
+		return
+
+
+	# -----------------------------------------------------
+	# CONTRATO CLIENTE VÁLIDO
+	#
+	# Esto NO autoriza gameplay.
+	# Sólo evita que un mapping local roto mande basura.
+	# -----------------------------------------------------
+
+	if ClientSkillCatalog.get_definition(
+		skill_id
+	) == null:
+		push_warning(
+			(
+				"GameplayScreen | "
+				+
+				"Skill Scroll apunta a una Skill "
+				+
+				"desconocida por el catálogo cliente: %s"
+			)
+			%
+			skill_id
+		)
+
+
+		return
+
+
+	# -----------------------------------------------------
+	# TRAINER
+	#
+	# UX gating basado exclusivamente en una autorización
+	# previamente recibida del Game Server.
+	#
+	# Incluso después de pasar esto, el Server vuelve a
+	# validar el servicio activo.
+	# -----------------------------------------------------
+
+	if not authorized_skill_trainer_active:
+		print(
+			"GameplayScreen | Aprendizaje omitido",
+			" | Skill: ",
+			skill_id,
+			" | Scroll UID: ",
+			normalized_uid,
+			" | Reason: skill_trainer_required"
+		)
+
+
+		return
+
+
+	if authorized_skill_trainer_npc_id.is_empty():
+		return
+
+
+	print(
+		"GameplayScreen | Intención de aprendizaje",
+		" | Skill: ",
+		skill_id,
+		" | Scroll: ",
+		normalized_item_id,
+		" | Scroll UID: ",
+		normalized_uid,
+		" | Trainer: ",
+		authorized_skill_trainer_npc_id
+	)
+
+
+	skill_learning_intent_requested.emit(
+		skill_id,
+		normalized_uid
+	)
 
 # =========================================================
 # INVENTORY AUTORITATIVO

@@ -34,6 +34,11 @@ signal equipment_item_unequip_requested(
 	new_position: Vector2i
 )
 
+signal inventory_item_activation_requested(
+	uid: String,
+	item_id: String
+)
+
 # =========================================================
 # REFERENCIAS
 # =========================================================
@@ -291,13 +296,59 @@ func _on_authoritative_item_transfer_requested(
 func _on_inventory_item_activated(
 	item: ItemInstance
 ) -> void:
-	if authoritative_inventory_mode:
-		return
-
-
 	if item == null:
 		return
 
+
+	if item.definition == null:
+		return
+
+
+	# -----------------------------------------------------
+	# MODO AUTORITATIVO
+	#
+	# InventoryWindow NO decide qué hace el item.
+	#
+	# Sólo propaga una intención utilizando identidad
+	# estable del ItemInstance.
+	# -----------------------------------------------------
+
+	if authoritative_inventory_mode:
+		var uid := (
+			item.uid
+			.strip_edges()
+			.to_lower()
+		)
+
+
+		var item_id := String(
+			item.definition.item_id
+		).strip_edges().to_lower()
+
+
+		if uid.is_empty():
+			return
+
+
+		if item_id.is_empty():
+			return
+
+
+		inventory_item_activation_requested.emit(
+			uid,
+			item_id
+		)
+
+
+		return
+
+
+	# -----------------------------------------------------
+	# MODO LOCAL / LAB
+	#
+	# Conservamos el comportamiento histórico:
+	# doble click intenta equipar.
+	# -----------------------------------------------------
 
 	if inventory_data == null:
 		return

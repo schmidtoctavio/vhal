@@ -1102,6 +1102,13 @@ func _show_gameplay(
 			_on_gameplay_skill_cast_intent_requested
 		)
 
+	if not gameplay_screen.skill_learning_intent_requested.is_connected(
+		_on_gameplay_skill_learning_intent_requested
+	):
+		gameplay_screen.skill_learning_intent_requested.connect(
+			_on_gameplay_skill_learning_intent_requested
+		)
+
 	if not gameplay_screen.basic_attack_intent_requested.is_connected(
 		_on_gameplay_basic_attack_intent_requested
 	):
@@ -1244,6 +1251,41 @@ func _on_gameplay_skill_cast_intent_requested(
 		+
 		"No se pudo enviar la intención de cast.",
 		" Error: ",
+		result
+	)
+
+
+	game_session_service.end_session()
+
+# =========================================================
+# SKILL LEARNING → GAME SERVER
+# =========================================================
+
+func _on_gameplay_skill_learning_intent_requested(
+	skill_id: String,
+	scroll_uid: String
+) -> void:
+	var result := (
+		game_server_client.send_skill_learning_request(
+			skill_id,
+			scroll_uid
+		)
+	)
+
+
+	if result == OK:
+		return
+
+
+	print(
+		"GameSessionFlowCoordinator | "
+		+
+		"No se pudo enviar la intención de aprendizaje.",
+		" | Skill: ",
+		skill_id,
+		" | Scroll UID: ",
+		scroll_uid,
+		" | Error: ",
 		result
 	)
 
