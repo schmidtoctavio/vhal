@@ -102,6 +102,10 @@ signal skill_learning_result_received(
 	idempotent: bool
 )
 
+signal skill_trainer_offers_received(
+	snapshot: Dictionary
+)
+
 signal mob_state_updated(
 	mob: Dictionary
 )
@@ -405,6 +409,13 @@ func _bind_protocol_signals() -> void:
 	):
 		skill_protocol.skill_learning_result_received.connect(
 			_on_protocol_skill_learning_result_received
+		)
+
+	if not skill_protocol.skill_trainer_offers_received.is_connected(
+		_on_protocol_skill_trainer_offers_received
+	):
+		skill_protocol.skill_trainer_offers_received.connect(
+			_on_protocol_skill_trainer_offers_received
 		)
 
 	if not presence_protocol.world_presence_snapshot_received.is_connected(
@@ -1348,6 +1359,13 @@ func _on_protocol_skill_learning_result_received(
 		reason,
 		learned_skill_ids,
 		idempotent
+	)
+
+func _on_protocol_skill_trainer_offers_received(
+	snapshot: Dictionary
+) -> void:
+	skill_trainer_offers_received.emit(
+		snapshot
 	)
 
 # =========================================================
