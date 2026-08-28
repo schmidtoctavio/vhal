@@ -46,6 +46,8 @@ signal inventory_item_activation_requested(
 	item_id: String
 )
 
+signal authorized_skill_trainer_closed
+
 # =========================================================
 # BARRAS
 # =========================================================
@@ -123,6 +125,13 @@ var skill_cooldown_state: SkillCooldownState = null
 	$WindowsLayer/SkillsWindow
 )
 
+# =========================================================
+# SKILL TRAINER WINDOW
+# =========================================================
+
+@onready var skill_trainer_window: SkillTrainerWindow = (
+	$WindowsLayer/SkillTrainerWindow
+)
 
 # =========================================================
 # PLAYER STATE
@@ -653,6 +662,19 @@ func _ready() -> void:
 			_on_skills_window_close_requested
 		)
 
+	# =====================================================
+	# SKILL TRAINER WINDOW
+	# =====================================================
+
+	skill_trainer_window.visible = false
+
+
+	if not skill_trainer_window.close_requested.is_connected(
+		_on_skill_trainer_close_requested
+	):
+		skill_trainer_window.close_requested.connect(
+			_on_skill_trainer_close_requested
+		)
 
 	# =====================================================
 	# PLAYER STATE
@@ -1067,6 +1089,53 @@ func _toggle_inventory() -> void:
 
 func _close_inventory() -> void:
 	inventory_window.visible = false
+
+# =========================================================
+# SKILL TRAINER
+# =========================================================
+
+func open_authorized_skill_trainer(
+	snapshot: Dictionary
+) -> bool:
+	if not skill_trainer_window.apply_authoritative_snapshot(
+		snapshot
+	):
+		return false
+
+
+	skill_trainer_window.visible = true
+
+	skill_trainer_window.center_in_viewport()
+
+
+	print(
+		"GameplayUI | Skill Trainer abierto con ofertas autoritativas."
+	)
+
+
+	return true
+
+
+func _on_skill_trainer_close_requested() -> void:
+	_close_skill_trainer()
+
+
+	authorized_skill_trainer_closed.emit()
+
+
+func _close_skill_trainer() -> void:
+	skill_trainer_window.visible = false
+
+	skill_trainer_window.clear_authoritative_snapshot()
+
+
+func close_authorized_skill_trainer() -> void:
+	_close_skill_trainer()
+
+
+	print(
+		"GameplayUI | Skill Trainer cerrado por Game Server."
+	)
 
 # =========================================================
 # VAULT

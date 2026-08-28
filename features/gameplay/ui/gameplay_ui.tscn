@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" uid="uid://ddpiaayu5jlw6" path="res://features/inventory/ui/inventory_window.tscn" id="11_8lp4b"]
 [ext_resource type="PackedScene" uid="uid://cp3bh3xmtvcsl" path="res://features/vault/ui/vault_window.tscn" id="12_tegix"]
 [ext_resource type="PackedScene" uid="uid://c4tom142cqmlj" path="res://features/skills/ui/skills_window.tscn" id="13_ka0vh"]
+[ext_resource type="PackedScene" uid="uid://37jffpi83k30" path="res://features/skills/ui/skill_trainer_window.tscn" id="14_jjx2p"]
 
 [node name="GameplayUI" type="Control" unique_id=79183495]
 layout_mode = 3
@@ -168,4 +169,7 @@ visible = false
 visible = false
 
 [node name="SkillsWindow" parent="WindowsLayer" unique_id=1284364103 instance=ExtResource("13_ka0vh")]
+visible = false
+
+[node name="SkillTrainerWindow" parent="WindowsLayer" unique_id=1593843077 instance=ExtResource("14_jjx2p")]
 visible = false

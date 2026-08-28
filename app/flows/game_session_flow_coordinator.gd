@@ -143,6 +143,12 @@ func _bind_services() -> void:
 			_on_game_session_ticket_issued
 		)
 
+	if not game_server_client.skill_trainer_offers_received.is_connected(
+		_on_skill_trainer_offers_received
+	):
+		game_server_client.skill_trainer_offers_received.connect(
+			_on_skill_trainer_offers_received
+		)
 
 	if not game_session_ticket_service.ticket_failed.is_connected(
 		_on_game_session_ticket_failed
@@ -1287,6 +1293,39 @@ func _on_gameplay_skill_learning_intent_requested(
 		scroll_uid,
 		" | Error: ",
 		result
+	)
+
+
+	game_session_service.end_session()
+
+# =========================================================
+# TRAINER OFFERS → GAMEPLAY
+# =========================================================
+
+func _on_skill_trainer_offers_received(
+	snapshot: Dictionary
+) -> void:
+	var gameplay_screen := (
+		_get_gameplay_screen()
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	if gameplay_screen.apply_authoritative_skill_trainer_offers(
+		snapshot
+	):
+		return
+
+
+	print(
+		"GameSessionFlowCoordinator | "
+		+
+		"No se pudieron aplicar las ofertas "
+		+
+		"autoritativas del Skill Trainer."
 	)
 
 

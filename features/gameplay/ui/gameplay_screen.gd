@@ -222,6 +222,13 @@ func _ready() -> void:
 			_on_authorized_vault_closed
 		)
 
+	if not gameplay_ui.authorized_skill_trainer_closed.is_connected(
+		_on_authorized_skill_trainer_closed
+	):
+		gameplay_ui.authorized_skill_trainer_closed.connect(
+			_on_authorized_skill_trainer_closed
+		)
+
 	if not gameplay_ui.item_container_transfer_requested.is_connected(
 		_on_item_container_transfer_requested
 	):
@@ -1621,6 +1628,98 @@ func _on_authorized_vault_closed() -> void:
 
 	npc_service_end_requested.emit()
 
+func _on_authorized_skill_trainer_closed() -> void:
+	if not authorized_skill_trainer_active:
+		return
+
+
+	authorized_skill_trainer_active = false
+
+	authorized_skill_trainer_npc_id = ""
+
+
+	npc_service_end_requested.emit()
+
+# =========================================================
+# OFERTAS AUTORITATIVAS DEL SKILL TRAINER
+# =========================================================
+
+func apply_authoritative_skill_trainer_offers(
+	snapshot: Dictionary
+) -> bool:
+	if player_state == null:
+		return false
+
+
+	if player_state.character_summary == null:
+		return false
+
+
+	if not authorized_skill_trainer_active:
+		return false
+
+
+	var character_id := int(
+		snapshot.get(
+			"character_id",
+			0
+		)
+	)
+
+
+	if (
+		character_id
+		!=
+		player_state.character_summary.character_id
+	):
+		return false
+
+
+	var npc_id := String(
+		snapshot.get(
+			"npc_id",
+			""
+		)
+	).strip_edges().to_lower()
+
+
+	var service_id := String(
+		snapshot.get(
+			"service_id",
+			""
+		)
+	).strip_edges().to_lower()
+
+
+	if service_id != "skill_trainer":
+		return false
+
+
+	if (
+		npc_id
+		!=
+		authorized_skill_trainer_npc_id
+	):
+		return false
+
+
+	if not gameplay_ui.open_authorized_skill_trainer(
+		snapshot
+	):
+		return false
+
+
+	print(
+		"GameplayScreen | Ofertas del Skill Trainer aplicadas",
+		" | NPC: ",
+		npc_id,
+		" | Character ID: ",
+		character_id
+	)
+
+
+	return true
+
 # =========================================================
 # SERVICIO NPC FINALIZADO AUTORITATIVAMENTE
 # =========================================================
@@ -1674,6 +1773,7 @@ func apply_authoritative_npc_service_end(
 
 			authorized_skill_trainer_npc_id = ""
 
+			gameplay_ui.close_authorized_skill_trainer()
 
 			print(
 				"GameplayScreen | Skill Trainer cerrado autoritativamente",

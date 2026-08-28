@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://cbvfp4chh35ot"]
+
+[ext_resource type="Script" uid="uid://ce1ckwnid213m" path="res://features/skills/ui/skill_trainer_offer_row.gd" id="1_2c18x"]
+[ext_resource type="PackedScene" uid="uid://bwwkopw7i2hwa" path="res://shared/ui/generic_button.tscn" id="1_7b4nk"]
+
+[node name="SkillTrainerOfferRow" type="PanelContainer" unique_id=578689685]
+custom_minimum_size = Vector2(0, 92)
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_2c18x")
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=832877880]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="Content" type="HBoxContainer" parent="Margin" unique_id=799295381]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SkillIcon" type="TextureRect" parent="Margin/Content" unique_id=1665449095]
+custom_minimum_size = Vector2(52, 52)
+layout_mode = 2
+stretch_mode = 5
+
+[node name="Info" type="VBoxContainer" parent="Margin/Content" unique_id=989659957]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SkillNameLabel" type="Label" parent="Margin/Content/Info" unique_id=1880618891]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+
+[node name="RequirementsLabel" type="Label" parent="Margin/Content/Info" unique_id=665338432]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="StatusLabel" type="Label" parent="Margin/Content/Info" unique_id=1153808735]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+
+[node name="LearnButton" parent="Margin/Content" unique_id=4979020 instance=ExtResource("1_7b4nk")]
+custom_minimum_size = Vector2(118, 42)
+layout_mode = 2
+text = "APRENDER"

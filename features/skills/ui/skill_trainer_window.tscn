@@ -1,0 +1,38 @@
+[gd_scene format=3 uid="uid://37jffpi83k30"]
+
+[ext_resource type="PackedScene" uid="uid://ck6ftdrkiei54" path="res://shared/ui/base_window.tscn" id="1_dklpu"]
+[ext_resource type="Script" uid="uid://bx4yuvykxlfk6" path="res://features/skills/ui/skill_trainer_window.gd" id="2_6y642"]
+
+[node name="SkillTrainerWindow" unique_id=1417963305 instance=ExtResource("1_dklpu")]
+custom_minimum_size = Vector2(480, 400)
+script = ExtResource("2_6y642")
+window_title = "ENTRENADOR DE HABILIDADES"
+
+[node name="TitleLabel" parent="ContentMargin/Content/Header" parent_id_path=PackedInt32Array(1938107997) index="0" unique_id=1114458321]
+text = "ENTRENADOR DE HABILIDADES"
+
+[node name="TrainerContent" type="VBoxContainer" parent="ContentMargin/Content/Body" parent_id_path=PackedInt32Array(521580399) index="0" unique_id=1813735775]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TrainerInfoLabel" type="Label" parent="ContentMargin/Content/Body/TrainerContent" index="0" unique_id=1177088026]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+horizontal_alignment = 1
+
+[node name="InstructionLabel" type="Label" parent="ContentMargin/Content/Body/TrainerContent" index="1" unique_id=1019648270]
+custom_minimum_size = Vector2(420, 0)
+layout_mode = 2
+text = "\"Elegí una habilidad que cumplas los requisitos para aprender.\""
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="OffersScroll" type="ScrollContainer" parent="ContentMargin/Content/Body/TrainerContent" index="2" unique_id=1875525190]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="OffersList" type="VBoxContainer" parent="ContentMargin/Content/Body/TrainerContent/OffersScroll" index="0" unique_id=804330683]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
