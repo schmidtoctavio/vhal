@@ -6,7 +6,7 @@
 **Backend:** Laravel + MySQL  
 **Rama habitual:** `dev`  
 **Estado general:** F19 Vertical Slice ✅, F20 Durable Character Runtime ✅, F21-A Durable Skill Ownership ✅, F21-B Durable Skill Learning ✅.  
-**Siguiente paso:** gate de planificación F22; elegir un único sistema siguiente después de revisar roadmap y repositorios reales.
+**Siguiente paso:** continuar en `PROJECT_MEMORY_3.md`, que contiene el contrato canónico de F22 Character Stats & Progression, Resets y balance futuro.
 
 ---
 
@@ -3565,3 +3565,55 @@ reconnect reconstruction
 ```
 
 La siguiente prioridad debe elegirse en F22 sin mezclar múltiples sistemas grandes.
+
+---
+
+# 79. CIERRE DE VOLUMEN 2 / HANDOFF A VOLUMEN 3
+
+Este volumen se cierra después de:
+
+```text
+F19 Vertical Slice                  ✅
+F20 Durable Character Runtime       ✅
+F21-A Durable Skill Ownership       ✅
+F21-B Durable Skill Learning        ✅
+```
+
+Último commit documental registrado en cliente:
+
+```text
+3a9ac1c1b2918d13d6559f39dc6c0cbbe910cba9
+docs: close F21 durable skill learning
+```
+
+La planificación posterior seleccionó:
+
+```text
+F22 — Character Stats & Progression
+```
+
+y definió además la dirección futura del sistema de:
+
+```text
+Max Level 400
+Resets
+Reset NPC
+350 Stat Points acumulativos por Reset
+Progressive EXP
+Secondary/Derived Stats
+Attack/Movement Speed
+Crit
+Armor/Resistances
+Skill scaling
+PvP anti-CC / diminishing returns
+```
+
+Para evitar que este archivo supere el límite operativo aproximado de 5000 líneas, toda esa continuidad se registra en:
+
+```text
+PROJECT_MEMORY_3.md
+```
+
+Regla:
+
+> desde F22, leer `PROJECT_MEMORY_3.md` después de Volumen 1 y Volumen 2. En caso de contradicción sobre F22 o sistemas posteriores, prevalece Volumen 3.
