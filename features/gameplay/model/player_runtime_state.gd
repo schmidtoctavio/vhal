@@ -975,3 +975,215 @@ func apply_skill_snapshot(
 
 
 	return true
+
+
+# =========================================================
+# SKILLS AUTORITATIVAS — ACTUALIZACIÓN EN VIVO
+# =========================================================
+
+func apply_skill_learning_update(
+	learned_skill_ids: PackedStringArray
+) -> bool:
+	if skill_book == null:
+		return false
+
+
+	if skill_hotbar == null:
+		return false
+
+
+	# -----------------------------------------------------
+	# VALIDAR SNAPSHOT COMPLETO ANTES DE MUTAR
+	#
+	# skill_learning_result contiene el ownership completo
+	# conocido por el Game Server después del aprendizaje.
+	# -----------------------------------------------------
+
+	var normalized_skill_ids: Array[String] = []
+
+	var definitions_by_id: Dictionary = {}
+
+
+	for skill_id_value in learned_skill_ids:
+		var skill_id := String(
+			skill_id_value
+		).strip_edges().to_lower()
+
+
+		if skill_id.is_empty():
+			return false
+
+
+		if definitions_by_id.has(
+			skill_id
+		):
+			return false
+
+
+		var definition := (
+			ClientSkillCatalog.get_definition(
+				skill_id
+			)
+		)
+
+
+		if definition == null:
+			return false
+
+
+		normalized_skill_ids.append(
+			skill_id
+		)
+
+
+		definitions_by_id[
+			skill_id
+		] = definition
+
+
+	# -----------------------------------------------------
+	# UN APRENDIZAJE NO PUEDE QUITAR SKILLS
+	#
+	# Si el resultado autoritativo omitiera una Skill que
+	# ya teníamos, hay una inconsistencia y fallamos cerrado.
+	# -----------------------------------------------------
+
+	for current_skill: SkillDefinition in (
+		skill_book.get_skills()
+	):
+		if current_skill == null:
+			return false
+
+
+		var current_skill_id := String(
+			current_skill.skill_id
+		).strip_edges().to_lower()
+
+
+		if not definitions_by_id.has(
+			current_skill_id
+		):
+			return false
+
+
+	# -----------------------------------------------------
+	# AGREGAR ÚNICAMENTE LAS SKILLS NUEVAS
+	# -----------------------------------------------------
+
+	var newly_learned_ids: Dictionary = {}
+
+
+	for skill_id: String in normalized_skill_ids:
+		if skill_book.has_skill_id(
+			StringName(
+				skill_id
+			)
+		):
+			continue
+
+
+		var definition := (
+			definitions_by_id[
+				skill_id
+			]
+			as SkillDefinition
+		)
+
+
+		if definition == null:
+			return false
+
+
+		if not skill_book.learn_skill(
+			definition
+		):
+			return false
+
+
+		newly_learned_ids[
+			skill_id
+		] = true
+
+
+	# -----------------------------------------------------
+	# HOTBAR
+	#
+	# Sólo autoasignamos Skills NUEVAS.
+	#
+	# No rellenamos Skills antiguas que el jugador haya
+	# decidido quitar manualmente de su hotbar.
+	# -----------------------------------------------------
+
+	var hotbar_added: int = 0
+
+
+	for skill_id: String in (
+		ClientSkillCatalog.DEFAULT_HOTBAR_ORDER
+	):
+		if not newly_learned_ids.has(
+			skill_id
+		):
+			continue
+
+
+		var definition := (
+			definitions_by_id[
+				skill_id
+			]
+			as SkillDefinition
+		)
+
+
+		if definition == null:
+			return false
+
+
+		if skill_hotbar.find_skill_index(
+			definition
+		) >= 0:
+			continue
+
+
+		var empty_index: int = -1
+
+
+		for index: int in range(
+			SkillHotbarData.SLOT_COUNT
+		):
+			if skill_hotbar.get_skill(
+				index
+			) != null:
+				continue
+
+
+			empty_index = index
+
+			break
+
+
+		if empty_index < 0:
+			break
+
+
+		if not skill_hotbar.set_skill(
+			empty_index,
+			definition
+		):
+			return false
+
+
+		hotbar_added += 1
+
+
+	print(
+		"PlayerRuntimeState | Skills autoritativas actualizadas en vivo",
+		" | Learned: ",
+		skill_book.get_skill_count(),
+		" | Nuevas: ",
+		newly_learned_ids.size(),
+		" | Hotbar agregadas: ",
+		hotbar_added
+	)
+
+
+	return true

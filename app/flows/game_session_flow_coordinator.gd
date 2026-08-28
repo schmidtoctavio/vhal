@@ -171,6 +171,13 @@ func _bind_services() -> void:
 			_on_skill_cast_result_received
 		)
 
+	if not game_server_client.skill_learning_result_received.is_connected(
+		_on_skill_learning_result_received
+	):
+		game_server_client.skill_learning_result_received.connect(
+			_on_skill_learning_result_received
+		)
+
 	if not game_server_client.game_server_connected.is_connected(
 		_on_game_server_connected
 	):
@@ -1293,6 +1300,74 @@ func _on_gameplay_skill_learning_intent_requested(
 		scroll_uid,
 		" | Error: ",
 		result
+	)
+
+
+	game_session_service.end_session()
+
+# =========================================================
+# SKILL LEARNING RESULT → GAMEPLAY
+# =========================================================
+
+func _on_skill_learning_result_received(
+	request_id: int,
+	accepted: bool,
+	skill_id: String,
+	_scroll_uid: String,
+	reason: String,
+	learned_skill_ids: PackedStringArray,
+	idempotent: bool
+) -> void:
+	# -----------------------------------------------------
+	# RECHAZOS
+	#
+	# No modifican ownership local.
+	# D4-C se ocupará del feedback visual del Trainer.
+	# -----------------------------------------------------
+
+	if not accepted:
+		print(
+			"GameSessionFlowCoordinator | Aprendizaje rechazado",
+			" | Request: ",
+			request_id,
+			" | Skill: ",
+			skill_id,
+			" | Reason: ",
+			reason
+		)
+
+
+		return
+
+
+	var gameplay_screen := (
+		_get_gameplay_screen()
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	if gameplay_screen.apply_authoritative_skill_learning_update(
+		request_id,
+		skill_id,
+		learned_skill_ids,
+		idempotent
+	):
+		return
+
+
+	print(
+		"GameSessionFlowCoordinator | "
+		+
+		"No se pudo aplicar el aprendizaje "
+		+
+		"autoritativo en vivo",
+		" | Request: ",
+		request_id,
+		" | Skill: ",
+		skill_id
 	)
 
 

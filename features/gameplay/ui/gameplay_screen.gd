@@ -2183,6 +2183,80 @@ func _on_item_container_transfer_requested(
 	)
 
 # =========================================================
+# SKILL LEARNING — ACTUALIZACIÓN AUTORITATIVA EN VIVO
+# =========================================================
+
+func apply_authoritative_skill_learning_update(
+	request_id: int,
+	skill_id: String,
+	learned_skill_ids: PackedStringArray,
+	idempotent: bool
+) -> bool:
+	if player_state == null:
+		return false
+
+
+	if request_id <= 0:
+		return false
+
+
+	var normalized_skill_id := (
+		skill_id
+		.strip_edges()
+		.to_lower()
+	)
+
+
+	if normalized_skill_id.is_empty():
+		return false
+
+
+	# -----------------------------------------------------
+	# UN RESULTADO ACCEPTED DEBE CONTENER LA SKILL PEDIDA
+	# EN EL OWNERSHIP AUTORITATIVO RESULTANTE.
+	# -----------------------------------------------------
+
+	var requested_skill_is_present: bool = false
+
+
+	for learned_skill_id_value in learned_skill_ids:
+		var learned_skill_id := String(
+			learned_skill_id_value
+		).strip_edges().to_lower()
+
+
+		if learned_skill_id == normalized_skill_id:
+			requested_skill_is_present = true
+
+			break
+
+
+	if not requested_skill_is_present:
+		return false
+
+
+	if not player_state.apply_skill_learning_update(
+		learned_skill_ids
+	):
+		return false
+
+
+	print(
+		"GameplayScreen | Aprendizaje autoritativo aplicado en vivo",
+		" | Request: ",
+		request_id,
+		" | Skill: ",
+		normalized_skill_id,
+		" | Learned: ",
+		learned_skill_ids,
+		" | Idempotent: ",
+		idempotent
+	)
+
+
+	return true
+
+# =========================================================
 # RESULTADO AUTORITATIVO DE SKILL
 # =========================================================
 
