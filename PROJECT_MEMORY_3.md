@@ -5,8 +5,8 @@
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama habitual:** `dev`  
-**Estado general:** F19 ✅, F20 ✅, F21-A ✅, F21-B ✅. F22 Character Stats & Progression seleccionado y diseñado a nivel de contrato.  
-**Siguiente checkpoint:** F22-B1 — Backend Durable Primary Stat Allocation Schema.
+**Estado general:** F19 ✅, F20 ✅, F21-A ✅, F21-B ✅, F22-A ✅, F22-B ✅.  
+**Siguiente checkpoint:** F22-C — Class Stats Catalog + Game Server Stat Runtime.
 
 ---
 
@@ -24,7 +24,7 @@ Orden obligatorio:
 
 Precedencia:
 
-> este volumen prevalece para F22 y decisiones posteriores si contradice una propuesta anterior de Volumen 1 o 2.
+> Este volumen prevalece para F22 y decisiones posteriores si contradice una propuesta anterior de Volumen 1 o 2.
 
 GitHub actual sigue prevaleciendo sobre memoria si el código real cambió.
 
@@ -46,9 +46,16 @@ ETAPA
 → siguiente etapa
 ```
 
-No avanzar antes de `pusheado`.
+Reglas:
 
+```text
+No avanzar antes de "pusheado".
 No mezclar scopes.
+Preferir etapas pequeñas.
+Testear antes de commit.
+Corregir warnings/errors antes de continuar.
+Actualizar memoria canónica al cerrar bloques importantes.
+```
 
 Objetivo habitual:
 
@@ -57,11 +64,20 @@ Objetivo habitual:
 0 errors
 ```
 
-Los `.md` canónicos siempre se entregan completos para reemplazar.
+Los `.md` canónicos siempre se entregan COMPLETOS para reemplazar.
+
+Cuando un volumen se acerque a ~5.000 líneas:
+
+```text
+cerrar volumen actual
+→ abrir PROJECT_MEMORY_4.md
+```
+
+No seguir inflando indefinidamente un mismo archivo.
 
 ---
 
-# 2. REPOSITORIOS Y BASELINES
+# 2. REPOSITORIOS
 
 ```text
 Cliente / memoria:
@@ -74,36 +90,73 @@ Backend:
 schmidtoctavio/vhal_backend
 ```
 
-Branch:
+Branch habitual:
 
 ```text
 dev
 ```
 
-Baseline documental cliente:
+---
+
+# 3. BASELINES RELEVANTES
+
+## Cliente / memoria
+
+Cierre F21:
 
 ```text
 3a9ac1c1b2918d13d6559f39dc6c0cbbe910cba9
 docs: close F21 durable skill learning
 ```
 
-Game Server funcional:
+Contrato F22 + transición de memoria:
+
+```text
+91f746733629f9b4544fb40a711a708175e30d43
+docs: define F22 stats progression and reset contract
+```
+
+## Game Server
+
+Último baseline funcional antes de F22:
 
 ```text
 968c1a19ea01b04d61b721ee59929fd55c036339
 feat: recover skill trainer after learning rejection
 ```
 
-Backend funcional:
+## Backend
+
+F22-B commits:
 
 ```text
-64be9a85e90ec6a07f1cb1b47d0c21c670f7dc18
-feat: add atomic durable skill learning
+715d4c00d92c386a5eae7d946df67cb009fe41b7
+feat: add durable character stat allocation schema
+
+d27a435b55d41aec28b81a49a52f43a2fbbd5de6
+feat: add character stat budget snapshot
+
+9e84c8c76580c72a5f0bcd309e37b23b1c3d9d31
+feat: expose durable character stat snapshot
+
+a77506185a97539bb5322a38c630b0137d07317d
+feat: add durable character stat allocation persistence
+
+ce0b202561dfee2e412f6edaf4e8df7bd422842e
+feat: expose durable character stat allocation
+```
+
+Última regresión Backend al cierre F22-B:
+
+```text
+60 tests
+337 assertions
+0 failures
 ```
 
 ---
 
-# 3. ESTADO CERRADO ANTES DE F22
+# 4. ESTADO CERRADO ANTES DE F22
 
 ```text
 F19 Vertical Slice                  ✅
@@ -112,7 +165,7 @@ F21-A Durable Skill Ownership       ✅
 F21-B Durable Skill Learning        ✅
 ```
 
-Durable actualmente:
+Durable antes de F22:
 
 ```text
 Account / Character identity
@@ -130,11 +183,11 @@ Skill Ownership
 Skill learning provenance
 ```
 
-F22 NO debe romper esos sistemas.
+F22 no debe romper esos sistemas.
 
 ---
 
-# 4. DECISIÓN F22
+# 5. DECISIÓN F22
 
 Sistema elegido:
 
@@ -172,11 +225,11 @@ World/content expansion
 
 ---
 
-# 5. FILOSOFÍA DE BALANCE
+# 6. FILOSOFÍA DE BALANCE
 
 Objetivo:
 
-> crear builds distintas sin permitir que una sola clase, un solo Primary Stat o una sola Skill concentren todas las ventajas relevantes.
+> Crear builds distintas sin permitir que una sola clase, un solo Primary Stat o una sola Skill concentren todas las ventajas relevantes.
 
 Regla central:
 
@@ -184,6 +237,7 @@ Regla central:
 un Primary Stat
 NO debe ser simultáneamente
 la mejor fuente de:
+
 damage
 defense
 crit
@@ -192,9 +246,7 @@ movement speed
 survivability
 ```
 
-Queremos tradeoffs.
-
-Ejemplo:
+Queremos tradeoffs:
 
 ```text
 más daño
@@ -207,9 +259,21 @@ más utility
 ↔ menos daño puro
 ```
 
+Balance futuro debe contemplar:
+
+```text
+PvE
+PvP
+progresión comparable
+resets
+gear
+skills
+status effects
+```
+
 ---
 
-# 6. PRIMARY STATS CANÓNICOS
+# 7. PRIMARY STATS CANÓNICOS
 
 Foundation:
 
@@ -222,11 +286,19 @@ Energy
 
 No agregar un quinto Primary Stat todavía.
 
-Stats adicionales existirán como secundarios/derivados.
+Stats adicionales existirán como:
+
+```text
+secondary
+derived
+ratings
+percent modifiers
+temporary effects
+```
 
 ---
 
-# 7. STRENGTH
+# 8. STRENGTH
 
 Rol principal:
 
@@ -256,7 +328,7 @@ HP
 
 ---
 
-# 8. AGILITY
+# 9. AGILITY
 
 Rol principal:
 
@@ -295,17 +367,25 @@ animaciones
 replicación
 ```
 
-y es un multiplicador demasiado sensible.
-
 Agility tampoco debe convertirse en:
 
 ```text
-damage + defense + crit + huge attack speed + movement speed
+damage
++
+defense
++
+crit
++
+huge attack speed
++
+movement speed
 ```
+
+todo simultáneamente.
 
 ---
 
-# 9. VITALITY
+# 10. VITALITY
 
 Rol principal:
 
@@ -333,7 +413,7 @@ Armor/Resistances deben provenir principalmente de Equipment y Secondary Stats.
 
 ---
 
-# 10. ENERGY
+# 11. ENERGY
 
 Rol principal:
 
@@ -373,13 +453,17 @@ Archer physical Skill
 → Agility
 ```
 
-Coeficientes reales todavía TBD.
+Coeficientes reales:
+
+```text
+TBD
+```
 
 ---
 
-# 11. STARTING STATS POR CLASE
+# 12. STARTING STATS POR CLASE
 
-Foundation de pruebas:
+Foundation inicial:
 
 | Class | STR | AGI | VIT | ENE | Total |
 |---|---:|---:|---:|---:|---:|
@@ -396,13 +480,15 @@ distinta identidad
 
 Estos valores NO son balance final.
 
-Deben vivir en catálogo autoritativo, no duplicarse por Character en DB.
+Deben vivir en catálogo autoritativo de clase.
+
+NO duplicarlos como base individual en cada Character.
 
 ---
 
-# 12. PUNTOS POR LEVEL
+# 13. PUNTOS POR LEVEL
 
-Foundation:
+Foundation actual:
 
 ```text
 Warrior = 5
@@ -416,13 +502,13 @@ Concepto:
 STAT_POINTS_PER_LEVEL = 5
 ```
 
-No usar budgets distintos por clase inicialmente.
-
-La arquitectura puede permitir excepciones futuras.
+La arquitectura puede permitir excepciones futuras de clase, pero no se usarán inicialmente.
 
 ---
 
-# 13. BUDGET DE STATS
+# 14. BUDGET DE STATS
+
+Level points:
 
 ```text
 level_points
@@ -432,7 +518,7 @@ level_points
 stat_points_per_level
 ```
 
-Con Resets:
+Reset points:
 
 ```text
 reset_points
@@ -478,7 +564,7 @@ total_budget
 spent
 ```
 
-Invariante:
+Invariante crítica:
 
 ```text
 spent <= total_budget
@@ -486,7 +572,7 @@ spent <= total_budget
 
 ---
 
-# 14. NO PERSISTIR UNSPENT SI ES DERIVABLE
+# 15. NO PERSISTIR UNSPENT
 
 No crear como verdad primaria:
 
@@ -503,88 +589,18 @@ bonus_stat_points
 allocations
 ```
 
-Esto evita bugs:
+Esto evita divergencias del tipo:
 
 ```text
 subió level
-pero no sumó puntos
+pero olvidamos sumar puntos
 ```
 
 El Level durable ya implica el budget.
 
 ---
 
-# 15. MODELO DURABLE PROPUESTO
-
-Entidad:
-
-```text
-character_stat_allocations
-```
-
-Campos foundation previstos:
-
-```text
-character_id PK/FK
-
-allocated_strength
-allocated_agility
-allocated_vitality
-allocated_energy
-
-bonus_stat_points
-
-revision
-timestamps
-```
-
-Stats asignados son:
-
-```text
-por Character
-```
-
-NO por Account.
-
----
-
-# 16. QUÉ NO PERSISTIR COMO VERDAD DURABLE
-
-No persistir:
-
-```text
-physical_damage
-magic_damage
-healing_power
-max_hp
-max_mp
-armor
-critical_chance
-critical_damage
-attack_speed
-movement_speed
-resistances
-```
-
-Son derivados.
-
-Se reconstruyen desde:
-
-```text
-Class Base
-+
-Allocation
-+
-Equipment
-+
-Buffs/Effects
-+
-Rules
-```
-
----
-
-# 17. BASE / ALLOCATED / PERMANENT / VARIABLE / EFFECTIVE
+# 16. BASE / ALLOCATED / PERMANENT / VARIABLE / EFFECTIVE
 
 Definiciones:
 
@@ -626,11 +642,15 @@ Requirements usan por defecto:
 Permanent
 ```
 
-No Effective.
+No:
+
+```text
+Effective
+```
 
 ---
 
-# 18. REQUISITOS Y EQUIPMENT
+# 17. REQUIREMENTS Y EQUIPMENT
 
 Ejemplo:
 
@@ -658,13 +678,22 @@ porque el requisito mira:
 Permanent STR = 150
 ```
 
-Esto evita cadenas de items que se habilitan entre sí.
+Esto evita cadenas circulares de Equipment habilitando Equipment.
 
 ---
 
-# 19. SECONDARY / DERIVED STATS
+# 18. DERIVED / SECONDARY STATS
 
-Ofensivos:
+## Vitals
+
+```text
+Max HP
+Max MP
+HP Regeneration
+MP Regeneration
+```
+
+## Ofensivos
 
 ```text
 Physical Power
@@ -679,7 +708,7 @@ Magic Damage Bonus
 Skill Damage Bonus
 ```
 
-Defensivos:
+## Defensivos
 
 ```text
 Armor
@@ -693,16 +722,7 @@ Block Chance futuro
 Evasion/Dodge futuro
 ```
 
-Vitals:
-
-```text
-Max HP
-Max MP
-HP Regeneration
-MP Regeneration
-```
-
-Movilidad:
+## Movilidad
 
 ```text
 Movement Speed
@@ -710,9 +730,45 @@ Movement Speed
 
 ---
 
+# 19. QUÉ NO PERSISTIR COMO VERDAD DURABLE
+
+No persistir:
+
+```text
+physical_damage
+magic_damage
+healing_power
+max_hp
+max_mp
+armor
+critical_chance
+critical_damage
+attack_speed
+movement_speed
+resistances
+```
+
+Son derivados.
+
+Se reconstruyen desde:
+
+```text
+Class Base
++
+Allocation
++
+Equipment
++
+Buffs/Effects
++
+Rules
+```
+
+---
+
 # 20. ATTACK SPEED
 
-El sistema actual ya usa:
+El sistema actual usa:
 
 ```text
 basic_attack_cooldown_seconds
@@ -738,46 +794,36 @@ base 0.90 sec
 → 0.75 sec
 ```
 
-Preferencia de item:
+Representación preferida:
 
 ```text
-+X% Attack Speed
+percentage / basis points
 ```
 
-No:
+Posible representación interna:
 
 ```text
-+5 velocidad
-```
-
-sin unidad.
-
-Representación interna posible:
-
-```text
-basis points
 100 bps = 1%
 ```
 
-Cap conceptual de testing:
+Cap conceptual normal de foundation:
 
 ```text
-Attack Speed Bonus normal
-≈ +50%
+~+50%
 ```
 
-Valor final se valida con animaciones/gameplay.
-
 Agility sólo aportará una fracción pequeña/capada.
+
+Gear/skills serán fuentes principales.
 
 ---
 
 # 21. MOVEMENT SPEED
 
-Foundation actual:
+Foundation actual pre-F22:
 
 ```text
-4.0
+MOVE_SPEED = 4.0
 ```
 
 Futuro:
@@ -797,15 +843,14 @@ Boots +5%
 4.0 → 4.2
 ```
 
-Preferir porcentaje.
+Primary Stats NO aumentan Movement Speed directamente.
 
 Cap conceptual inicial:
 
 ```text
-bonus normal total ≈ +25%
+normal total bonus
+≈ +25%
 ```
-
-Primary Stats NO aumentan directamente Movement Speed.
 
 Movement Speed será raro/controlado.
 
@@ -831,9 +876,7 @@ significa:
 5% → 7%
 ```
 
-No multiplicación ambigua.
-
-Representación futura:
+Representación futura sugerida:
 
 ```text
 critical_chance_bps
@@ -845,7 +888,7 @@ Cap conceptual normal:
 ≈ 50%
 ```
 
-PvP puede tener otro cap.
+PvP puede usar otro cap.
 
 ---
 
@@ -881,7 +924,7 @@ No convertir Crit Damage en crecimiento infinito.
 
 # 24. ARMOR Y RESISTANCE RATINGS
 
-Items otorgan valores/rating.
+Items otorgan ratings planos.
 
 Ejemplo:
 
@@ -889,14 +932,6 @@ Ejemplo:
 Leather Helmet
 +30 Armor
 ```
-
-No preferir:
-
-```text
--10% Physical Damage
-```
-
-por cada pieza.
 
 Servidor convierte rating a reducción con diminishing returns.
 
@@ -997,48 +1032,11 @@ can_crit
 Status Effects
 ```
 
-Ejemplo:
-
-```text
-Fire Ball
-Energy = primary scaling
-magical/fire
-```
-
-Ejemplo:
-
-```text
-Archer physical Skill
-Agility = strong
-Strength = secondary
-```
-
 Game Server es autoridad de coeficientes.
 
 ---
 
-# 28. SKILL SCALING EN UI
-
-Cliente puede mostrar:
-
-```text
-Escala principalmente con Energía
-```
-
-o:
-
-```text
-Energy ★★★
-Agility ★
-```
-
-No debe inventar el scaling.
-
-Debe derivarse de metadata consistente con servidor.
-
----
-
-# 29. STATUS EFFECT TAXONOMY
+# 28. STATUS EFFECTS / CONTROL
 
 Separar:
 
@@ -1049,45 +1047,6 @@ Damage over Time
 Debuff
 Buff
 ```
-
-Hard Control:
-
-```text
-stun
-root
-silence futuro si corresponde
-```
-
-Soft Control:
-
-```text
-slow
-attack speed slow
-accuracy debuff
-```
-
-DoT:
-
-```text
-poison
-burn
-bleed futuro
-```
-
-Debuff:
-
-```text
-armor reduction
-resistance reduction
-damage reduction
-healing reduction
-```
-
-No representar todo como un boolean genérico.
-
----
-
-# 30. PRINCIPIO ANTI-STUNLOCK
 
 PvP no debe permitir:
 
@@ -1107,160 +1066,47 @@ Diminishing Returns
 duration caps
 ```
 
-Objetivo:
-
-> ningún jugador debe quedar sin posibilidad real de actuar por una cadena infinita de una clase o composición.
-
----
-
-# 31. DIMINISHING RETURNS DE HARD CC
-
-Concepto de testing:
+Concepto DR inicial:
 
 ```text
-1º CC de categoría
-→ 100%
-
-2º dentro de ventana DR
-→ ~50%
-
-3º
-→ ~25%
-
-repetición posterior
-→ inmunidad breve o duración mínima
+1º CC → 100%
+2º → ~50%
+3º → ~25%
+posteriores → inmunidad breve o duración mínima
 ```
 
-Valores exactos:
+Valores exactos TBD.
 
-```text
-TBD
-```
-
-PvE puede usar otra política.
-
-Bosses pueden tener inmunidades/reducción propia.
-
----
-
-# 32. TENACITY
-
-Tenacity reduce duración de control.
-
-Ejemplo:
-
-```text
-Stun 4 sec
-Tenacity 25%
-→ 3 sec antes de otros modifiers
-```
-
-Preferencia:
-
-```text
-reducción determinística
-```
-
-No:
-
-```text
-25% chance RNG de ignorar el Stun
-```
-
-como sistema normal.
+Tenacity reduce duración determinísticamente.
 
 Cap conceptual:
 
 ```text
-≈ 50%
+~50%
 ```
+
+Slow PvP conceptual:
+
+```text
+normal movement slow cap ~40%
+```
+
+DoTs:
+
+```text
+default no crit
+explicit stack policy
+explicit max stacks
+explicit refresh policy
+```
+
+No stack infinito.
 
 ---
 
-# 33. SLOWS
+# 29. PvP COMBAT PROFILE FUTURO
 
-Un Slow no debe transformarse en Root accidental.
-
-Cap PvP conceptual:
-
-```text
-maximum normal movement slow
-≈ 40%
-```
-
-Root es categoría Hard CC aparte.
-
-También habrá cap para Attack Speed debuffs.
-
----
-
-# 34. DoT — POISON / BURN
-
-Default futuro:
-
-```text
-DoT ticks
-→ no crit
-```
-
-salvo definición explícita:
-
-```text
-can_crit = true
-```
-
-Cada DoT define:
-
-```text
-duration
-tick interval
-stack policy
-max stacks
-refresh policy
-school
-element
-scaling
-```
-
-Stack modes posibles:
-
-```text
-refresh
-replace_stronger
-stack
-```
-
-No stack infinito global.
-
----
-
-# 35. RESISTENCIA A EFFECTS
-
-Separar:
-
-```text
-Damage Resistance
-de
-Control Resistance
-```
-
-Ejemplo:
-
-```text
-Poison Resistance
-→ poison damage
-
-Tenacity
-→ control duration
-```
-
-No mezclar semánticas.
-
----
-
-# 36. PvP COMBAT PROFILE FUTURO
-
-Stats base serán compartidos PvE/PvP.
+Stats base compartidos PvE/PvP.
 
 Capa futura:
 
@@ -1279,11 +1125,9 @@ Tenacity interaction
 DoT modifiers
 ```
 
-Esto permite balancear PvP sin destruir PvE.
-
 ---
 
-# 37. MAX LEVEL CANÓNICO
+# 30. MAX LEVEL Y EXP
 
 Decisión:
 
@@ -1291,23 +1135,7 @@ Decisión:
 MAX_LEVEL = 400
 ```
 
-Level 400 no avanza a 401.
-
-Se convierte en candidato a:
-
-```text
-Reset
-```
-
-El MAX_LEVEL 65535 actual es foundation temporal.
-
----
-
-# 38. EXP CURVE PROGRESIVA
-
-La regla actual de 100 EXP por level se reemplazará.
-
-Foundation propuesta:
+Foundation EXP propuesta:
 
 ```text
 n = level - 1
@@ -1343,104 +1171,32 @@ Total aproximado 1→400:
 43.4 millones EXP
 ```
 
-No representa por sí solo tiempo de juego.
-
----
-
-# 39. EXP DE MOBS
-
-Cada mob mantiene:
-
-```text
-level
-experience_reward
-```
-
 El mismo mob NO aumenta su reward porque el jugador suba.
 
-Game Server futuro aplica multiplier por diferencia:
+Training Goblin sigue temporalmente:
 
 ```text
-Player Level
-vs
-Mob Level
-```
-
-Concepto:
-
-```text
-mismo/cercano
-→ ~100%
-
-bastante inferior
-→ reducido
-
-muy inferior
-→ casi 0
-
-mob superior
-→ pequeño bonus con cap
-```
-
-Objetivo:
-
-```text
-Lvl 100
-NO farmea Goblins Lv.1
-como opción óptima.
+experience_reward = 50
 ```
 
 ---
 
-# 40. EXP Y RESETS
-
-Default:
-
-```text
-misma curva 1→400
-en cada Reset
-```
-
-No agregar inicialmente penalización extra de XP por Reset.
-
-Futuro opcional:
-
-```text
-reset_experience_multiplier
-```
-
-Default previsto:
-
-```text
-1.0
-```
-
-Si hace falta frenar resets, primero usar:
-
-```text
-Reset costs
-requirements
-content progression
-```
-
----
-
-# 41. RESET SYSTEM — DIRECCIÓN CANÓNICA
+# 31. RESET SYSTEM — DIRECCIÓN CANÓNICA
 
 VHAL tendrá Resets.
-
-Flujo:
 
 ```text
 Level 400
 ↓
 Reset NPC
 ↓
-mostrar requirements
+requirements
 ↓
-confirmar
+confirm
 ↓
-Backend transaction
+GS context validation
+↓
+Backend atomic transaction
 ↓
 Level 1
 Reset Count +1
@@ -1451,11 +1207,9 @@ Base Stats
 
 Reset todavía NO está implementado.
 
-F22 debe dejar la foundation preparada.
-
 ---
 
-# 42. RESET COUNT
+# 32. RESET COUNT / RESET POINTS
 
 Durable por Character:
 
@@ -1463,31 +1217,18 @@ Durable por Character:
 reset_count
 ```
 
-Inicio:
+Implementado en Backend:
 
 ```text
-0
+characters.reset_count
+default 0
 ```
 
-Primer reset:
-
-```text
-1
-```
-
----
-
-# 43. RESET STAT POINTS
-
-Decisión aprobada:
+Reset points:
 
 ```text
 RESET_STAT_POINTS = 350
-```
 
-Son acumulativos.
-
-```text
 reset_points
 =
 reset_count * 350
@@ -1504,14 +1245,13 @@ R10 → 3500
 
 ---
 
-# 44. QUÉ HACE RESET A LEVEL/EXP/STATS
+# 33. RESET EFFECT
 
-Reset exitoso:
+Reset exitoso futuro:
 
 ```text
 level → 1
 experience → 0
-
 reset_count → +1
 
 allocated_strength → 0
@@ -1520,486 +1260,163 @@ allocated_vitality → 0
 allocated_energy → 0
 ```
 
-Personaje vuelve a:
-
-```text
-Class Base Stats
-```
-
-y recibe libre:
-
-```text
-new_reset_count * 350
-```
-
-para redistribuir.
+Character vuelve a Class Base y recibe budget de Reset.
 
 ---
 
-# 45. EJEMPLO DE RESET
+# 34. MAX RESETS / STAT CAPS
 
-Antes:
-
-```text
-Reset 0
-Level 400
-1995 level points gastados
-```
-
-Después:
+Todavía:
 
 ```text
-Reset 1
-Level 1
-Class Base Stats
-350 unspent Reset Points
+MAX_RESETS = TBD
+Primary Stat Hard Cap = TBD
 ```
 
-Al volver a subir:
+Se diseñan juntos.
 
-```text
-Level Points
-+
-Reset Points
-```
+Principio:
 
-forman el mismo presupuesto asignable.
+> A max reset + level 400 no se deben poder maximizar automáticamente los cuatro Primary Stats.
 
----
-
-# 46. TOTAL BUDGET A LEVEL 400
-
-Con 5 puntos/level:
-
-```text
-(400 - 1) * 5
-=
-1995
-```
-
-Budget:
-
-```text
-1995
-+
-(reset_count * 350)
-+
-bonus_stat_points
-```
-
-Ejemplos sin bonus:
-
-| Reset | Budget a Lv400 |
-|---:|---:|
-| 0 | 1,995 |
-| 1 | 2,345 |
-| 10 | 5,495 |
-| 20 | 8,995 |
-| 25 | 10,745 |
-
----
-
-# 47. MAX RESETS — TBD
-
-No fijar todavía número definitivo.
-
-Debe ser configurable:
-
-```text
-MAX_RESETS
-```
-
-También habrá:
-
-```text
-Primary Stat Hard Cap
-```
-
-Ambos se diseñan juntos.
-
----
-
-# 48. PRINCIPIO ANTI-FULL-STATS
-
-Incluso en:
-
-```text
-MAX_RESETS
-+
-Level 400
-```
-
-NO queremos que automáticamente se puedan maximizar:
-
-```text
-STR
-AGI
-VIT
-ENE
-```
-
-Si todos terminan full:
-
-```text
-desaparecen builds
-desaparecen tradeoffs
-todos convergen
-```
-
----
-
-# 49. GUÍA PARA RESET CAP / STAT CAP
-
-Objetivo de balance inicial:
+Guideline de balance:
 
 ```text
 max_total_budget
 ≈ 55%–70%
-del presupuesto necesario
-para fullear los cuatro Stats
+de lo requerido para fullear los cuatro Stats
 ```
 
-No es regla matemática rígida.
-
-Ejemplo sandbox NO definitivo:
+Ejemplo sandbox NO final:
 
 ```text
 cap 4000 cada Stat
 full four = 16000
-
-Max Reset 20:
-budget Lv400 = 8995
+R20 Lv400 = 8995
 ≈ 56%
 ```
 
-Esto demuestra por qué:
-
-```text
-MAX_RESETS
-y
-STAT_CAP
-```
-
-se deciden juntos.
-
-No convertir todavía 20/4000 en constants finales.
-
 ---
 
-# 50. RESET NPC
+# 35. RESET NPC / COSTS
 
-Reset será un NPC service autoritativo.
-
-Patrón:
+Reset NPC autoritativo:
 
 ```text
 Client click
 → GS range/service validation
-→ Reset requirements snapshot
+→ requirements snapshot
 → Reset Window
-→ Confirm
-→ GS context validation
+→ confirm
+→ GS validation
 → Backend atomic reset
-→ GS runtime rebuild
-→ Client authoritative update
+→ runtime rebuild
+→ client update
 ```
 
-Reutilizar principios de:
-
-```text
-Warehouse
-Skill Trainer
-```
-
----
-
-# 51. RESET REQUIREMENTS
-
-Base:
+Foundation requirements:
 
 ```text
 level == 400
 reset_count < MAX_RESETS
-Reset NPC service activo
-Character válido
+active Reset NPC
+valid Character
 ```
 
 Futuro:
 
 ```text
 Currency
-specific Item
-multiple Items
+specific Item(s)
 quest/progression
 inventory space
 ```
 
-NPC debe decir claramente:
+Cost tiers:
 
 ```text
-qué falta
-costo
-qué se reinicia
-qué se conserva
-puntos obtenidos
+early → Currency
+mid → more Currency
+late → Currency + Item
+near max → high Currency + rare/specific Item
 ```
+
+Currency final TBD.
+
+No canonizar `Zen`.
 
 ---
 
-# 52. RESET COST TIERS
+# 36. RESET + EQUIPMENT / SKILLS / INVENTORY
 
-No fijar costos ahora.
-
-Dirección:
+Equipment inválido post-reset:
 
 ```text
-early resets
-→ Currency
-
-mid
-→ más Currency
-
-late
-→ Currency + Item
-
-near max
-→ Currency alta + Item raro/específico
-```
-
-Currency final todavía no se llama `Zen`.
-
----
-
-# 53. RESET BACKEND TRANSACTION
-
-Reset tocará múltiples durables.
-
-Debe ser:
-
-```text
-atomic transaction
-```
-
-Conceptualmente:
-
-```text
-validate requirements
-consume Currency
-consume required Items
-increment reset_count
-level = 1
-experience = 0
-clear Stat allocations
-resolve Equipment
-set Class Spawn/runtime state
-commit
-```
-
-Todo o nada.
-
----
-
-# 54. RESET Y EQUIPMENT
-
-Problema:
-
-```text
-Lv400 STR alta
-arma equipada requiere STR alta
-↓
-Reset
-↓
-STR vuelve a base
-```
-
-No dejar Equipment inválido activo.
-
-Política prevista:
-
-```text
-unequip items que ya no cumplen
+unequip
 → Inventory
 ```
 
-Antes de confirmar:
+Antes:
 
 ```text
-validar espacio
+validate inventory capacity
 ```
 
 Sin espacio:
 
 ```text
-Reset rechazado
+Reset rejected
 ```
 
-No permitir Equipment inválido otorgando bonuses.
-
----
-
-# 55. RESET Y SKILLS
-
-Skill ownership:
+Skills:
 
 ```text
-PERSISTE
+ownership persists
 ```
 
-No obligar a consumir nuevamente Scrolls en cada Reset.
-
-Pero Skill aprendida puede tener requirement superior al nuevo estado.
-
-Por eso se distinguirá:
+Pero:
 
 ```text
 learned
-de
+!=
 currently usable
 ```
 
-Futuro:
+Inventory/Vault:
 
 ```text
-Skill ownership = durable knowledge
-Skill usability = current requirements
+persist
 ```
 
-Reset puede dejar temporalmente una Skill:
+excepto costos consumidos.
+
+Reset spawn:
 
 ```text
-locked/unusable
+Class Spawn Definition
 ```
 
-hasta recuperar Level/Stats.
+No hardcodear TestTown.
 
----
-
-# 56. RESET Y INVENTORY / VAULT
-
-Default:
+Vitals:
 
 ```text
-Inventory persiste
-Vault persiste
-Item ownership persiste
-```
-
-Sólo se consumen items usados como costo de Reset.
-
----
-
-# 57. RESET Y CLASS SPAWN
-
-Reset exitoso vuelve a:
-
-```text
-spawn de la Class
-```
-
-Debe restaurar:
-
-```text
-Map
-Position
-Rotation
-```
-
-desde una futura Class/Spawn Definition.
-
-No hardcodear TestTown como spawn definitivo.
-
----
-
-# 58. RESET Y VITALS
-
-Tras reset:
-
-```text
-Max HP
-Max MP
-```
-
-se recalculan desde el nuevo estado.
-
-Current:
-
-```text
-HP = Max HP
-MP = Max MP
-```
-
-al reaparecer.
-
-No conservar current HP superior al nuevo máximo.
-
----
-
-# 59. RESET Y POWER PROGRESSION
-
-Reset intencionalmente aumenta poder potencial.
-
-No exigimos:
-
-```text
-Reset 0 = Reset 20
-```
-
-en Open World.
-
-Balance de clases se evalúa principalmente entre progresión comparable.
-
-PvP futuro puede añadir:
-
-```text
-reset brackets
-matchmaking
-normalized arenas
-```
-
-si se necesita.
-
----
-
-# 60. RESETS NO PUEDEN ROMPER SECONDARY STATS
-
-Más Primary Stats por Reset NO deben llevar a:
-
-```text
-100% Crit
-0 cooldown
-movement speed absurda
-100% resistance
-perma stun
-infinite poison scaling
-```
-
-Secondary Stats sensibles usan:
-
-```text
-caps
-diminishing returns
-PvP profile
-```
-
-Ejemplo:
-
-```text
-AGI crece
-pero contribution a Attack Speed
-se desacelera/capa.
+rederive max
+current HP = new max
+current MP = new max
 ```
 
 ---
 
-# 61. BONUS STAT POINTS
+# 37. BONUS POINTS / RESPEC
 
-Campo futuro:
+Durable:
 
 ```text
 bonus_stat_points
 ```
 
-Para fuentes distintas a Level/Reset:
+Para:
 
 ```text
 quest
@@ -2009,454 +1426,1149 @@ compensation
 special progression
 ```
 
-Reset NO usa ese campo.
+Reset points NO se guardan ahí.
 
-Reset usa:
-
-```text
-reset_count * 350
-```
-
----
-
-# 62. STAT RESPEC FUTURO
-
-Puede existir:
+Respec futuro:
 
 ```text
-Stat Respec NPC
-```
-
-Separado de Reset.
-
-Respec:
-
-```text
-mismo Level
-mismo Reset
-mismo total budget
+same level
+same reset
+same total budget
 clear allocations
 redistribute
 ```
 
-Modelo durable F22 debe soportarlo naturalmente.
+Endpoint normal de allocation NO puede bajar Stats.
 
 ---
 
-# 63. ITEM MODIFIERS FUTUROS
-
-Ejemplos:
+# 38. F22 — ROADMAP ACTUAL
 
 ```text
-+20 Strength
-+10 Vitality
-+30 Armor
-+5% Movement Speed
-+8% Attack Speed
-+2% Crit Chance
-+10% Crit Damage
-+25 Fire Resistance
+F22-A  Stats/Progression Contract
+	   ✅ CLOSED
+
+F22-B  Durable Primary Stat Model
+	   ✅ CLOSED
+
+F22-C  Class Stats Catalog
+	   + GS Stat Runtime
+	   ⏳ NEXT
+
+F22-D  Stat Allocation
+	   GS protocol
+	   client protocol
+	   authoritative runtime update
+	   UI
+	   ⏳ FUTURE
+
+F22-E  Progressive EXP
+	   Max Level 400
+	   ⏳ FUTURE
+
+F22-F  Derived Vitals
+	   Physical/Magic/Healing Power
+	   ⏳ FUTURE
+
+F22-G  Armor / Resistances / Crit
+	   ⏳ FUTURE
+
+F22-H  Attack Speed + Movement Speed
+	   ⏳ FUTURE
+
+F22-I  Equipment Stat Modifiers
+	   ⏳ FUTURE
+
+F22-J  Skill Scaling
+	   Stat Requirements
+	   reset-safe usability
+	   ⏳ FUTURE
+
+F22-K  Integrated Balance Audit
+	   ⏳ FUTURE
 ```
 
-Separar semánticamente:
+Nota:
+
+F22-B implementó anticipadamente la mutation durable Backend.
+
+F22-D sigue pendiente para:
 
 ```text
-flat primary modifiers
-flat ratings
-percentage modifiers
+Game Server request flow
+network protocol
+client state
+Stat Window/UI
+live allocation gameplay
 ```
-
-ServerItemCatalog será autoridad.
 
 ---
 
-# 64. SKILL STAT REQUIREMENTS
-
-F21-B hoy usa:
+# 39. F22-B — BREAKDOWN FINAL
 
 ```text
-class
-level
-scroll
-trainer
+F22-B1-A
+Schema + Models durables
+✅
+
+F22-B1-B1
+Stat Snapshot + Budget Invariants
+✅
+
+F22-B1-B2
+Internal Read Contract + Game Session Ticket
+✅
+
+F22-B2-A
+Atomic Allocation Persistence
+✅
+
+F22-B2-B
+Internal Allocation Endpoint
+✅
+
+F22-B2-C
+Integrated Backend Audit
+✅
 ```
-
-F22-J agregará:
-
-```text
-minimum permanent stats
-```
-
-Ejemplo:
-
-```text
-Level 80
-Energy 300
-```
-
-Requirement usa por defecto:
-
-```text
-Permanent Energy
-```
-
-No Equipment temporary boost.
 
 ---
 
-# 65. BALANCE DATA DEBE SER CENTRALIZADA
+# 40. F22-B1-A — SCHEMA
 
-Centralizar:
+Commit:
 
 ```text
-starting stats
-points per level
-XP coefficients
-Max Level
-Reset points
-Max Resets
-Stat caps
-Attack Speed cap
-Movement Speed cap
-Crit caps
-Tenacity cap
-PvP multipliers
+715d4c00d92c386a5eae7d946df67cb009fe41b7
+feat: add durable character stat allocation schema
 ```
 
-No desperdigar entre:
+Durable:
 
 ```text
-UI
-MovementCoordinator
-BasicAttackCoordinator
-Skill scripts
+characters.reset_count
+```
+
+Tabla:
+
+```text
+character_stat_allocations
+├── character_id PK/FK
+├── allocated_strength
+├── allocated_agility
+├── allocated_vitality
+├── allocated_energy
+├── bonus_stat_points
+├── revision
+└── timestamps
+```
+
+Cascade delete:
+
+```text
+Character delete
+→ Stat Allocation delete
+```
+
+---
+
+# 41. SEMÁNTICA DE FILA AUSENTE
+
+Sin row:
+
+```text
+revision = 0
+allocated = 0
+bonus = 0
+```
+
+No crear rows vacías.
+
+Primera mutation:
+
+```text
+revision 0
+→ create row
+→ revision 1
+```
+
+---
+
+# 42. F22-B1-B1 — SNAPSHOT
+
+Commit:
+
+```text
+d27a435b55d41aec28b81a49a52f43a2fbbd5de6
+feat: add character stat budget snapshot
+```
+
+Clases:
+
+```text
+CharacterStatSnapshotBuilder
+CharacterStatSnapshotException
+```
+
+Constants:
+
+```text
+STAT_POINTS_PER_LEVEL = 5
+RESET_STAT_POINTS = 350
+```
+
+Snapshot:
+
+```text
+revision
+
+progression
+├── level
+└── reset_count
+
+allocated
+├── strength
+├── agility
+├── vitality
+└── energy
+
+bonus_stat_points
+
+budget
+├── points_per_level
+├── points_per_reset
+├── level_points
+├── reset_points
+├── bonus_points
+├── total_points
+├── spent_points
+└── unspent_points
+```
+
+Fail closed:
+
+```text
+spent > total
+→ stat_budget_exceeded
+```
+
+Tests:
+
+```text
+4 passed
+31 assertions
+```
+
+Suite:
+
+```text
+39 passed
+219 assertions
+```
+
+---
+
+# 43. F22-B1-B2 — READ + TICKET
+
+Commit:
+
+```text
+9e84c8c76580c72a5f0bcd309e37b23b1c3d9d31
+feat: expose durable character stat snapshot
+```
+
+GET:
+
+```text
+/api/internal/accounts/{accountId}/characters/{characterId}/stats
+```
+
+Session Ticket agregó:
+
+```text
+character.reset_count
+character.stats
+```
+
+Invalid durable Stats:
+
+```text
+409
+ticket remains unconsumed
+```
+
+Tests:
+
+```text
+6 passed
+45 assertions
+```
+
+Suite:
+
+```text
+45 passed
+264 assertions
+```
+
+---
+
+# 44. F22-B2-A — PERSISTENCE
+
+Commit:
+
+```text
+a77506185a97539bb5322a38c630b0137d07317d
+feat: add durable character stat allocation persistence
+```
+
+Operación recibe final desired state:
+
+```text
+expected_revision
+next STR/AGI/VIT/ENE
+```
+
+No recibe un delta durable.
+
+Lock order:
+
+```text
+Character
+→ Allocation row
+```
+
+Permite serializar con Progression y futuro Reset.
+
+Retry exacto:
+
+```text
+idempotent = true
+```
+
+Stale:
+
+```text
+stale_revision
+```
+
+Overspend:
+
+```text
+stat_budget_exceeded
+```
+
+Reduction normal:
+
+```text
+allocation_regression
+```
+
+Tests:
+
+```text
+7 passed
+30 assertions
+```
+
+Suite:
+
+```text
+52 passed
+294 assertions
+```
+
+---
+
+# 45. F22-B2-B — PATCH ENDPOINT
+
+Commit:
+
+```text
+ce0b202561dfee2e412f6edaf4e8df7bd422842e
+feat: expose durable character stat allocation
+```
+
+PATCH:
+
+```text
+/api/internal/accounts/{accountId}/characters/{characterId}/stats
+```
+
+Payload:
+
+```json
+{
+  "expected_revision": 0,
+  "next": {
+	"strength": 10,
+	"agility": 0,
+	"vitality": 0,
+	"energy": 0
+  }
+}
+```
+
+Controller sólo:
+
+```text
+validates HTTP
+resolves Account/Character
+delegates persistence
+returns snapshot
+```
+
+Tests:
+
+```text
+8 passed
+43 assertions
+```
+
+Suite:
+
+```text
+60 passed
+337 assertions
+```
+
+---
+
+# 46. F22-B2-C — REAL HTTP AUDIT
+
+Audit contra:
+
+```text
+http://localhost:8080
+```
+
+Nginx:
+
+```text
+8080:80
+```
+
+Auth interna:
+
+```text
+X-VHAL-Game-Server-Key
+```
+
+No guardar ni documentar valor secreto.
+
+---
+
+# 47. AUDIT — ATILIO BEFORE
+
+Inicial:
+
+```text
+Character ID 1
+Level 124
+Reset 0
+
+revision 0
+STR 0
+AGI 0
+VIT 0
+ENE 0
+
+total 615
+spent 0
+unspent 615
+```
+
+DB:
+
+```text
+statAllocation = null
+```
+
+---
+
+# 48. AUDIT — REAL FIRST ALLOCATION
+
+Se asignó REALMENTE:
+
+```text
+STR +10
+```
+
+Payload final:
+
+```text
+expected_revision = 0
+
+next:
+STR 10
+AGI 0
+VIT 0
+ENE 0
+```
+
+Resultado:
+
+```text
+ok true
+idempotent false
+revision 1
+
+spent 10
+unspent 605
+```
+
+DB real:
+
+```text
+character_id = 1
+allocated_strength = 10
+allocated_agility = 0
+allocated_vitality = 0
+allocated_energy = 0
+bonus_stat_points = 0
+revision = 1
+```
+
+NO revertir automáticamente este estado.
+
+---
+
+# 49. AUDIT — RETRY / STALE
+
+Retry exacto con:
+
+```text
+expected_revision = 0
+same next state
+```
+
+resultado:
+
+```text
+idempotent true
+revision 1
+```
+
+No duplicate spend.
+
+Stale distinto:
+
+```text
+expected_revision = 0
+next STR = 20
+```
+
+resultado:
+
+```text
+stale_revision
+current revision = 1
+current STR = 10
+```
+
+GET final:
+
+```text
+revision 1
+STR 10
+spent 10
+unspent 605
+```
+
+---
+
+# 50. POWERSHELL CURL QUIRK
+
+JSON inline con:
+
+```powershell
+--data-raw '{"expected_revision":0,...}'
+```
+
+en Windows PowerShell produjo body inválido/vacío para Laravel.
+
+Síntoma:
+
+```text
+422
+field required
+```
+
+No fue bug Backend.
+
+Patrón correcto:
+
+```powershell
+$body = @{
+	expected_revision = 0
+	next = @{
+		strength = 10
+		agility = 0
+		vitality = 0
+		energy = 0
+	}
+} | ConvertTo-Json -Depth 5 -Compress
+```
+
+y:
+
+```powershell
+$body | curl.exe ... --data-binary "@-"
+```
+
+Usar esto en audits futuros.
+
+---
+
+# 51. FINAL BACKEND REGRESSION
+
+Después del audit real:
+
+```text
+60 tests
+337 assertions
+0 failures
+```
+
+Repo:
+
+```text
+working tree clean
+```
+
+---
+
+# 52. TEST CHARACTERS ACTUALES
+
+## Atilio
+
+```text
+ID 1
+Warrior
+Level 124
+Experience 50
+Reset 0
+```
+
+Durable Stats:
+
+```text
+revision 1
+STR allocated 10
+AGI allocated 0
+VIT allocated 0
+ENE allocated 0
+bonus 0
+```
+
+Budget:
+
+```text
+level_points 615
+reset_points 0
+total 615
+spent 10
+unspent 605
+```
+
+## Lyra
+
+```text
+ID 2
+Archer
+Level 85
+Experience 0
+Reset 0
+```
+
+No allocation real hecha durante F22-B.
+
+Expected if still no row:
+
+```text
+revision 0
+allocated 0
+bonus 0
+total 420
+spent 0
+unspent 420
+```
+
+No inventar distribución histórica.
+
+---
+
+# 53. F22-B RESULTADO
+
+Backend ahora resuelve autoritativamente:
+
+```text
+durable allocations
+revision
+level points
+reset points
+bonus points
+total budget
+spent
+unspent
+```
+
+Puede:
+
+```text
+first allocation
+next revision
+exact retry
+stale reject
+overspend reject
+regression reject
+account isolation
+ticket fail-closed
+```
+
+---
+
+# 54. F22-B NO IMPLEMENTÓ
+
+Todavía NO:
+
+```text
+Class Base Stats runtime
+Permanent Stats runtime
+Effective Stats runtime
+derived HP/MP
+damage scaling
+physical power
+magic power
+healing power
+Armor
+Resistances
+Crit
+Attack Speed
+Movement Speed modifiers
+Equipment stat modifiers
+Skill scaling
+Skill stat requirements
+Stat Window
+client allocation buttons
+GS stat allocation protocol
+Reset NPC
+Respec NPC
+MAX_RESETS final
+Primary Stat hard caps finales
+```
+
+---
+
+# 55. SIGUIENTE CHECKPOINT — F22-C
+
+```text
+F22-C — Class Stats Catalog + Game Server Stat Runtime
 ```
 
 Objetivo:
 
 ```text
-balance patch
-→ modificar reglas/datos centrales
-→ no reescribir arquitectura
+Class Base
++
+Durable Allocated
+=
+Permanent Primary Stats foundation
+```
+
+Ejemplo Atilio:
+
+```text
+Warrior Base
+STR 25
+AGI 15
+VIT 25
+ENE 10
+
+Allocated
+STR 10
+AGI 0
+VIT 0
+ENE 0
+
+Permanent foundation
+STR 35
+AGI 15
+VIT 25
+ENE 10
 ```
 
 ---
 
-# 66. BACKWARD COMPATIBILITY — TEST CHARACTERS
+# 56. F22-C PRINCIPIOS
 
-Estado actual de laboratorio:
-
-```text
-Atilio Lv124
-Lyra Lv85
-```
-
-Al introducir Allocation:
+Class Catalog:
 
 ```text
-allocated_* = 0
-reset_count = 0
-bonus_stat_points = 0
+Game Server authoritative
+centralized
+validated
+fail closed on unknown class
 ```
 
-Budget inicial derivado:
+Foundation data:
 
 ```text
-Atilio:
-(124 - 1) * 5
-= 615 libres
-
-Lyra:
-(85 - 1) * 5
-= 420 libres
+class_id
+starting_strength
+starting_agility
+starting_vitality
+starting_energy
+stat_points_per_level
 ```
 
-No inventar una distribución histórica automática.
+Runtime distingue:
+
+```text
+base
+allocated
+permanent
+```
+
+En F22-C initially:
+
+```text
+variable = 0
+effective = permanent
+```
+
+si conviene representar esos layers, pero no mezclar Equipment todavía.
 
 ---
 
-# 67. MIGRACIÓN DE VITALS FOUNDATION
+# 57. F22-C BOOTSTRAP
 
-Actual:
+Game Session Ticket ya contiene:
 
 ```text
-Max HP = 100000
-Max MP = 350
+character.class_id
+character.level
+character.reset_count
+character.stats
 ```
 
-son temporales.
+F22-C debe consumir ese contrato.
 
-Cuando F22 derive nuevos máximos:
+No hacer segundo GET Backend innecesario durante bootstrap.
 
-```text
-current HP/MP
-```
-
-deben respetar:
+Fail closed si:
 
 ```text
-current <= max
-```
-
-Política concreta de transición se decidirá en F22-F.
-
-No cambiar silenciosamente durable current values.
-
----
-
-# 68. LEVEL 400 STATE
-
-Al alcanzar 400:
-
-```text
-level = 400
-at_max_level = true
-```
-
-No Level 401.
-
-Preferencia futura:
-
-```text
-experience = 0
-experience_required = 0
-```
-
-UI:
-
-```text
-MAX
-```
-
-y orientar al Reset NPC.
-
----
-
-# 69. LEVEL-UP Y PUNTOS
-
-No escribir una columna mutable:
-
-```text
-+5 unspent
-```
-
-cada vez que sube Level.
-
-Ejemplo:
-
-```text
-Lv10 budget = 45
-Lv11 budget = 50
-```
-
-La fuente durable es `level`.
-
----
-
-# 70. F22 — ORDEN DE IMPLEMENTACIÓN
-
-```text
-F22-A  Stats/Progression Contract
-	   ✅ DISEÑADO
-
-F22-B  Durable Primary Stat Model
-	   ⏳ SIGUIENTE
-
-F22-C  Class Stats Catalog
-	   + GS Stat Runtime
-
-F22-D  Stat Allocation
-	   protocol + authoritative mutation + UI
-
-F22-E  Progressive EXP
-	   Max Level 400
-	   earned level points
-
-F22-F  Derived Vitals
-	   Physical/Magic/Healing Power
-
-F22-G  Armor
-	   Resistances
-	   Crit
-
-F22-H  Attack Speed
-	   Movement Speed
-
-F22-I  Equipment Stat Modifiers
-
-F22-J  Skill Scaling
-	   Stat Requirements
-	   reset-safe Skill usability
-
-F22-K  Integrated Balance Audit
-```
-
-Reset real se implementará después de que estas primitives estén disponibles.
-
-Fase exacta futura del Reset NPC:
-
-```text
-TBD
+unknown class_id
+invalid stats payload
+level/reset mismatch
+negative allocation
+invalid revision
+budget inconsistency
 ```
 
 ---
 
-# 71. SIGUIENTE CHECKPOINT REAL
+# 58. F22-C NO MEZCLAR
+
+Primer bloque F22-C NO debe incluir:
 
 ```text
-F22-B1 — Backend Durable Primary Stat Allocation Schema
-```
-
-Scope:
-
-```text
-migration
-model
-relation
-invariants
-read contract
-```
-
-Todavía NO:
-
-```text
-allocation gameplay endpoint
-GS formulas
 damage
-HP/MP derivados
-speed
+HP/MP formulas
+attack speed
+movement speed
 crit
-Armor
-Skill scaling
-Reset NPC
+armor
+resists
+skill scaling
+client UI
+allocation network mutation
+```
+
+Primero:
+
+```text
+Class Catalog
++
+Primary Stat Runtime
++
+bootstrap validation
 ```
 
 ---
 
-# 72. INVARIANTES CANÓNICOS F22
+# 59. FOUNDATIONS EXISTENTES A NO ROMPER
+
+Vitals pre-F22:
+
+```text
+DEFAULT_MAX_HP = 100000
+DEFAULT_MAX_MP = 350
+```
+
+Basic attack:
+
+```text
+unarmed
+base_damage 500
+range 1.5
+cooldown 1.0
+
+bronze_sword
+mode melee
+base_damage 1000
+range 2.0
+cooldown 0.9
+```
+
+Movement:
+
+```text
+MOVE_SPEED = 4.0
+```
+
+No conectar AGI a Movement Speed.
+
+Skills:
+
+```text
+Heal authoritative implemented
+Fire Ball skill_not_implemented
+Poison skill_not_implemented
+```
+
+No expandir damage skills en F22-C.
+
+---
+
+# 60. INPUT CANÓNICO — NO ROMPER
+
+```text
+LEFT CLICK drop
+→ PICKUP
+
+LEFT CLICK mob hostil
+→ BASIC ATTACK PvE
+
+LEFT CLICK NPC interactuable
+→ INTERACT
+
+LEFT CLICK terreno
+→ MOVE
+
+RIGHT CLICK
+→ SELECTED SKILL according to target_kind
+
+CTRL + LEFT CLICK player
+→ BASIC ATTACK PvP future
+
+CTRL + RIGHT CLICK player
+→ SELECTED SKILL PvP future
+```
+
+---
+
+# 61. WEAPON-AWARE BASIC ATTACK
+
+```text
+sin weapon
+→ unarmed/fists
+→ protocol mode "unarmed"
+
+sword/axe
+→ melee
+
+bow
+→ ranged
+```
+
+Cliente sólo solicita entity.
+
+Servidor resuelve:
+
+```text
+equipment
+modality
+range
+damage
+cooldown
+```
+
+No renombrar `unarmed`.
+
+---
+
+# 62. BACKEND NO EN HOT LOOP
+
+```text
+Client
+→ intent
+→ Game Server validation/mutation
+→ authoritative result/events
+→ clients
+```
+
+Backend NO entra en:
+
+```text
+per-hit
+per-cast
+per-attack
+movement tick
+```
+
+Backend sirve durable state.
+
+---
+
+# 63. REVISION SEMANTICS
+
+```text
+no row
+→ revision 0
+
+first allocation
+→ revision 1
+
+valid next mutation
+→ revision +1
+
+exact retry
+→ same revision
+
+stale
+→ same revision
+
+overspend
+→ same revision
+
+regression
+→ same revision
+```
+
+---
+
+# 64. INVARIANTES CANÓNICOS F22 ACTUALIZADOS
 
 ```text
 1. Stats asignados son por Character.
-
 2. Base Stats viven en Class catalog.
-
 3. Allocated Stats son durable player choice.
-
 4. Derived Stats no se persisten como verdad final.
-
 5. Requirements usan Permanent Stats por defecto.
-
 6. Equipment/Buffs producen Variable Stats.
-
 7. Effective = Permanent + Variable.
-
 8. AGI no aumenta Movement Speed directamente.
-
 9. Speed/Crit/Resistance usan caps o diminishing returns.
-
 10. MAX_LEVEL = 400.
-
-11. Warrior/Mage/Archer reciben 5 points/level foundation.
-
+11. Warrior/Mage/Archer usan 5 points/level foundation.
 12. Reset otorga 350 points acumulativos.
-
 13. Reset vuelve Level a 1.
-
-14. Reset borra allocations del ciclo y vuelve a Class Base.
-
-15. reset_count es durable.
-
+14. Reset borra allocations y vuelve a Class Base.
+15. reset_count es durable en characters.
 16. MAX_RESETS queda configurable/TBD.
-
 17. Endgame no debe fullear automáticamente los 4 Primary Stats.
-
 18. Reset será NPC + Backend atomic transaction.
-
 19. Skill ownership persiste tras Reset.
-
-20. Skill usability debe soportar requirements post-reset.
-
-21. Equipment inválido tras Reset no puede seguir activo.
-
+20. Skill usability soportará requirements post-reset.
+21. Equipment inválido post-reset no puede seguir activo.
 22. Status Effects deben impedir stunlock/perma-control.
-
 23. DoTs no stackean infinitamente por defecto.
-
-24. PvP tendrá una capa de balance separada de PvE.
+24. PvP tendrá capa de balance separada.
+25. unspent no se persiste si es derivable.
+26. Ausencia de allocation row = revision 0 + allocation 0.
+27. Allocation normal es monotónica.
+28. Reset/Respec podrán reducir allocation mediante operaciones dedicadas.
+29. Stat mutation usa final desired state, no delta durable.
+30. Retry exacto debe ser idempotente.
+31. Stale revision falla cerrado.
+32. Overspend falla cerrado.
+33. Character lock precede allocation lock.
+34. Session Ticket inválido por Stats no se consume.
+35. Backend no persiste derived combat stats.
+36. Game Server será autoridad de Class Stats Catalog.
+37. Game Server bootstrappea Stats desde Ticket.
+38. Atilio mantiene STR allocated 10 / revision 1.
+39. Lyra no recibe distribución automática histórica.
+40. PowerShell HTTP audits prefieren ConvertTo-Json + --data-binary @-.
 ```
 
 ---
 
-# 73. RESUMEN EJECUTIVO F22
-
-```text
-PRIMARY
-STR / AGI / VIT / ENE
-
-LEVEL
-Max 400
-5 points per level
-progressive XP
-
-RESET
-350 cumulative points per reset
-Level → 1
-EXP → 0
-allocations → 0
-Class Base Stats
-Class Spawn
-NPC future
-atomic Backend transaction
-
-DERIVED
-Physical
-Magic
-Healing
-HP/MP
-Armor
-Resists
-Crit
-Attack Speed
-Movement Speed
-
-ANTI-BREAK
-caps
-diminishing returns
-Tenacity
-CC DR
-PvP profile
-
-SKILLS
-explicit scaling
-explicit damage school/element
-future permanent-stat requirements
-reset-safe ownership/usability
-```
-
----
-
-# 74. ESTADO DE IMPLEMENTACIÓN AL CERRAR ESTE DOCUMENTO
-
-No se ha modificado todavía código de F22.
+# 65. CHECKPOINT DE CONTINUIDAD
 
 Estado:
 
 ```text
-F22-A Design Contract ✅
-
-F22-B1
-→ listo para comenzar
+F22-A ✅
+F22-B ✅
+F22-C NEXT
 ```
 
-Antes de modificar Backend:
+Al retomar:
 
 ```text
+NO rediseñar F22-A.
+NO rehacer F22-B.
+NO borrar STR10 de Atilio.
+NO inventar Stats para Lyra.
+NO introducir derived stats todavía.
+NO introducir Reset NPC todavía.
+NO introducir Stat UI todavía.
+```
+
+Continuar desde:
+
+```text
+Backend Ticket
+character.class_id
+character.stats
+		│
+		▼
+Game Server Class Catalog
+		│
+		▼
+Base Primary Stats
++
+Durable Allocated Stats
+		│
+		▼
+Permanent Primary Stats foundation
+```
+
+Primer sub-bloque recomendado:
+
+```text
+F22-C1
+Server Class Stats Catalog
++
+tests
+```
+
+Luego:
+
+```text
+F22-C2
+Character Primary Stat Runtime
++
+ticket bootstrap
+```
+
+Luego:
+
+```text
+F22-C3
+Reconnect / per-character audit
+```
+
+Antes de cualquier código F22-C:
+
+```text
+reemplazar este PROJECT_MEMORY_3.md completo
 git status
-repos clean
-review schema actual
-etapa pequeña
-test
 commit
 push
 esperar "pusheado"
+verificar remoto
 ```
