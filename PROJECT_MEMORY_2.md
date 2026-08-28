@@ -1,12 +1,12 @@
 # VHAL — PROJECT MEMORY 2 / CONTINUIDAD CANÓNICA
 
 **Volumen:** 2  
-**Última actualización:** 26/08/2026  
+**Última actualización:** 28/08/2026  
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama habitual:** `dev`  
-**Estado general:** F19 Vertical Slice ✅, F20 Durable Character Runtime ✅, F21-A Durable Skill Ownership ✅.  
-**Siguiente bloque recomendado:** F21-B — Durable Skill Learning Foundation (Scroll/Book + requisitos + Trainer + persistencia autoritativa).
+**Estado general:** F19 Vertical Slice ✅, F20 Durable Character Runtime ✅, F21-A Durable Skill Ownership ✅, F21-B Durable Skill Learning ✅.  
+**Siguiente paso:** gate de planificación F22; elegir un único sistema siguiente después de revisar roadmap y repositorios reales.
 
 ---
 
@@ -111,14 +111,9 @@ Reglas:
 - GitHub actual prevalece sobre recuerdos anteriores;
 - revisar siempre el código real antes de indicar cambios concretos;
 - cuando una escena/nodo/Inspector sea razonablemente manual, el usuario lo hace en Godot;
-- no convertir cada etapa en un refactor general si no lo necesita.
-
-Objetivo habitual:
-
-```text
-0 warnings
-0 errors
-```
+- no convertir cada etapa en un refactor general si no lo necesita;
+- si una etapa revela una deuda real, se corrige antes del commit;
+- no aceptar warnings "porque funciona": objetivo habitual `0 warnings / 0 errors`.
 
 ---
 
@@ -147,69 +142,128 @@ schmidtoctavio/vhal_backend
 
 # 3. BASELINES CANÓNICOS ACTUALES
 
-## Cliente / memoria
+## Cliente
 
-Baseline previo al próximo commit documental:
-
-```text
-cc9d528add6976cb53d6108a67ac9ff313d68298
-Project memory 2
-```
-
-Padre relevante:
+Head funcional previo a este commit documental:
 
 ```text
-557bee80258d09cfbc9084e42213d14caefd9b85
-docs: close F19 vertical slice and record future systems
-```
-
-F20 y F21-A no requirieron cambios de gameplay en el cliente para ownership durable porque el contrato de skills autoritativas y `PlayerRuntimeState.apply_skill_snapshot()` ya soportaban listas vacías y ownership parcial.
-
-## Game Server
-
-Baseline actual:
-
-```text
-598d993eeff80aaf5fd84ca7413a04772ee4faab
-feat: bootstrap skills from durable ownership
-```
-
-Cadena reciente:
-
-```text
-f329f4fe854a416fd684322567951ee023f14606
-feat: restore durable character runtime
-
-fe41377ba59c38d4c19e40388bb937799163a450
-feat: persist character runtime on disconnect
-
-2623eb60985b0af6070d137bda086c9c53dae1c4
-feat: add periodic character runtime autosave
-
-598d993eeff80aaf5fd84ca7413a04772ee4faab
-feat: bootstrap skills from durable ownership
-```
-
-## Backend
-
-Baseline actual:
-
-```text
-29c2426077788225779674652ba6712dcc13231a
-feat: add durable character skill ownership
+8eb5cf9da711655994cfbcaaa75f25218629a542
+feat: preserve skill trainer position on refresh
 ```
 
 Cadena reciente relevante:
 
 ```text
-1ae3036031bd8d2e8fb6289c94df4d2869c6e23
-fix: include experience in game session ticket
+09b84327f9028b6c8a4cbb213c6aa14ec3792a22
+docs: close F21 durable skill ownership
 
+e2808b32156887cbb66f13713b68b3204a42655c
+feat: add client skill learning protocol
+
+a274d1a62f59aa7e27c22d1f52491389b9b34c4d
+feat: add skill trainer to client world
+
+e414a24b7137e3ff4cfe2fce8be6990fd4b6f853
+feat: add skill scroll client definitions
+
+327c3370aad874b236490adb2fbd9e8c727a79af
+feat: connect skill scroll learning flow
+
+984d0da6345404cf3adc84e11cc5b525f44b1b48
+feat: receive authoritative skill trainer offers
+
+fd67e19e89471e2946da0e8b382ec339c183504d
+feat: add authoritative skill trainer window
+
+bfb39eea4751ff6015d0935507704614c9745b3e
+feat: route skill learning through trainer
+
+5399334957b852af582cdc047cd64d67d1cf7c2d
+feat: apply learned skills to live runtime
+
+8eb5cf9da711655994cfbcaaa75f25218629a542
+feat: preserve skill trainer position on refresh
+```
+
+Nota:
+
+```text
+327c337...
+```
+
+creó un camino temporal de aprendizaje desde doble click de Scroll.
+
+Ese camino fue retirado posteriormente en:
+
+```text
+bfb39ee...
+```
+
+La arquitectura final NO aprende Skills desde Inventory.
+
+## Game Server
+
+Head funcional actual:
+
+```text
+968c1a19ea01b04d61b721ee59929fd55c036339
+feat: recover skill trainer after learning rejection
+```
+
+Cadena F21-B relevante:
+
+```text
+25cd9f68bf68212cd6599998ac9424de96967a04
+feat: add skill learning contract
+
+2a60147bd2cacccc98c884918f48a97e7f977868
+feat: add skill learning backend repository
+
+9535f9e33081728622a0eb668e30a54a364b56e1
+feat: add authoritative skill learning validation
+
+df7bcb3a757365a9e2f35cda9bb5b377bd8a3e82
+feat: apply durable skill learning to runtime
+
+a953194e26ba8b1fd746314defa2b2b201b017ab
+feat: add skill trainer npc
+
+2efc2ceaab8a8150541fe727f1e461187d0ba190
+feat: add skill learning network protocol
+
+9b389b7fe7f5e83e892b09533e89dd982279a2d3
+feat: build authoritative skill trainer offers
+
+2734b652f10ed30a005b6fd4e329867b07e04405
+feat: send authoritative skill trainer offers
+
+ba41cee395573fbfc3a8cbc43ecff1ba357dad88
+feat: refresh skill trainer offers after learning
+
+968c1a19ea01b04d61b721ee59929fd55c036339
+feat: recover skill trainer after learning rejection
+```
+
+## Backend
+
+Head funcional actual:
+
+```text
+64be9a85e90ec6a07f1cb1b47d0c21c670f7dc18
+feat: add atomic durable skill learning
+```
+
+Cadena reciente relevante:
+
+```text
 55d69f7b63e853c2aa66b49570bd490d358aa9ca
 feat: add durable character runtime persistence
 
 29c2426077788225779674652ba6712dcc13231a
 feat: add durable character skill ownership
+
+64be9a85e90ec6a07f1cb1b47d0c21c670f7dc18
+feat: add atomic durable skill learning
 ```
 
 ---
@@ -274,6 +328,8 @@ loot
 pickup success
 skill ownership
 skill learning success
+skill eligibility
+trainer eligibility
 estado PvP
 ```
 
@@ -300,7 +356,7 @@ cada frame / attack / cast
 → gameplay
 ```
 
-Laravel participa cuando debe existir durabilidad o una operación transaccional durable.
+Laravel participa cuando debe existir durabilidad o una operación durable/transaccional.
 
 Ejemplos:
 
@@ -311,13 +367,22 @@ movement runtime
 HP/MP runtime
 → Game Server
 
+basic attack
+→ Game Server
+
+skill cast
+→ Game Server
+
 autosave runtime
 → Backend
 
 inventory durable mutation
 → Backend
 
-learned skill durable mutation
+skill ownership durable mutation
+→ Backend
+
+skill learning transaction
 → Backend
 ```
 
@@ -393,7 +458,7 @@ Auto-chase permanece diferido a un checkpoint dedicado.
 
 **Estado:** ✅ CERRADO.
 
-F19 dejó funcionalmente probado:
+F19 dejó probado:
 
 ```text
 Login
@@ -424,17 +489,7 @@ Level
 Experience
 ```
 
-Runtime autoritativo ya existente:
-
-```text
-Skills
-Vitals
-Combat
-Mobs
-Drops mientras vive el GS
-```
-
-Pendientes que F19 dejó para después:
+F19 dejó para después:
 
 ```text
 Character Runtime durable
@@ -447,6 +502,12 @@ Merchant
 Stats completos
 más mapas/contenido
 ```
+
+F20 resolvió Character Runtime durable.
+
+F21-A resolvió Skill Ownership durable.
+
+F21-B resolvió Skill Learning real.
 
 ---
 
@@ -577,16 +638,6 @@ Personaje sin checkpoint:
 runtime = null
 ```
 
-Tests:
-
-```text
-InternalCharacterRuntimeStateTest
-5 passed / 63 assertions
-
-InternalCharacterProgressionTest
-5 passed / 23 assertions
-```
-
 Commit:
 
 ```text
@@ -616,9 +667,7 @@ mp
 runtime_revision
 ```
 
-HP/MP se aplican con primitives de `ServerVitalsState`, por lo que quedan clampados contra máximos actuales.
-
-Diferencia crítica:
+HP/MP se aplican con primitives de `ServerVitalsState`.
 
 ```text
 runtime = null
@@ -628,18 +677,6 @@ runtime = null
 runtime presente pero malformado
 → bootstrap inválido
 ```
-
-Prueba real:
-
-```text
-revision 1
-position (1,0,1)
-rotation_y 1.25
-hp 87654
-mp 222
-```
-
-restauró exactamente en GS y cliente.
 
 Commit:
 
@@ -663,7 +700,7 @@ peer disconnect
 → Backend confirma copia capturada
 ```
 
-No dejar PlayerWorldSession fantasma esperando HTTP.
+No dejar `PlayerWorldSession` fantasma esperando HTTP.
 
 Componentes principales:
 
@@ -692,23 +729,6 @@ max_hp
 max_mp
 level
 experience
-```
-
-Prueba real B2:
-
-```text
-revision 1
-↓
-movement (-2.420902,0,1.101203)
-Heal
-HP 100000
-MP 182
-↓
-disconnect
-↓
-revision 2
-↓
-reconnect exacto
 ```
 
 Commit:
@@ -780,29 +800,13 @@ disconnect
 → persistir snapshot final encolado
 ```
 
-Prueba explícita de hard crash:
-
-```text
-autosave revision 5 → 6
-position guardada (-0.363776,0,1.591599)
-↓
-movimiento posterior (-5.691637,0,-1.650471)
-↓
-Game Server hard-stop
-↓
-restart
-↓
-revision 6
-position (-0.363776,0,1.591599)
-```
-
-Resultado correcto:
+Hard crash:
 
 ```text
 último autosave confirmado
 → durable
 
-cambios posteriores
+cambios posteriores al último autosave
 → pueden perderse ante crash abrupto
 ```
 
@@ -815,9 +819,9 @@ feat: add periodic character runtime autosave
 
 ---
 
-# 13. DURABILIDAD ACTUAL DESPUÉS DE F20 + F21-A
+# 13. DURABILIDAD ACTUAL DESPUÉS DE F20
 
-Durable real por personaje/cuenta según dominio:
+Durable:
 
 ```text
 Inventory
@@ -825,472 +829,69 @@ Equipment
 Vault
 Level
 Experience
-Map ID
+Map
 Position
-Rotation Y
+Rotation
 HP
 MP
-Learned Skill Ownership
 ```
 
-Separación de dominios:
+Runtime no durable tras restart GS:
 
 ```text
-Inventory / Equipment / Vault
-→ persistent item/container domain
-
-Level / EXP
-→ Character Progression domain
-
-Map / Position / Rotation / HP / MP
-→ Character Runtime State domain
-
-Learned Skills
-→ Character Skill Ownership domain
-```
-
-No fusionar dominios sólo porque pertenecen al mismo Character.
-
----
-
-# 14. ESTADO DELIBERADAMENTE RUNTIME-ONLY
-
-Todavía NO sobrevive a un restart completo del Game Server:
-
-```text
-WorldDrops no recogidos
-mob runtime actual
-mob HP actual
+WorldDrops
+Mob runtime
 cooldowns activos
 combat temporal
 NPC service runtime
-movement path activo
-runtime request IDs
-```
-
-WorldDrop actual:
-
-```text
-reconnect mientras GS vive
-→ persiste en runtime
-
-restart GS
-→ desaparece
-```
-
-Limitación aceptada por diseño actual.
-
----
-
-# 15. F21-A — DURABLE SKILL OWNERSHIP
-
-**Estado:** ✅ COMPLETADO, PROBADO Y PUSHEADO.
-
-Objetivo cumplido:
-
-> retirar el bootstrap temporal que concedía todas las foundation skills a todos los personajes y reemplazarlo por ownership durable real por Character.
-
-Sub-etapas:
-
-```text
-F21-A1 Backend durable ownership           ✅
-F21-A2 Game Server bootstrap ownership     ✅
-F21-A3 Reconnect/per-character audit       ✅
 ```
 
 ---
 
-# 16. F21-A1 — BACKEND DURABLE SKILL OWNERSHIP
+# 14. F21-A — DURABLE SKILL OWNERSHIP
 
-## Modelo
+**Estado:** ✅ COMPLETADO.
 
-No se usan columnas por skill:
+Objetivo:
 
 ```text
-fire_ball = true
-heal = false
-...
+Learned Skills
+→ durable por Character
+→ no por Account
+→ restauradas en login
+→ bootstrap autoritativo GS
 ```
 
-Tampoco JSON de ownership dentro de `characters`.
-
-Modelo normalizado:
+Backend normalizó ownership en:
 
 ```text
-characters
-	1
-	│
-	N
 character_skills
 ```
 
-Tabla:
+Contrato durable:
 
 ```text
-id
-character_id FK → characters.id
-skill_id varchar(64)
-timestamps
-UNIQUE(character_id, skill_id)
+character_id
+skill_id
 ```
 
-Un row significa:
+El Backend persiste identidad de ownership.
+
+El Game Server conserva autoridad semántica de las Skills.
+
+Ticket:
 
 ```text
-este Character posee/aprendió este skill_id
+skills.learned_skill_ids
 ```
 
-Delete Character:
-
-```text
-ON DELETE CASCADE
-→ elimina ownerships
-```
-
-## Autoridades
-
-Laravel persiste:
-
-```text
-stable skill_id ownership
-```
-
-Laravel NO duplica el catálogo semántico del Game Server.
-
-El Game Server sigue siendo autoridad de:
-
-```text
-si skill_id existe
-qué target_kind tiene
-MP cost
-cooldown
-efecto
-requisitos de gameplay futuros
-```
-
-## Endpoint interno
-
-```text
-POST /api/internal/accounts/{accountId}/characters/{characterId}/skills
-```
-
-Payload:
-
-```json
-{
-  "skill_id": "heal"
-}
-```
-
-Primer grant:
-
-```text
-201
-idempotent = false
-```
-
-Retry exacto:
-
-```text
-200
-idempotent = true
-```
-
-La unique constraint es defensa final contra duplicados.
-
-## Componentes Backend
-
-```text
-app/Models/CharacterSkill.php
-app/Application/Skills/CharacterSkillOwnershipPersistence.php
-app/Http/Controllers/Api/InternalCharacterSkillController.php
-database/migrations/2026_08_26_165645_create_character_skills_table.php
-tests/Feature/InternalCharacterSkillTest.php
-```
-
-`Character.php` agrega:
-
-```text
-hasMany CharacterSkill
-```
-
-## Ticket de sesión
-
-El ticket incluye ahora:
-
-```json
-"skills": {
-  "learned_skill_ids": ["heal", "poison"]
-}
-```
-
-Ordenado/canónico.
-
-Forma conceptual actual:
-
-```text
-character
-├── id
-├── slot_index
-├── name
-├── class_id
-├── level
-├── experience
-├── skills
-│   └── learned_skill_ids
-└── runtime
-```
-
-## Tests F21-A1
-
-```text
-InternalCharacterSkillTest
-6 passed / 23 assertions
-```
-
-Casos validados:
-
-```text
-persist learned skill
-retry idempotente
-mismo skill en Characters distintos
-auth/account-character boundary
-ticket contiene ownership durable
-cascade delete ownership
-```
-
-Regresiones:
-
-```text
-InternalCharacterRuntimeStateTest
-5 passed / 63 assertions
-
-InternalCharacterProgressionTest
-5 passed / 23 assertions
-```
-
-Migración real aplicada:
-
-```text
-2026_08_26_165645_create_character_skills_table
-DONE
-```
+El cliente NO auto-concede foundation skills.
 
 Commit Backend:
 
 ```text
 29c2426077788225779674652ba6712dcc13231a
 feat: add durable character skill ownership
-```
-
----
-
-# 17. F21-A2 — GAME SERVER BOOTSTRAP FROM OWNERSHIP
-
-**Estado:** ✅ COMPLETADO.
-
-Antes:
-
-```text
-ServerCharacterRuntimeBootstrap
-→ ServerSkillCatalog.get_all_skill_ids()
-→ aprende todas las skills
-→ todos los personajes reciben todo
-```
-
-Eso fue eliminado.
-
-Ahora:
-
-```text
-MySQL character_skills
-↓
-Laravel ticket
-↓
-character.skills.learned_skill_ids
-↓
-PlayerWorldSession
-↓
-ServerCharacterRuntimeBootstrap
-↓
-ServerSkillRuntimeState.learn_skill(skill_id)
-↓
-world_snapshot
-↓
-cliente
-```
-
-Archivos modificados:
-
-```text
-core/combat/server_character_runtime_bootstrap.gd
-core/world/player_world_session.gd
-```
-
-## Validación
-
-`PlayerWorldSession` requiere estructura válida:
-
-```text
-skills
-└── learned_skill_ids Array
-```
-
-Cada ID se:
-
-```text
-trim
-lowercase
-reject empty
-reject duplicate
-```
-
-Luego:
-
-```text
-ServerSkillRuntimeState.learn_skill()
-→ valida contra ServerSkillCatalog
-```
-
-Un skill desconocido no se convierte silenciosamente en autoridad válida.
-
-## Estado con cero skills
-
-Es válido:
-
-```text
-learned_skill_ids = []
-```
-
-Produce:
-
-```text
-ServerSkillRuntimeState vacío
-world_snapshot Skills: []
-cliente SkillBook vacío
-Hotbar vacía
-```
-
-No es error.
-
-## Cliente
-
-No se necesitó cambio.
-
-`PlayerRuntimeState.apply_skill_snapshot()` ya soportaba:
-
-```text
-[]
-["heal"]
-subsets del catálogo
-```
-
-Reconstruye únicamente definitions conocidas por `ClientSkillCatalog`.
-
-Hotbar default sólo coloca skills realmente aprendidas.
-
-## Primer test A2 — ownership vacío
-
-DB:
-
-```text
-character_skills count = 0
-```
-
-Game Server:
-
-```text
-Atilio
-Skills: []
-```
-
-Cliente:
-
-```text
-Skills: []
-Learned: 0
-Hotbar slots: 0
-Hotbar seleccionada: VACÍA
-```
-
-Y continuaron correctos:
-
-```text
-Runtime revision 6
-HP 100000/100000
-MP 142/350
-Level 123
-EXP 50/100
-Inventory 5
-Equipment 1
-```
-
-## Segundo test A2 — ownership Heal
-
-Se persistió manualmente por la capa durable:
-
-```text
-Character 1
-→ heal
-```
-
-DB:
-
-```text
-character_id = 1
-skill_id = heal
-```
-
-Nuevo login:
-
-```text
-Game Server
-Skills: ["heal"]
-
-Cliente
-Learned: 1
-Hotbar slots: 1
-Hotbar: Heal
-```
-
-## Cast real de Heal
-
-Antes:
-
-```text
-MP 142/350
-```
-
-Cast:
-
-```text
-Skill: heal
-Target: self
-Accepted: true
-Reason: ok
-Cooldown: 4.0
-```
-
-Después:
-
-```text
-MP 102/350
-```
-
-HP ya estaba full:
-
-```text
-Heal amount = 0
-```
-
-Correcto.
-
-F20 autosave capturó la mutación:
-
-```text
-Reason: autosave
-Revision 6 → 7
-MP 102
 ```
 
 Commit Game Server:
@@ -1300,223 +901,78 @@ Commit Game Server:
 feat: bootstrap skills from durable ownership
 ```
 
+Docs de cierre:
+
+```text
+09b84327f9028b6c8a4cbb213c6aa14ec3792a22
+docs: close F21 durable skill ownership
+```
+
 ---
 
-# 18. F21-A3 — RECONNECT + OWNERSHIP PER CHARACTER
+# 15. F21-A — REGLAS DE BOOTSTRAP
 
-**Estado:** ✅ COMPLETADO.
-
-No requirió código nuevo.
-
-Fue una auditoría funcional integrada.
-
-## Character 1 — Atilio
-
-```text
-id: 1
-class: warrior
-level: 123
-experience: 50
-skills: ["heal"]
-```
-
-Reconnect después del commit A2:
-
-```text
-WorldSessionRegistry
-Skills: ["heal"]
-Runtime revision: 7
-
-Client
-Skills: ["heal"]
-Learned: 1
-Hotbar slots: 1
-Hotbar: Heal
-```
-
-Esto demostró que Heal no vivía accidentalmente sólo en memoria del GS.
-
-## Character 2 — Lyra
-
-Personaje existente de la misma cuenta:
-
-```text
-id: 2
-class: archer
-level: 85
-experience: 0
-```
-
-Inicialmente:
-
-```text
-skills: []
-```
-
-Login:
-
-```text
-Game Server
-Skills: []
-
-Client
-Learned: 0
-Hotbar slots: 0
-Hotbar: VACÍA
-```
-
-Esto demostró:
-
-```text
-ownership por Character
-≠ ownership por Account
-```
-
-## Ownership distinto para Lyra
-
-Se persistió:
-
-```text
-Character 2
-→ poison
-```
-
-DB final del audit:
-
-```text
-Character 1 → heal
-Character 2 → poison
-```
-
-Login Lyra:
-
-```text
-Game Server
-Skills: ["poison"]
-
-Client
-Learned: 1
-Hotbar slots: 1
-Hotbar: Poison
-```
-
-## Poison cast audit
-
-Primer intento sin target:
-
-```text
-Cast omitido
-Reason: entity_target_required
-```
-
-Correcto según target_kind.
-
-Con Training Goblin seleccionado:
-
-```text
-Skill: poison
-Target: entity
-```
-
-Game Server:
-
-```text
-Target autoritativo validado
-Entity: mob_test_town_001
-Type: mob
-HP: 5000/5000
-```
-
-Resultado:
-
-```text
-Accepted: false
-Reason: skill_not_implemented
-Cooldown: 0
-```
-
-Esto es CORRECTO para la etapa.
-
-Significa:
-
-```text
-ownership pasó validación
-entity target pasó validación
-↓
-el efecto todavía no está implementado
-```
-
-No devolvió:
-
-```text
-skill_not_learned
-```
-
-porque Lyra sí posee Poison durablemente.
-
-MP permaneció:
-
-```text
-350/350
-```
-
-El audit final Atilio volvió a confirmar sólo:
+Game Server recibe exclusivamente IDs durables.
 
 ```text
 ["heal"]
+["poison"]
+[]
 ```
 
-sin contaminación desde Lyra.
-
----
-
-# 19. RESULTADO CANÓNICO DE F21-A
-
-F21-A queda cerrado con este comportamiento:
+No existe:
 
 ```text
-Character A
-DB ownership A
-→ Ticket A
-→ GS Runtime A
-→ Client SkillBook A
-
-Character B
-DB ownership B
-→ Ticket B
-→ GS Runtime B
-→ Client SkillBook B
+"si no viene nada, dar todas las foundation skills"
 ```
 
-Misma cuenta puede contener personajes con ownership completamente distinto.
+Unknown durable skill:
 
-Ejemplo auditado:
+```text
+fail closed
+```
+
+El Game Server no acepta silenciosamente un `skill_id` durable que no conozca.
+
+Aislamiento probado:
 
 ```text
 Account 1
-├── Atilio / Character 1
-│   └── heal
-└── Lyra / Character 2
-	└── poison
+├── Character 1 / Atilio
+└── Character 2 / Lyra
 ```
 
-No existen auto-grants de todas las foundation skills en flujo normal.
+El ownership pertenece al Character.
 
-Estado:
+---
+
+# 16. F21-A — AUDITORÍA PER CHARACTER
+
+Atilio:
 
 ```text
-Skill Runtime authority           ✅
-Skill IDs enviados por GS         ✅
-Client no auto-concede            ✅
-Skill Ownership durable real      ✅
-Per-character isolation           ✅
-Reconnect ownership               ✅
-Skill Learning real               ❌ siguiente bloque
+class = warrior
+ownership = heal
+```
+
+Lyra:
+
+```text
+class = archer
+ownership independiente
+```
+
+Se probó que cambiar de Character no mezcla:
+
+```text
+SkillBook
+Hotbar
+ownership
 ```
 
 ---
 
-# 20. SKILLS FOUNDATION ACTUALES
+# 17. SKILLS FOUNDATION ACTUALES
 
 Definitions foundation:
 
@@ -1546,310 +1002,1297 @@ Poison
 → efecto todavía skill_not_implemented
 ```
 
-No expandir Fire Ball/Poison por inercia mientras se trabaja F21-B.
+No expandir Fire Ball/Poison por inercia.
 
 ---
 
-# 21. F21-B — SIGUIENTE BLOQUE RECOMENDADO
+# 18. F21-B — DURABLE SKILL LEARNING
 
-Nombre:
+**Estado:** ✅ COMPLETADO, PROBADO Y PUSHEADO.
 
-```text
-F21-B — Durable Skill Learning Foundation
-```
+Objetivo alcanzado:
 
-Objetivo:
+> un personaje puede aprender una Skill real mediante Scroll + Trainer, con validación autoritativa del Game Server y una transacción durable atómica en Backend.
 
-> permitir que un personaje aprenda realmente una skill mediante una acción de gameplay validada por el Game Server y persistida de forma durable, reutilizando el ownership de F21-A.
-
-Dirección canónica:
+Arquitectura final:
 
 ```text
-Skill Scroll / Book
+Skill Scroll durable en Inventory
 +
-compatible Trainer NPC
+Skill Trainer compatible
 +
 class requirement
 +
 minimum level
 +
-minimum stats
-+
-skill not already learned
+skill no aprendida
 ↓
-Game Server validation
+Game Server valida todo
 ↓
-durable learned skill
+Backend transacción atómica
+├── consume Scroll
+└── crea character_skill
 ↓
-ServerSkillRuntimeState
+Game Server actualiza runtime
 ↓
-Client SkillBook / Hotbar
+Client actualiza SkillBook/Hotbar
+↓
+Trainer refresca estado
 ```
 
-No permitir:
-
-```text
-Client
-→ "ya aprendí esta skill"
-```
-
-como verdad consumada.
-
-## División recomendada de F21-B
-
-No implementar todo de golpe.
-
-Propuesta:
-
-```text
-F21-B1 — Skill learning definitions / requirements contract
-F21-B2 — Scroll/Book item foundation
-F21-B3 — Trainer compatibility + learn request protocol
-F21-B4 — Durable learn transaction
-F21-B5 — Runtime replication after learn
-F21-B6 — Integrated reconnect audit
-```
-
-La división exacta debe confirmarse revisando repositorios antes de programar.
+El cliente nunca se auto-concede una Skill.
 
 ---
 
-# 22. REQUISITOS CANÓNICOS DE SKILL LEARNING
+# 19. F21-B — DIVISIÓN FINAL REAL
 
-Una skill futura puede requerir:
+La división que efectivamente se implementó quedó:
+
+```text
+F21-B1 Skill Learning Contract/Catalog            ✅
+F21-B2 Atomic Learn Persistence Backend           ✅
+F21-B3 GS Learn Skill Coordinator                 ✅
+F21-B4 Trainer NPC + Protocol/Client UI           ✅
+F21-B5 Integrated Durable Skill Learning Audit    ✅
+```
+
+Dentro de B4:
+
+```text
+B4-A  Skill Trainer NPC                           ✅
+B4-B1 Server learning network protocol            ✅
+B4-B2 Client learning network protocol            ✅
+B4-C1 Trainer visible/interactable                ✅
+B4-C2 Scrolls client definitions                  ✅
+B4-C3 Temporary scroll learning route             ✅ luego retirado
+B4-D1 Authoritative Trainer Offers                ✅
+B4-D2 Skill Trainer Window                        ✅
+B4-D3 Learn button → authoritative request        ✅
+B4-D4 Live learning result → runtime/UI           ✅
+B4-D5 Retire temporary route / cleanup            ✅
+```
+
+---
+
+# 20. F21-B1 — SKILL LEARNING CONTRACT
+
+Game Server agrega contrato semántico central.
+
+Componentes:
+
+```text
+ServerSkillLearningDefinition
+ServerSkillLearningCatalog
+ServerItemCatalog
+```
+
+Servicio:
+
+```text
+trainer_service_id = "skill_trainer"
+```
+
+Foundation actual:
+
+```text
+Fire Ball
+skill_id = fire_ball
+scroll = skill_scroll_fire_ball
+allowed_classes = [mage]
+minimum_level = 10
+
+Poison
+skill_id = poison
+scroll = skill_scroll_poison
+allowed_classes = [archer]
+minimum_level = 10
+
+Heal
+skill_id = heal
+scroll = skill_scroll_heal
+allowed_classes = [warrior, mage, archer]
+minimum_level = 5
+```
+
+Stats:
+
+```text
+minimum_stats
+→ diseño previsto
+→ no implementado todavía
+→ no inventar Stats paralelo sólo para learning
+```
+
+Validación de catálogo al startup:
+
+```text
+contrato inconsistente
+→ fail closed
+```
+
+Commit:
+
+```text
+25cd9f68bf68212cd6599998ac9424de96967a04
+feat: add skill learning contract
+```
+
+---
+
+# 21. F21-B2 — ATOMIC DURABLE LEARNING BACKEND
+
+Backend extendió `character_skills` con trazabilidad del origen:
+
+```text
+learned_from_item_uid UUID nullable unique
+learned_from_item_id string nullable
+```
+
+Endpoint interno:
+
+```text
+POST /api/internal/accounts/{accountId}/characters/{characterId}/skills/learn
+```
+
+Payload:
 
 ```text
 skill_id
-required_scroll_item_id
-allowed_classes
-minimum_level
-minimum_stats
-compatible_trainer_service / trainer tags
+scroll_uid
+scroll_item_id
 ```
 
-No duplicar requisitos en UI.
-
-Fuente deseada:
+Regla crítica:
 
 ```text
-ServerSkillCatalog / server-side definitions
-```
-
-o un catálogo autoritativo equivalente.
-
-Cliente puede tener metadata visual, pero no autoridad final.
-
-## Stats
-
-El sistema de stats completos todavía no está implementado.
-
-Por eso F21-B debe diseñarse para soportar requisitos futuros sin obligarnos a construir todo Stats ahora.
-
-Se puede empezar con foundation como:
-
-```text
-class
-level
-scroll
-trainer
-```
-
-y reservar estructura para stats si corresponde.
-
-No inventar un sistema de stats paralelo sólo para aprender skills.
-
----
-
-# 23. SCROLL / BOOK — DIRECCIÓN CANÓNICA
-
-Un Skill Scroll/Book debe ser un ItemDefinition / ItemInstance real.
-
-Flujo deseado:
-
-```text
-Drop/content
-→ Skill Scroll ItemInstance
-→ Inventory durable
-→ Trainer interaction
-→ Learn Skill request
-```
-
-No crear una lista de scrolls separada del sistema de items.
-
-Debe convivir con:
-
-```text
-InventoryData
-ItemDefinition
-ItemInstance
-persistent UID
-```
-
-Decisión pendiente a resolver durante F21-B:
-
-```text
-¿el scroll se consume siempre?
-¿se consume sólo si learn durable confirma?
-¿hay scrolls reusables?
-```
-
-Regla transaccional recomendada si es consumible:
-
-```text
-VALIDAR
-→ PERSISTIR OWNERSHIP + CONSUMIR ITEM de forma segura
-→ recién después confirmar aprendizaje
+CONSUMIR SCROLL
++
+CREAR OWNERSHIP
+=
+MISMA TRANSACCIÓN
 ```
 
 Nunca:
 
 ```text
-consumir scroll
-→ falla persistencia ownership
-→ jugador pierde item sin aprender
+consume scroll
+→ luego intenta grant
+→ falla grant
+→ jugador pierde item
+```
+
+Backend valida identidad durable:
+
+```text
+Account
+Character
+container
+ItemInstance UID
+item_id
+cantidad
+ownership existente
+scroll ya usado
+```
+
+Semántica de clase/nivel/trainer permanece en Game Server.
+
+Idempotencia:
+
+```text
+mismo skill + mismo source
+→ replay 200
+→ idempotent true
+
+mismo skill + distinto scroll
+→ skill_already_learned
+→ segundo scroll intacto
+
+mismo scroll + otra skill
+→ scroll_already_used
+```
+
+Commit:
+
+```text
+64be9a85e90ec6a07f1cb1b47d0c21c670f7dc18
+feat: add atomic durable skill learning
 ```
 
 ---
 
-# 24. TRAINER — DIRECCIÓN CANÓNICA
+# 22. F21-B3 — GAME SERVER LEARNING COORDINATOR
 
-Trainer puede servir:
-
-```text
-una clase
-varias clases
-```
-
-No obligar un NPC por clase.
-
-Un Trainer debería poder informar:
+Subcomponentes efectivos:
 
 ```text
-skills compatibles
-scroll requerido
-level requerido
-stats requeridos
-si el personaje cumple
-mapas donde obtener scroll
-mobs/content que pueden dropearlo
+BackendCharacterSkillLearningRepository
+SkillLearningCoordinator
+ServerSkillLearningCatalog
+ServerItemCatalog
+ServerSkillRuntimeState
+CharacterItemStateCoordinator
+NpcServiceCoordinator
 ```
 
-La información debe derivarse de catálogos/definitions/drop content.
+Commits:
 
-No hardcodear textos divergentes en UI.
+```text
+2a60147bd2cacccc98c884918f48a97e7f977868
+feat: add skill learning backend repository
 
-## Importante
+9535f9e33081728622a0eb668e30a54a364b56e1
+feat: add authoritative skill learning validation
 
-F21-A NO construyó Trainer.
+df7bcb3a757365a9e2f35cda9bb5b377bd8a3e82
+feat: apply durable skill learning to runtime
+```
 
-Trainer comienza recién en F21-B cuando el contrato de learning esté definido.
+Validaciones GS:
+
+```text
+world session válida
+request sequence
+learning no busy
+skill definition conocida
+skill no aprendida
+class compatible
+level suficiente
+Skill Trainer activo y compatible
+scroll UID exacto en Inventory runtime
+scroll item_id correcto
+quantity válida
+```
+
+Sólo después:
+
+```text
+Backend atomic learn
+```
+
+Tras COMMIT:
+
+```text
+GS skill runtime update
++
+Inventory reload durable
+```
+
+La verdad durable gana ante cualquier inconsistencia.
 
 ---
 
-# 25. ECONOMÍA — DIRECCIÓN CANÓNICA
+# 23. F21-B4-A — SKILL TRAINER NPC
 
-No usar como nombre final:
-
-```text
-Zen
-```
-
-`CurrencyState` sigue siendo placeholder técnico genérico.
-
-Nombre/iconografía/lore final pendiente.
-
-Economía futura:
+Se creó el servicio NPC autoritativo:
 
 ```text
-saldo durable
-recompensas
-merchant
-buy/sell
-servicios pagos
-trainer fees si aplica
-Priest confession
-trade futuro
-fees/taxes futuros
+npc_id = skill_trainer
+service_id = skill_trainer
+interaction_range = 2.5
 ```
+
+Game Server controla:
+
+```text
+iniciar servicio
+mantener servicio mientras está en rango
+cerrar por X/request
+invalidar por out_of_range
+```
+
+Commit GS:
+
+```text
+a953194e26ba8b1fd746314defa2b2b201b017ab
+feat: add skill trainer npc
+```
+
+Cliente representa visualmente el Trainer en TestTown.
+
+Commit cliente:
+
+```text
+a274d1a62f59aa7e27c22d1f52491389b9b34c4d
+feat: add skill trainer to client world
+```
+
+La escena cliente NO es la autoridad de interacción.
+
+---
+
+# 24. F21-B4-B — NETWORK PROTOCOL
+
+Mensajes:
+
+```text
+skill_learning_request
+skill_learning_result
+skill_trainer_offers
+```
+
+Request learning:
+
+```text
+request_id
+skill_id
+scroll_uid
+```
+
+Result learning:
+
+```text
+request_id
+skill_id
+scroll_uid
+accepted
+reason
+learned_skill_ids
+idempotent
+```
+
+Sequence de learning es independiente de cast sequence.
+
+Correlación estricta:
+
+```text
+request_id
++
+skill_id
++
+scroll_uid
+```
+
+Commit GS:
+
+```text
+2efc2ceaab8a8150541fe727f1e461187d0ba190
+feat: add skill learning network protocol
+```
+
+Commit cliente:
+
+```text
+e2808b32156887cbb66f13713b68b3204a42655c
+feat: add client skill learning protocol
+```
+
+---
+
+# 25. F21-B4-C — CLIENT PRESENTATION FOUNDATION
+
+Scrolls client-side son metadata visual del sistema de items:
+
+```text
+skill_scroll_fire_ball
+skill_scroll_poison
+skill_scroll_heal
+```
+
+Categoría:
+
+```text
+MISC
+```
+
+Foundation actual:
+
+```text
+grid size = 1x2
+max_stack = 1
+```
+
+Los iconos son temporales/foundation.
+
+Commit:
+
+```text
+e414a24b7137e3ff4cfe2fce8be6990fd4b6f853
+feat: add skill scroll client definitions
+```
+
+---
+
+# 26. RUTA TEMPORAL DE DOBLE CLICK — HISTORIA Y RETIRO
+
+Durante B4-C3 existió temporalmente:
+
+```text
+Inventory double click Scroll
+→ client mapping scroll → skill
+→ skill_learning_intent
+→ Game Server
+```
+
+Commit histórico:
+
+```text
+327c3370aad874b236490adb2fbd9e8c727a79af
+feat: connect skill scroll learning flow
+```
+
+Esta ruta fue útil sólo para probar el pipeline antes de tener Trainer UI.
+
+La arquitectura final la RETIRÓ.
+
+Commit:
+
+```text
+bfb39eea4751ff6015d0935507704614c9745b3e
+feat: route skill learning through trainer
+```
+
+Estado final:
+
+```text
+double click Skill Scroll
+→ NO aprende Skill
+```
+
+También se eliminó:
+
+```text
+ClientSkillLearningCatalog
+```
+
+El mapping semántico:
+
+```text
+scroll_item_id ↔ skill_id
+```
+
+queda del lado autoritativo del Game Server.
+
+Se conserva el signal genérico de item activation en UI para futuros:
+
+```text
+Health Potion
+Mana Potion
+teleport item
+quest item
+otros consumibles
+```
+
+No eliminarlo sólo porque ya no se usa para Skills.
+
+---
+
+# 27. F21-B4-D1 — AUTHORITATIVE TRAINER OFFERS
+
+El Game Server construye el snapshot de ofertas usando:
+
+```text
+authenticated Character
+class
+level
+runtime skill ownership
+runtime Inventory
+ServerSkillLearningCatalog
+ServerItemCatalog
+active Skill Trainer service
+```
+
+Campos de oferta:
+
+```text
+skill_id
+scroll_item_id
+minimum_level
+already_learned
+has_scroll
+can_learn
+reason
+scroll_uid cuando corresponde
+```
+
+El cliente NO recalcula eligibility.
+
+Commits GS:
+
+```text
+9b389b7fe7f5e83e892b09533e89dd982279a2d3
+feat: build authoritative skill trainer offers
+
+2734b652f10ed30a005b6fd4e329867b07e04405
+feat: send authoritative skill trainer offers
+```
+
+Commit cliente:
+
+```text
+984d0da6345404cf3adc84e11cc5b525f44b1b48
+feat: receive authoritative skill trainer offers
+```
+
+Ejemplo archer:
+
+```text
+Heal
+Poison
+```
+
+Fire Ball:
+
+```text
+NO aparece para archer
+```
+
+---
+
+# 28. F21-B4-D2 — SKILL TRAINER WINDOW
+
+Cliente agregó UI basada en `BaseWindow`.
+
+Archivos principales:
+
+```text
+features/skills/ui/skill_trainer_window.gd
+features/skills/ui/skill_trainer_window.tscn
+features/skills/ui/skill_trainer_offer_row.gd
+features/skills/ui/skill_trainer_offer_row.tscn
+```
+
+Integración:
+
+```text
+GameplayUI
+→ WindowsLayer
+→ SkillTrainerWindow
+```
+
+Reglas UI:
+
+```text
+fixed size
+draggable
+keep_inside_viewport
+no resize
+server-authorized open/close
+```
+
+Oferta row muestra:
+
+```text
+Skill icon
+Skill name
+minimum level
+required Scroll
+status
+APRENDER
+```
+
+Status deriva únicamente de `reason` autoritativo recibido.
+
+Ejemplos:
+
+```text
+ok
+→ Disponible para aprender
+
+skill_already_learned
+→ Aprendida
+
+level_requirement_not_met
+→ Nivel insuficiente
+
+scroll_required
+→ Falta el Scroll requerido
+```
+
+Cliente sólo traduce reason a texto visual.
+
+No decide elegibilidad.
+
+Commit:
+
+```text
+fd67e19e89471e2946da0e8b382ec339c183504d
+feat: add authoritative skill trainer window
+```
+
+---
+
+# 29. TRAINER LIFECYCLE
+
+Apertura:
+
+```text
+click NPC
+→ NpcInteractionController
+→ Game Server request
+→ GS valida rango/service
+→ NPC service authorized
+→ offers snapshot
+→ SkillTrainerWindow open
+```
+
+Cierre manual:
+
+```text
+X
+→ GameplayUI close
+→ npc_service_end_request
+→ GS finaliza servicio
+```
+
+Cierre autoritativo:
+
+```text
+player sale de rango
+→ GS detecta out_of_range
+→ npc_service_end
+→ cliente cierra ventana
+```
+
+Cierre programático por GS NO vuelve a emitir manual-close.
+
+Esto evita recursion:
+
+```text
+server close
+→ client close
+→ nuevo service_end request
+→ loop
+```
+
+---
+
+# 30. F21-B4-D3 — APRENDER DESDE TRAINER
+
+Flujo final:
+
+```text
+SkillTrainerOfferRow
+→ learn_requested(skill_id, scroll_uid)
+→ SkillTrainerWindow
+→ GameplayUI
+→ GameplayScreen
+→ skill_learning_intent_requested
+→ GameSessionFlowCoordinator
+→ GameServerClient
+→ Game Server
+```
+
+GameplayScreen exige localmente sólo contexto UX mínimo:
+
+```text
+Trainer service activo
+trainer NPC id presente
+skill_id no vacío
+scroll_uid no vacío
+```
+
+Eso NO reemplaza validación GS.
+
+El botón se deshabilita inmediatamente:
+
+```text
+status = Procesando...
+```
+
+para evitar múltiples clicks accidentales.
+
+Commit cliente:
+
+```text
+bfb39eea4751ff6015d0935507704614c9745b3e
+feat: route skill learning through trainer
+```
+
+---
+
+# 31. F21-B4-D4-A — LIVE RUNTIME UPDATE
+
+Problema previo:
+
+```text
+GS aprendía Skill
+Backend persistía
+Scroll desaparecía
+pero cliente sólo veía nueva Skill después de reconnect
+```
+
+Solución:
+
+```text
+skill_learning_result accepted=true
+→ learned_skill_ids
+→ PlayerRuntimeState.apply_skill_learning_update()
+```
+
+No se reutiliza ciegamente bootstrap de login.
+
+Se actualizan los mismos objetos:
+
+```text
+SkillBookData
+SkillHotbarData
+```
+
+Esto conserva bindings/signals UI existentes.
+
+Regla hotbar:
+
+```text
+sólo autoasignar Skills NUEVAS
+```
+
+No rellenar Skills viejas que el jugador pudiera haber quitado manualmente de la hotbar.
+
+Si hotbar está llena:
+
+```text
+Skill se aprende igual
+→ queda en SkillBook
+→ no se fuerza slot
+```
+
+Commit:
+
+```text
+5399334957b852af582cdc047cd64d67d1cf7c2d
+feat: apply learned skills to live runtime
+```
+
+Audit:
+
+```text
+Atilio sin Heal
+→ aprende Heal
+→ sin reconnect:
+   SkillBook +1
+   Hotbar +1
+   selected slot = Heal
+```
+
+---
+
+# 32. F21-B4-D4-B — REFRESH TRAINER AFTER SUCCESS
+
+Después del COMMIT, el Inventory durable se recarga async.
+
+No reconstruir ofertas antes de que el Inventory nuevo haya sido aplicado.
+
+Cadena:
+
+```text
+Backend learn success
+→ GS skill runtime update
+→ reload Inventory
+→ CharacterItemStateCoordinator aplica Inventory nuevo
+→ inventory_snapshot_applied
+→ SkillLearningCoordinator rebuild offers
+→ send skill_trainer_offers
+```
+
+Esto evita:
+
+```text
+Skill aprendida
++
+Inventory viejo con Scroll todavía presente
+→ oferta inconsistente
+```
+
+Después de éxito:
+
+```text
+Disponible para aprender
+→ Procesando...
+→ Aprendida
+```
+
+sin cerrar ventana.
+
+Game Server commit:
+
+```text
+ba41cee395573fbfc3a8cbc43ecff1ba357dad88
+feat: refresh skill trainer offers after learning
+```
+
+Cliente preserva posición de ventana durante refresh.
+
+Primera apertura:
+
+```text
+center_in_viewport()
+```
+
+Snapshot posterior:
+
+```text
+actualizar contenido
+→ NO recentrar
+```
+
+Commit:
+
+```text
+8eb5cf9da711655994cfbcaaa75f25218629a542
+feat: preserve skill trainer position on refresh
+```
+
+Audit:
+
+```text
+ventana arrastrada
+→ APRENDER
+→ refresh
+→ Aprendida
+→ ventana permanece exactamente donde estaba
+```
+
+---
+
+# 33. F21-B4-D4-C — REJECTION RECOVERY
+
+Problema:
+
+```text
+APRENDER
+→ Procesando...
+→ Backend/GS rechaza
+→ botón podía quedar congelado si no llegaba snapshot nuevo
+```
+
+Solución GS:
+
+```text
+send skill_learning_result accepted=false
+→ rebuild current authoritative offers
+→ send skill_trainer_offers
+```
+
+Cliente NO decide:
+
+```text
+"si backend_unavailable entonces can_learn=true"
+```
+
+Cliente simplemente vuelve a renderizar verdad GS.
+
+Cubre:
+
+```text
+semantic rejection
+stale_request
+async Backend persistence failure
+```
+
+Commit:
+
+```text
+968c1a19ea01b04d61b721ee59929fd55c036339
+feat: recover skill trainer after learning rejection
+```
+
+---
+
+# 34. BACKEND FAILURE PARSING
+
+Durante audit D4-C se apagó intencionalmente Laravel app.
+
+nginx respondió:
+
+```text
+HTTP 502
+body no JSON
+```
+
+El repository intentaba:
+
+```text
+JSON.parse_string(body)
+```
+
+y Godot producía error rojo:
+
+```text
+Parse JSON failed
+Unexpected character
+```
+
+Se corrigió dentro del mismo commit D4-C.
+
+Ahora:
+
+```text
+JSON.new().parse(body)
+→ parse_error controlado
+```
+
+Para response `>=500` no JSON:
+
+```text
+reason = backend_unavailable
+```
+
+Resultado:
+
+```text
+NO error rojo del parser
+NO crash
+NO Skill aprendida
+NO Scroll consumido
+UI recuperada
+```
+
+Luego Backend puede volver y el mismo Character/session puede reintentar.
+
+Audit real:
+
+```text
+Request 1
+→ Backend apagado
+→ Accepted false
+→ Scroll intacto
+→ Heal no aprendida
+→ Trainer vuelve a Disponible para aprender
+
+Backend start
+
+Request 2
+→ Accepted true
+→ Heal aprendida
+→ Scroll consumido
+→ Trainer Aprendida
+```
+
+Todo sin reconnect.
+
+---
+
+# 35. F21-B5 — INTEGRATED DURABLE SKILL LEARNING AUDIT
+
+**Estado:** ✅ COMPLETADO.
+
+No requirió código adicional.
+
+Se auditó success, durability, reconnect, character isolation, class filtering, Trainer lifecycle y rejection recovery.
+
+---
+
+# 36. AUDIT FINAL — ATILIO
+
+Estado final auditado:
+
+```text
+Character ID: 1
+Name: Atilio
+Class: warrior
+Level: 124
+EXP: 50/100
+Skills: ["heal"]
+Inventory Items: 7
+Equipment Items: 1
+```
+
+Reconnect GS:
+
+```text
+WorldSessionRegistry
+Skills: ["heal"]
+```
+
+Cliente:
+
+```text
+Skills: ["heal"]
+Learned: 1
+Hotbar slots: 1
+Hotbar seleccionada: Heal
+```
+
+Trainer:
+
+```text
+Ofertas: 1
+
+Heal
+already_learned = true
+has_scroll = false
+can_learn = false
+reason = skill_already_learned
+```
+
+Visual:
+
+```text
+Heal
+Aprendida
+[APRENDER disabled]
+```
+
+Warehouse regression:
+
+```text
+abre Vault
+X cierra
+reabre
+out_of_range cierra autoritativamente
+```
+
+F20 autosave también siguió funcionando durante audit.
+
+---
+
+# 37. AUDIT FINAL — LYRA
+
+Estado final auditado:
+
+```text
+Character ID: 2
+Name: Lyra
+Class: archer
+Level: 85
+EXP: 0/100
+Skills: ["heal", "poison"]
+Inventory: 0
+Equipment: 0
+```
+
+Reconnect cliente:
+
+```text
+Skills: ["heal", "poison"]
+Learned: 2
+Hotbar slots: 2
+```
+
+Trainer:
+
+```text
+Ofertas: 2
+
+Heal
+├── already_learned = true
+├── has_scroll = false
+├── can_learn = false
+└── reason = skill_already_learned
+
+Poison
+├── already_learned = true
+├── has_scroll = false
+├── can_learn = false
+└── reason = skill_already_learned
+```
+
+Fire Ball:
+
+```text
+NO aparece
+```
+
+correcto por clase `archer`.
+
+Lifecycle final:
+
+```text
+Trainer abierto
+→ player se aleja
+→ distancia > 2.5
+→ GS out_of_range
+→ cliente cierra ventana automáticamente
+```
+
+Esto confirmó:
+
+```text
+ownership durable por Character
++
+filter por class
++
+lifecycle NPC
+```
+
+sin contaminación entre Atilio y Lyra.
+
+---
+
+# 38. RESULTADO CANÓNICO DE F21-B
+
+F21-B se considera un sistema REAL porque cumple:
+
+```text
+intención nace desde gameplay correcto
+autoridad semántica GS
+item durable real
+trainer real
+class/level validation
+atomic persistence
+runtime update
+client live replication
+Trainer UI live refresh
+reconnect durability
+per-character isolation
+error recovery
+edge cases principales auditados
+no depende de debug shortcut
+```
+
+Arquitectura final:
+
+```text
+Inventory Scroll
+		│
+		│ sólo item durable
+		▼
+Skill Trainer NPC
+		│
+		▼
+Authoritative Offers
+		│
+		▼
+[APRENDER]
+		│
+		▼
+Game Server Validation
+		│
+		▼
+Backend Atomic Transaction
+├── consume ItemInstance
+└── create CharacterSkill
+		│
+		▼
+GS Runtime Skill Ownership
+		│
+		├── Client SkillBook
+		├── Client Hotbar
+		├── Inventory refresh
+		└── Trainer Offers refresh
+```
+
+---
+
+# 39. QUÉ NO HACE EL CLIENTE EN SKILL LEARNING
+
+No decide:
+
+```text
+qué Scroll enseña qué Skill
+class compatibility
+minimum level real
+minimum stats futuros
+Trainer compatibility
+si tiene realmente el Scroll
+si una Skill ya está aprendida durablemente
+si puede aprender
+si el Scroll se consume
+si persistencia fue exitosa
+```
+
+Cliente puede:
+
+```text
+mostrar display name
+mostrar icon
+mostrar description
+mostrar reason traducido
+emitir intención
+mostrar Procesando...
+```
+
+---
+
+# 40. QUÉ HACE EL GAME SERVER EN SKILL LEARNING
 
 Autoridad:
 
 ```text
-Client
-→ intención
-
-Game Server
-→ contexto/reglas
-
-Backend
-→ operación durable/atómica
+catálogo semántico
+Trainer service
+class
+level
+ownership runtime
+Inventory runtime
+scroll ↔ skill mapping
+request sequence
+concurrency/busy state
 ```
 
-No mezclar Economy automáticamente dentro de F21-B si no es necesaria para el primer learning slice.
+Orquesta:
+
+```text
+validate
+→ Backend learn
+→ runtime mutation
+→ Inventory reload
+→ result
+→ offers refresh
+```
 
 ---
 
-# 26. PvP / PK / SIN — DIRECCIÓN CANÓNICA
+# 41. QUÉ HACE EL BACKEND EN SKILL LEARNING
 
-Estados previstos:
-
-```text
-Inocente
-→ Diablillo
-→ Delincuente
-→ Pecador / Sinner
-```
-
-Thresholds definitivos pendientes.
-
-Auto-defense:
+Backend garantiza:
 
 ```text
-A agrede primero a B
-→ GS registra aggression context
-→ B puede defenderse según reglas
+Account identity
+Character identity
+Scroll durable UID
+container identity
+scroll item id
+quantity
+CharacterSkill durable
+source traceability
+atomic mutation
+idempotency
 ```
 
-Auto-defense:
+Backend NO reemplaza reglas gameplay como:
 
 ```text
-runtime Game Server
+class compatibility
+level requirement
+active Trainer range
 ```
 
-Estado criminal:
-
-```text
-durable Backend
-```
-
-Sinner futuro:
-
-```text
-tint rojo autoritativo
-body/armor/weapon/wings/main appearance
-```
-
-Redención:
-
-```text
-Priest confession
-→ costo currency
-```
-
-y alternativa más lenta:
-
-```text
-PvE válido
-→ reduce pecado progresivamente
-```
-
-PvP debe construirse sobre Combat como dominio propio.
-
-No meter toda la lógica dentro de `BasicAttackCoordinator`.
+esas permanecen GS.
 
 ---
 
-# 27. WORLD DROPS
+# 42. INVENTORY / EQUIPMENT / VAULT
+
+Foundation durable:
+
+```text
+Inventory ✅
+Equipment ✅
+Vault ✅
+```
+
+F15-C sigue diferido para:
+
+```text
+stack merge autoritativo
+stack split
+partial quantity transfer
+sort autoritativo
+general consumable use
+durability
+item-specific state avanzado
+```
+
+No construirlos sin necesidad funcional concreta.
+
+Health Potion existe durablemente, pero todavía no tiene pipeline final de `use item`.
+
+Flujo futuro correcto:
+
+```text
+use item intent
+→ GS validate item/quantity
+→ shared vitals/effects pipeline
+→ durable quantity mutation
+→ replicate inventory + vitals
+```
+
+El signal genérico de Inventory activation se conserva para esto.
+
+---
+
+# 43. WORLD DROPS
 
 Actual:
 
@@ -1867,7 +2310,7 @@ Health Potion x1
 100% drop para testing
 ```
 
-Pickup durable mantiene regla:
+Pickup durable:
 
 ```text
 PERSIST INVENTORY
@@ -1875,7 +2318,7 @@ PERSIST INVENTORY
 → CONSUME WORLD DROP
 ```
 
-No invertir ese orden.
+Nunca invertir ese orden.
 
 Tras restart GS:
 
@@ -1887,7 +2330,40 @@ Aceptado por ahora.
 
 ---
 
-# 28. COMBAT FOUNDATION
+# 44. PROGRESSION FOUNDATION
+
+Regla foundation:
+
+```text
+100 EXP por level
+```
+
+Training Goblin:
+
+```text
++50 EXP
+```
+
+Progression durable:
+
+```text
+Level
+Experience
+```
+
+Separada de Skill Ownership.
+
+No mezclar:
+
+```text
+CharacterSkill
+con
+CharacterProgression
+```
+
+---
+
+# 45. COMBAT FOUNDATION
 
 Basic Attack:
 
@@ -1935,75 +2411,7 @@ checkpoint dedicado
 
 ---
 
-# 29. PROGRESSION FOUNDATION
-
-Regla foundation actual:
-
-```text
-100 EXP por level
-```
-
-Training Goblin:
-
-```text
-+50 EXP
-```
-
-F18 validó level-up durable.
-
-Ejemplo histórico:
-
-```text
-Level 122 / EXP 50
-+50
-→ Level 123 / EXP 0
-```
-
-F21-A regression mantuvo Progression intacta.
-
-No mezclar skill ownership con level/EXP persistence.
-
----
-
-# 30. INVENTORY / EQUIPMENT / VAULT
-
-Foundation durable:
-
-```text
-Inventory ✅
-Equipment ✅
-Vault ✅
-```
-
-F15-C sigue diferido para:
-
-```text
-stack merge autoritativo
-stack split
-partial quantity transfer
-sort autoritativo
-consumables
-durability
-item-specific state avanzado
-```
-
-No construirlos sin necesidad funcional concreta.
-
-Health Potion existe pero todavía debe obtener un pipeline real de `use item` apoyado en Vitals autoritativos.
-
-Flujo futuro correcto:
-
-```text
-use item intent
-→ GS validate item/quantity
-→ shared vitals/effects pipeline
-→ durable quantity mutation
-→ replicate inventory + vitals
-```
-
----
-
-# 31. UI — REGLAS VIGENTES
+# 46. UI — REGLAS VIGENTES
 
 Ventanas principales:
 
@@ -2014,7 +2422,13 @@ no resize
 no salir del viewport
 ```
 
-No volver al plan antiguo de resize/expand/contract.
+No volver al plan antiguo:
+
+```text
+resize
+expand
+contract
+```
 
 Inventario:
 
@@ -2029,9 +2443,40 @@ Inspiración funcional MU no significa copiar identidad visual.
 
 VHAL debe mantener identidad propia.
 
+Skill Trainer respeta las mismas reglas.
+
 ---
 
-# 32. PERFORMANCE
+# 47. BASEWINDOW / WINDOW LIFECYCLE
+
+`BaseWindow`:
+
+```text
+PanelContainer
+fixed minimum size
+draggable header
+keep_inside_viewport
+close_requested
+```
+
+Skill Trainer hereda `BaseWindow`.
+
+Importante por `@tool`:
+
+```text
+si BaseWindow usa @tool
+subclass directa de ventana también debe usar @tool
+```
+
+Esto evitó warning:
+
+```text
+MISSING_TOOL
+```
+
+---
+
+# 48. PERFORMANCE
 
 Regla:
 
@@ -2041,10 +2486,10 @@ Refactor ≠ Optimization
 
 No optimizar sin medir.
 
-F20 ya evitó una mala práctica crítica:
+F20 ya evitó:
 
 ```text
-NO persistir position por frame
+persistir position por frame
 ```
 
 Usa:
@@ -2080,7 +2525,7 @@ concurrent autosave distribution
 
 ---
 
-# 33. ARQUITECTURA DE COMPONENTES — GAME SERVER
+# 49. ARQUITECTURA DE COMPONENTES — GAME SERVER
 
 Estructura conceptual vigente:
 
@@ -2107,22 +2552,16 @@ No convertir:
 PlayerWorldSession
 main.gd
 BasicAttackCoordinator
+SkillLearningCoordinator
 ```
 
 en God Objects.
 
-F20 agregó/reafirmó:
-
-```text
-CharacterRuntimeStateCoordinator
-BackendCharacterRuntimeStateRepository
-```
-
-F21-A reutilizó la composición existente sin crear un SkillOwnershipManager gigante.
+Skill Learning se construyó mediante composición y coordinators existentes.
 
 ---
 
-# 34. CRITERIO DE SISTEMA “REAL”
+# 50. CRITERIO DE SISTEMA “REAL”
 
 Un sistema se considera real cuando:
 
@@ -2138,15 +2577,319 @@ edge cases principales están probados
 no depende de shortcut debug en flujo normal
 ```
 
-F20 cumple este criterio para Character Runtime durable.
+Cumplen actualmente:
 
-F21-A cumple este criterio para Skill Ownership durable.
-
-F21-B deberá cumplirlo para Skill Learning.
+```text
+F20 Character Runtime durable ✅
+F21-A Skill Ownership durable ✅
+F21-B Skill Learning durable ✅
+```
 
 ---
 
-# 35. ROADMAP CANÓNICO ACTUAL
+# 51. PERSISTENCIA / RUNTIME ACTUAL
+
+Durable hoy:
+
+```text
+Account / Character identity
+Inventory
+Equipment
+Vault
+Level
+Experience
+Map
+Position
+Rotation
+HP
+MP
+Skill Ownership
+Skill learning provenance
+```
+
+Runtime pero no durable tras restart GS:
+
+```text
+WorldDrops
+Mob runtime
+Cooldowns activos
+Combat temporal
+NPC service runtime
+Aggression/PvP future runtime
+```
+
+---
+
+# 52. ECONOMÍA — DIRECCIÓN CANÓNICA
+
+No usar como nombre final:
+
+```text
+Zen
+```
+
+`CurrencyState` sigue siendo placeholder técnico genérico.
+
+Nombre/iconografía/lore final pendiente.
+
+Economía futura:
+
+```text
+saldo durable
+recompensas
+merchant
+buy/sell
+servicios pagos
+trainer fees si aplica
+Priest confession
+trade futuro
+fees/taxes futuros
+```
+
+Autoridad:
+
+```text
+Client
+→ intención
+
+Game Server
+→ contexto/reglas
+
+Backend
+→ operación durable/atómica
+```
+
+No agregar fees al Trainer por inercia.
+
+---
+
+# 53. PvP / PK / SIN — DIRECCIÓN CANÓNICA
+
+Estados previstos:
+
+```text
+Inocente
+→ Diablillo
+→ Delincuente
+→ Pecador / Sinner
+```
+
+Thresholds definitivos pendientes.
+
+Auto-defense:
+
+```text
+A agrede primero a B
+→ GS registra aggression context
+→ B puede defenderse según reglas
+```
+
+Auto-defense:
+
+```text
+runtime Game Server
+```
+
+Estado criminal:
+
+```text
+durable Backend
+```
+
+Sinner futuro:
+
+```text
+tint rojo autoritativo
+body/armor/weapon/wings/main appearance
+```
+
+Redención:
+
+```text
+Priest confession
+→ costo currency
+```
+
+Alternativa lenta:
+
+```text
+PvE válido
+→ reduce pecado progresivamente
+```
+
+PvP debe construirse sobre Combat como dominio propio.
+
+No meter toda la lógica dentro de `BasicAttackCoordinator`.
+
+---
+
+# 54. STATS — DIRECCIÓN CANÓNICA
+
+Stats completos todavía no están implementados.
+
+Skill Learning ya dejó preparado conceptualmente:
+
+```text
+minimum_stats
+```
+
+pero foundation actual valida:
+
+```text
+class
+level
+scroll
+trainer
+ownership
+```
+
+No inventar Stats sólo para completar una casilla del contrato.
+
+Cuando se abra Stats, debe servir también a:
+
+```text
+equipment
+combat
+skills
+requirements
+progression
+future PvP
+```
+
+---
+
+# 55. MAPAS / NPCS / CONTENIDO
+
+Foundation actual:
+
+```text
+TestTown
+Warehouse Keeper
+Skill Trainer
+Training Goblin
+```
+
+Esta escena es laboratorio/vertical slice.
+
+Expansión futura debe separar:
+
+```text
+MapDefinition
+spawn/content definitions
+NPC definitions
+mob definitions
+drop content
+```
+
+No convertir `test_town.tscn` en repositorio permanente de todo el juego.
+
+---
+
+# 56. SKILL TRAINER — UX FUTURO POSIBLE
+
+La UI foundation ya funciona.
+
+Mejoras visuales futuras posibles:
+
+```text
+iconos reales de Skills
+iconos reales de Scrolls
+mejor tipografía
+requirements más compactos
+descripciones/tooltip refinados
+filtros/categorías si crece el catálogo
+source hints de dónde conseguir Scroll
+```
+
+Pero no deben introducir autoridad semántica en cliente.
+
+---
+
+# 57. SKILL LEARNING — ERRORES / REASONS IMPORTANTES
+
+Examples:
+
+```text
+ok
+skill_already_learned
+level_requirement_not_met
+scroll_required
+stale_request
+backend_unavailable
+invalid_backend_response
+```
+
+El set puede crecer.
+
+Regla:
+
+```text
+reason
+→ Game Server / Backend contract
+→ Client presentation
+```
+
+No duplicar reglas a partir de strings en UI.
+
+---
+
+# 58. IDEMPOTENCIA — REGLA CANÓNICA
+
+Learning durable:
+
+```text
+retry same semantic operation
+→ no duplicate CharacterSkill
+→ no consume Scroll dos veces
+```
+
+Pickup durable:
+
+```text
+grant idempotente
+→ luego consume WorldDrop
+```
+
+Runtime state:
+
+```text
+same durable checkpoint replay
+→ no revision bump artificial
+```
+
+Idempotencia debe diseñarse por operación, no agregarse al final.
+
+---
+
+# 59. FAILURE POLICY
+
+Cuando el cliente recibe una verdad autoritativa que no puede representar:
+
+```text
+fail closed
+```
+
+Ejemplo D4-A:
+
+```text
+Accepted true
++
+learned_skill_ids inválidos/desconocidos
+→ no seguir jugando con runtime inconsistente
+```
+
+Cuando Backend durable falla:
+
+```text
+NO mutación durable confirmada
+→ no consumir item
+→ no conceder ownership
+→ recuperar UI desde snapshot autoritativo
+```
+
+---
+
+# 60. ROADMAP CANÓNICO ACTUAL
 
 ```text
 F00-F14 Foundation               ✅
@@ -2192,145 +2935,313 @@ F21-A2 GS Ownership Bootstrap   ✅
 F21-A3 Per-character Audit      ✅
 F21-A Durable Skill Ownership   ✅
 
-F21-B Durable Skill Learning    ⏳ SIGUIENTE
+F21-B1 Learning contract        ✅
+F21-B2 Atomic persistence       ✅
+F21-B3 GS learning coordinator  ✅
+F21-B4 Trainer/protocol/UI      ✅
+F21-B5 Integrated audit         ✅
+F21-B Durable Skill Learning    ✅
 
-Skill Scroll content            ⏳ dentro/evolución F21-B
-Trainer learning flow           ⏳ dentro/evolución F21-B
-Economy / VHAL currency         ⏳ futuro
-PvP / PK / Sin                  ⏳ futuro
-World/content expansion         ⏳ futuro
-Merchant                        ⏳ futuro
-Stats completos                 ⏳ futuro
-WorldDrop durability            ⏳ futuro si se necesita
-
-PERF-1                          ⏳ después de base estable
+F22                            ⏳ PLANIFICAR
 ```
 
-No abrir simultáneamente varios bloques grandes post-F21-A.
+No abrir simultáneamente varios bloques grandes.
 
 ---
 
-# 36. CHECKPOINTS IMPORTANTES
+# 61. POSIBLES CANDIDATOS PARA F22 — NO ELEGIDOS TODAVÍA
 
-## F19 docs / vertical slice
+Antes de codificar F22, revisar repositorios y elegir UNO.
+
+Candidatos razonables:
+
+```text
+Character Stats Foundation
+Consumable Use / Health Potion
+Economy / Currency foundation
+Merchant
+PvP / PK / Sin foundation
+World/content expansion
+Map/spawn content architecture
+```
+
+No tratar esta lista como orden obligatorio.
+
+La elección debe basarse en:
+
+```text
+qué dependencia desbloquea más sistemas
+qué sirve al vertical slice siguiente
+qué reduce deuda estructural
+qué puede probarse como sistema real
+```
+
+---
+
+# 62. DECISIONES FUTURAS QUE SIGUEN VIGENTES
+
+## F15-C
+
+Diferido:
+
+```text
+stack merge
+stack split
+partial transfer
+authoritative sort
+durability
+general consumables
+```
+
+## Fire Ball / Poison
+
+```text
+Fire Ball effect
+Poison effect
+```
+
+siguen diferidos.
+
+No implementarlos automáticamente sólo porque el learning ya existe.
+
+## WorldDrop durability
+
+Runtime-only mientras vive GS.
+
+Durabilidad tras restart:
+
+```text
+futuro si se necesita
+```
+
+## Auto-chase
+
+Diferido.
+
+## Currency name
+
+No usar `Zen` como nombre final.
+
+---
+
+# 63. CHECKPOINTS IMPORTANTES — PRE F21-B
 
 ```text
 557bee80258d09cfbc9084e42213d14caefd9b85
 docs: close F19 vertical slice and record future systems
-```
 
-## F20 Backend
-
-```text
 55d69f7b63e853c2aa66b49570bd490d358aa9ca
 feat: add durable character runtime persistence
-```
 
-## F20 Game Server restore
-
-```text
 f329f4fe854a416fd684322567951ee023f14606
 feat: restore durable character runtime
-```
 
-## F20 Game Server disconnect
-
-```text
 fe41377ba59c38d4c19e40388bb937799163a450
 feat: persist character runtime on disconnect
-```
 
-## F20 Game Server autosave
-
-```text
 2623eb60985b0af6070d137bda086c9c53dae1c4
 feat: add periodic character runtime autosave
-```
 
-## PROJECT MEMORY 2 inicial
-
-```text
-cc9d528add6976cb53d6108a67ac9ff313d68298
-Project memory 2
-```
-
-## F21-A Backend ownership
-
-```text
 29c2426077788225779674652ba6712dcc13231a
 feat: add durable character skill ownership
-```
 
-## F21-A Game Server bootstrap
-
-```text
 598d993eeff80aaf5fd84ca7413a04772ee4faab
 feat: bootstrap skills from durable ownership
-```
 
-F21-A3 fue auditoría sin código adicional.
+09b84327f9028b6c8a4cbb213c6aa14ec3792a22
+docs: close F21 durable skill ownership
+```
 
 ---
 
-# 37. PRUEBAS CLAVE ACTUALES
-
-## Backend F21-A
+# 64. CHECKPOINTS IMPORTANTES — F21-B BACKEND
 
 ```text
-InternalCharacterSkillTest
-6 passed / 23 assertions
-
-InternalCharacterRuntimeStateTest
-5 passed / 63 assertions
-
-InternalCharacterProgressionTest
-5 passed / 23 assertions
+64be9a85e90ec6a07f1cb1b47d0c21c670f7dc18
+feat: add atomic durable skill learning
 ```
-
-## Ownership vacío
-
-```text
-DB []
-→ GS Skills []
-→ Client Learned 0
-→ Hotbar 0
-```
-
-## Ownership Atilio
-
-```text
-DB Character 1 → heal
-→ GS ["heal"]
-→ Client Learned 1
-→ Heal cast Accepted true
-→ MP 142 → 102
-→ Runtime autosave revision 6 → 7
-```
-
-## Ownership Lyra
-
-```text
-DB Character 2 → poison
-→ GS ["poison"]
-→ Client Learned 1
-→ target mob validado
-→ skill_not_implemented
-```
-
-Correcto porque Poison todavía no implementa efecto.
-
-## Isolation audit
-
-```text
-Atilio → heal
-Lyra   → poison
-```
-
-Cambiar entre Characters no mezcló SkillBook/Hotbar/ownership.
 
 ---
 
-# 38. ESTADO FUNCIONAL CANÓNICO ACTUAL
+# 65. CHECKPOINTS IMPORTANTES — F21-B GAME SERVER
+
+```text
+25cd9f68bf68212cd6599998ac9424de96967a04
+feat: add skill learning contract
+
+2a60147bd2cacccc98c884918f48a97e7f977868
+feat: add skill learning backend repository
+
+9535f9e33081728622a0eb668e30a54a364b56e1
+feat: add authoritative skill learning validation
+
+df7bcb3a757365a9e2f35cda9bb5b377bd8a3e82
+feat: apply durable skill learning to runtime
+
+a953194e26ba8b1fd746314defa2b2b201b017ab
+feat: add skill trainer npc
+
+2efc2ceaab8a8150541fe727f1e461187d0ba190
+feat: add skill learning network protocol
+
+9b389b7fe7f5e83e892b09533e89dd982279a2d3
+feat: build authoritative skill trainer offers
+
+2734b652f10ed30a005b6fd4e329867b07e04405
+feat: send authoritative skill trainer offers
+
+ba41cee395573fbfc3a8cbc43ecff1ba357dad88
+feat: refresh skill trainer offers after learning
+
+968c1a19ea01b04d61b721ee59929fd55c036339
+feat: recover skill trainer after learning rejection
+```
+
+---
+
+# 66. CHECKPOINTS IMPORTANTES — F21-B CLIENT
+
+```text
+e2808b32156887cbb66f13713b68b3204a42655c
+feat: add client skill learning protocol
+
+a274d1a62f59aa7e27c22d1f52491389b9b34c4d
+feat: add skill trainer to client world
+
+e414a24b7137e3ff4cfe2fce8be6990fd4b6f853
+feat: add skill scroll client definitions
+
+327c3370aad874b236490adb2fbd9e8c727a79af
+feat: connect skill scroll learning flow
+TEMPORAL / RETIRADO
+
+984d0da6345404cf3adc84e11cc5b525f44b1b48
+feat: receive authoritative skill trainer offers
+
+fd67e19e89471e2946da0e8b382ec339c183504d
+feat: add authoritative skill trainer window
+
+bfb39eea4751ff6015d0935507704614c9745b3e
+feat: route skill learning through trainer
+
+5399334957b852af582cdc047cd64d67d1cf7c2d
+feat: apply learned skills to live runtime
+
+8eb5cf9da711655994cfbcaaa75f25218629a542
+feat: preserve skill trainer position on refresh
+```
+
+---
+
+# 67. PRUEBAS CLAVE F21-B
+
+## Atomic Backend
+
+Probado:
+
+```text
+same source replay
+same skill different scroll
+same scroll different skill
+failure rollback
+```
+
+## Trainer Offers
+
+Probado:
+
+```text
+class filtering
+level
+ownership
+Inventory scroll
+can_learn
+reason
+scroll_uid
+```
+
+## Real Learn Success
+
+Atilio:
+
+```text
+warrior
+level 124
+Heal no aprendida
+Heal Scroll durable
+↓
+Trainer Offer can_learn=true
+↓
+APRENDER
+↓
+Accepted=true
+↓
+Scroll consumido
+↓
+Heal durable
+```
+
+DB:
+
+```text
+character_skills.heal
+learned_from_item_uid = UID del Scroll consumido
+learned_from_item_id = skill_scroll_heal
+```
+
+Scroll:
+
+```text
+ya no existe
+```
+
+Reconnect:
+
+```text
+Heal sigue aprendida
+```
+
+## Live Client
+
+Sin reconnect:
+
+```text
+SkillBook + Heal
+Hotbar + Heal
+Inventory - Scroll
+Trainer → Aprendida
+```
+
+## Backend Failure Recovery
+
+```text
+Backend app stop
+→ request rejected
+→ no durable mutation
+→ UI recuperada
+
+Backend app start
+→ retry
+→ success
+```
+
+## Per Character
+
+```text
+Atilio
+→ warrior
+→ heal
+
+Lyra
+→ archer
+→ heal + poison
+```
+
+No contaminación.
+
+---
+
+# 68. ESTADO FUNCIONAL CANÓNICO ACTUAL
 
 Vertical slice actual:
 
@@ -2342,9 +3253,12 @@ Login
 → Durable Character Runtime Restore
 → Game Server World
 → Movement
-→ Warehouse
+→ NPC Services
+├── Warehouse
+└── Skill Trainer
 → Inventory / Vault / Equipment
 → Skill Runtime
+→ Durable Skill Learning
 → Mob
 → Combat
 → Death
@@ -2378,125 +3292,276 @@ Rotation
 HP
 MP
 Skill Ownership
+Skill learning provenance
 ```
 
-Runtime pero no durable tras GS restart:
+---
+
+# 69. QUÉ SIGUE NO IMPLEMENTADO
 
 ```text
-WorldDrops
-mob runtime
-cooldowns activos
-combat temporal
-NPC service runtime
-```
-
-No implementado todavía:
-
-```text
-real Skill Learning
 Fire Ball effect
 Poison effect
-consumable use
+general consumable use
+Character Stats completos
 Economy
-PvP/PK
+Currency final
 Merchant real
-full Stats
-multi-map content real
+PvP
+PK / Sin
+auto-defense
+Priest confession
+trade
+WorldDrop persistence across GS restart
+auto-chase
+más mapas / content architecture
+production-grade NPC/mob content
 ```
 
 ---
 
-# 39. DECISIONES QUE NO DEBEN REGRESIONAR
+# 70. REGLAS DE CONTINUIDAD AL RETOMAR
 
-No volver a:
+Antes de programar:
 
 ```text
-auto-conceder todas las skills
+1. leer PROJECT_MEMORY.md
+2. leer PROJECT_MEMORY_2.md
+3. git status en los 3 repos
+4. revisar branch dev remoto
+5. identificar último checkpoint real
+6. elegir una sola etapa
 ```
 
-No mover ownership al cliente.
+No asumir que una propuesta futura ya fue aprobada.
 
-No almacenar ownership como columnas booleanas por skill.
-
-No duplicar ServerSkillCatalog en Laravel.
-
-No meter Backend en cada cast/attack.
-
-No persistir movement por frame.
-
-No guardar max_hp/max_mp como verdad durable actual.
-
-No mezclar Character Progression con Runtime State.
-
-No mezclar Skill Ownership con Skill Runtime.
-
-No convertir `PlayerWorldSession` en monolito.
-
-No usar `Zen` como moneda final.
-
-No reactivar resize de ventanas.
-
-No hacer auto-chase dentro de otro scope accidentalmente.
-
-No convertir WorldDrops a DB sin necesidad concreta.
+No avanzar basado sólo en memoria si GitHub dice otra cosa.
 
 ---
 
-# 40. SIGUIENTE PASO EXACTO
+# 71. NO HACER POR INERCIA
 
-F21-A quedó funcionalmente cerrado.
-
-Antes de abrir F21-B:
+No abrir automáticamente:
 
 ```text
-reemplazar PROJECT_MEMORY_2.md completo
-↓
-git status en cliente vhal
-↓
-confirmar que sólo cambió PROJECT_MEMORY_2.md
-↓
-commit documental
-↓
-push dev
-↓
-esperar "pusheado"
-↓
-verificar remoto
-↓
-recién entonces abrir F21-B
+Fire Ball damage
+Poison DoT
+PvP
+Economy
+Merchant
+Stats
+consumables
+new maps
 ```
 
-Commit documental sugerido:
+sólo porque F21-B terminó.
 
-```text
-docs: close F21 durable skill ownership
-```
-
-No abrir código de F21-B antes del checkpoint documental pusheado.
+Primero elegir F22 conscientemente.
 
 ---
 
-# 41. ESTADO FINAL DEL VOLUMEN 2 EN ESTE CHECKPOINT
+# 72. REGLA PARA NUEVOS ITEMS / SYSTEMS
 
-Últimas etapas cerradas:
-
-```text
-F19 — Vertical Slice                    ✅
-F20 — Durable Character Runtime         ✅
-F21-A — Durable Skill Ownership         ✅
-├── F21-A1 Backend ownership            ✅
-├── F21-A2 Game Server bootstrap        ✅
-└── F21-A3 Reconnect/per-character      ✅
-```
-
-Siguiente etapa:
+Si un item produce una acción real:
 
 ```text
-F21-B — Durable Skill Learning          ⏳
+Client
+→ use intent
+
+GS
+→ validate context + semantic rule
+
+Backend
+→ durable mutation si corresponde
+
+GS
+→ authoritative runtime mutation/result
+
+Client
+→ render
 ```
 
-Regla operativa:
+No permitir:
 
-> Primero cerrar y pushear este documento canónico. Después revisar repositorios reales y diseñar F21-B en etapas pequeñas antes de modificar código.
+```text
+Inventory UI
+→ cambia durable state por sí sola
+```
 
 ---
+
+# 73. REGLA PARA NUEVOS NPC SERVICES
+
+Patrón reutilizable de Warehouse / Skill Trainer:
+
+```text
+NPC click
+→ client interaction intent
+→ GS range/service validation
+→ session service start
+→ service-specific data/result
+→ UI open
+→ GS maintains validity
+→ X or out_of_range
+→ service end
+→ UI close
+```
+
+No crear NPC UI que se abra sin autorización GS para servicios gameplay reales.
+
+---
+
+# 74. REGLA PARA FUTUROS REQUIREMENTS
+
+Requirements de gameplay deben vivir en catálogos/definitions autoritativos.
+
+Ejemplos:
+
+```text
+class
+level
+stats
+currency fee
+quest state
+faction
+trainer tags
+```
+
+Cliente puede mostrar requirements.
+
+No debe decidir su cumplimiento final.
+
+---
+
+# 75. CIERRE CANÓNICO F21-B
+
+Estado final:
+
+```text
+F21-B1 Contract/Catalog                         ✅
+F21-B2 Atomic Durable Persistence               ✅
+F21-B3 GS Learning Coordinator                  ✅
+F21-B4 Trainer NPC + Protocol + UI              ✅
+F21-B5 Integrated Audit                         ✅
+
+F21-B DURABLE SKILL LEARNING                    ✅ COMPLETE
+```
+
+Resultado:
+
+> VHAL posee ahora un pipeline real de aprendizaje de Skills durable, autoritativo, transaccional, recuperable y aislado por Character.
+
+El próximo trabajo NO debe modificar esta arquitectura sin una razón explícita y probada.
+
+---
+
+# 76. GATE DE PLANIFICACIÓN F22
+
+**Estado:** ⏳ PENDIENTE.
+
+Antes de elegir F22:
+
+```text
+revisar estado del proyecto completo
+revisar dependencias
+revisar qué vertical slice siguiente se quiere lograr
+comparar candidatos
+elegir uno
+dividir en etapas pequeñas
+```
+
+No hay un F22 implementado ni aprobado todavía.
+
+Candidatos actuales:
+
+```text
+Stats Foundation
+Consumables
+Economy
+Merchant
+PvP/PK/Sin
+World Content / Maps
+```
+
+La selección debe quedar registrada aquí cuando se decida.
+
+---
+
+# 77. ÚLTIMA VERIFICACIÓN REGISTRADA
+
+Fecha:
+
+```text
+28/08/2026
+```
+
+Atilio:
+
+```text
+Skills ["heal"]
+Trainer Heal → Aprendida
+Warehouse regression OK
+repos clean
+```
+
+Lyra:
+
+```text
+Skills ["heal", "poison"]
+Trainer Heal + Poison
+Fire Ball ausente
+out_of_range cierra Trainer automáticamente
+```
+
+Game Server:
+
+```text
+0 warnings
+0 errors en flujo normal
+```
+
+Backend-down audit:
+
+```text
+controlled rejection
+no parser red error after fix
+recovery without reconnect
+```
+
+Los repos quedaron limpios antes de este update documental.
+
+---
+
+# 78. RESUMEN EJECUTIVO
+
+```text
+F19
+→ vertical slice jugable
+
+F20
+→ Character runtime durable
+
+F21-A
+→ Skill ownership durable
+
+F21-B
+→ Skill learning durable real
+```
+
+La arquitectura actual ya soporta:
+
+```text
+Character identity
+durable world position/vitals
+durable inventory/equipment/vault
+durable progression
+authoritative mobs/combat
+drops/pickup
+skill ownership
+trainer-based skill learning
+live SkillBook/Hotbar updates
+failure recovery
+reconnect reconstruction
+```
+
+La siguiente prioridad debe elegirse en F22 sin mezclar múltiples sistemas grandes.
