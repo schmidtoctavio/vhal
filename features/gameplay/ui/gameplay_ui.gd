@@ -1110,6 +1110,11 @@ func _close_inventory() -> void:
 func open_authorized_skill_trainer(
 	snapshot: Dictionary
 ) -> bool:
+	var was_visible := (
+		skill_trainer_window.visible
+	)
+
+
 	if not skill_trainer_window.apply_authoritative_snapshot(
 		snapshot
 	):
@@ -1118,12 +1123,23 @@ func open_authorized_skill_trainer(
 
 	skill_trainer_window.visible = true
 
-	skill_trainer_window.center_in_viewport()
+
+	if not was_visible:
+		skill_trainer_window.center_in_viewport()
 
 
-	print(
-		"GameplayUI | Skill Trainer abierto con ofertas autoritativas."
-	)
+	if was_visible:
+		print(
+			"GameplayUI | "
+			+
+			"Skill Trainer actualizado con ofertas autoritativas."
+		)
+	else:
+		print(
+			"GameplayUI | "
+			+
+			"Skill Trainer abierto con ofertas autoritativas."
+		)
 
 
 	return true
