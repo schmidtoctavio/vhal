@@ -5,8 +5,8 @@
 **Motor cliente / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama habitual:** `dev`  
-**Estado general:** F19 ✅, F20 ✅, F21-A ✅, F21-B ✅, F22-A ✅, F22-B ✅.  
-**Siguiente checkpoint:** F22-C — Class Stats Catalog + Game Server Stat Runtime.
+**Estado general:** F19 ✅, F20 ✅, F21-A ✅, F21-B ✅, F22-A ✅, F22-B ✅, F22-C ✅.  
+**Siguiente checkpoint:** F22-D — Stat Allocation Protocol + UI.
 
 ---
 
@@ -2571,4 +2571,1301 @@ commit
 push
 esperar "pusheado"
 verificar remoto
+```
+
+---
+
+# 66. F22-C — CIERRE COMPLETO
+
+Estado final:
+
+```text
+F22-C — Class Stats Catalog + Game Server Runtime
+✅ CLOSED
+```
+
+Breakdown real:
+
+```text
+F22-C1
+Server Class Stats Catalog
+✅
+
+F22-C2
+Character Primary Stat Runtime
++ Ticket Bootstrap
+✅
+
+F22-C3
+Reconnect + Per-character Isolation Audit
+✅
+```
+
+No hubo cambios Backend ni Client durante F22-C.
+
+---
+
+# 67. F22-C1 — SERVER CLASS STATS CATALOG
+
+Commit Game Server:
+
+```text
+b4544af42da7e4065ab5a96f250c98be867f08dc
+feat: add authoritative class stats catalog
+```
+
+Se creó:
+
+```text
+core/stats/
+├── server_class_stats_definition.gd
+├── server_class_stats_definition.gd.uid
+├── server_class_stats_catalog.gd
+└── server_class_stats_catalog.gd.uid
+```
+
+`ServerClassStatsDefinition` representa exclusivamente:
+
+```text
+class_id
+starting_strength
+starting_agility
+starting_vitality
+starting_energy
+stat_points_per_level
+```
+
+No contiene todavía:
+
+```text
+HP formulas
+MP formulas
+damage
+armor
+crit
+resists
+attack speed
+movement speed
+```
+
+---
+
+# 68. CLASS BASE STATS AUTORITATIVOS
+
+Game Server authority:
+
+```text
+ServerClassStatsCatalog
+```
+
+Foundation actual:
+
+```text
+Warrior
+STR 25
+AGI 15
+VIT 25
+ENE 10
+Total 75
+5 points/level
+
+Mage
+STR 10
+AGI 15
+VIT 15
+ENE 35
+Total 75
+5 points/level
+
+Archer
+STR 15
+AGI 30
+VIT 15
+ENE 15
+Total 75
+5 points/level
+```
+
+IDs canónicos:
+
+```text
+warrior
+mage
+archer
+```
+
+Unknown class:
+
+```text
+get_definition(...)
+→ null
+```
+
+El Game Server falla cerrado cuando una sesión intenta bootstrappear una Class no definida.
+
+---
+
+# 69. CLASS STATS CONTRACT VALIDATION
+
+`ServerClassStatsCatalog.validate_contract()` valida:
+
+```text
+class_id no vacío
+no duplicados
+definition existente
+definition válida
+definition.class_id consistente
+starting stat total = 75
+stat_points_per_level = 5
+```
+
+Foundation constants:
+
+```text
+FOUNDATION_STARTING_STAT_TOTAL = 75
+FOUNDATION_STAT_POINTS_PER_LEVEL = 5
+```
+
+Se integró la validación al startup de:
+
+```text
+app/main.gd
+```
+
+Startup correcto observado:
+
+```text
+ServerMain | Mob Drop Catalog Contract validado.
+ServerMain | Class Stats Catalog Contract validado.
+ServerMain | Skill Catalog Contract validado.
+ServerMain | Skill Learning Catalog Contract validado.
+ServerMain | Equipment Domain Contract validado.
+ServerMain | Equipment Snapshot Contract validado.
+ServerMain | Equipment Transfer Contract validado.
+```
+
+Game Server continuó hasta:
+
+```text
+VHAL Game Server | Listening on UDP 7000 | Max clients: 100
+ServerMain | VHAL Game Server iniciado.
+```
+
+Audit:
+
+```text
+0 parser errors
+0 warnings nuevos
+0 errors
+```
+
+---
+
+# 70. F22-C2 — PRIMARY STAT RUNTIME + TICKET BOOTSTRAP
+
+Commit Game Server:
+
+```text
+7ab3f081f51506e1d68e8b991be516bdbd378e6d
+feat: bootstrap authoritative character primary stats
+```
+
+Se creó:
+
+```text
+core/stats/
+├── server_primary_stat_budget_rules.gd
+├── server_primary_stat_budget_rules.gd.uid
+├── server_character_primary_stats_state.gd
+├── server_character_primary_stats_state.gd.uid
+├── server_character_primary_stats_bootstrap.gd
+└── server_character_primary_stats_bootstrap.gd.uid
+```
+
+Se modificó:
+
+```text
+core/world/player_world_session.gd
+core/world/world_session_registry.gd
+```
+
+---
+
+# 71. SERVER PRIMARY STAT BUDGET RULES
+
+`ServerPrimaryStatBudgetRules` contiene foundation Game Server para validar el snapshot durable:
+
+```text
+RESET_STAT_POINTS = 350
+```
+
+Funciones:
+
+```text
+get_level_points(level, stat_points_per_level)
+get_reset_points(reset_count)
+```
+
+No reemplaza todavía `ServerCharacterProgressionRules`.
+
+F22-C deliberadamente NO cambió:
+
+```text
+MAX_LEVEL
+EXP curve
+```
+
+Eso sigue reservado para F22-E.
+
+---
+
+# 72. SERVER CHARACTER PRIMARY STATS STATE
+
+Runtime autoritativo:
+
+```text
+ServerCharacterPrimaryStatsState
+```
+
+Capas actuales:
+
+```text
+Base
+Allocated
+Permanent
+```
+
+En F22-C:
+
+```text
+Permanent
+=
+Base
++
+Allocated
+```
+
+Todavía NO existe con contenido real:
+
+```text
+Variable
+Effective
+```
+
+porque faltan Equipment/Buffs/Temporary Effects.
+
+---
+
+# 73. PRIMARY STAT RUNTIME FIELDS
+
+Identity/progression:
+
+```text
+class_id
+revision
+level
+reset_count
+```
+
+Base:
+
+```text
+base_strength
+base_agility
+base_vitality
+base_energy
+```
+
+Allocated:
+
+```text
+allocated_strength
+allocated_agility
+allocated_vitality
+allocated_energy
+```
+
+Permanent:
+
+```text
+permanent_strength
+permanent_agility
+permanent_vitality
+permanent_energy
+```
+
+Budget:
+
+```text
+stat_points_per_level
+stat_points_per_reset
+level_points
+reset_points
+bonus_stat_points
+total_points
+spent_points
+unspent_points
+```
+
+---
+
+# 74. PRIMARY STAT STATE VALIDATION
+
+`ServerCharacterPrimaryStatsState.is_valid()` valida:
+
+```text
+class_id no vacío
+revision >= 0
+level >= 1
+reset_count >= 0
+
+Base >= 0
+Allocated >= 0
+
+Permanent = Base + Allocated
+
+stat_points_per_level > 0
+stat_points_per_reset > 0
+
+level_points =
+(level - 1) * stat_points_per_level
+
+reset_points =
+reset_count * stat_points_per_reset
+
+spent =
+sum allocated
+
+total =
+level_points + reset_points + bonus
+
+spent <= total
+
+unspent =
+total - spent
+```
+
+Revision 0 además exige:
+
+```text
+spent_points = 0
+bonus_stat_points = 0
+```
+
+por semántica de fila durable ausente.
+
+---
+
+# 75. TICKET BOOTSTRAP DE STATS
+
+`ServerCharacterPrimaryStatsBootstrap.create_from_character_data()` recibe el `character_data` ya transportado por Game Session Ticket.
+
+Laravel entrega:
+
+```text
+character.class_id
+character.level
+character.experience
+character.reset_count
+character.stats
+character.skills
+character.runtime
+```
+
+No se agregó un GET Backend adicional.
+
+Flujo:
+
+```text
+Backend Ticket
+↓
+BackendTicketValidator
+↓
+AuthenticationCoordinator
+↓
+WorldSessionRegistry
+↓
+PlayerWorldSession
+↓
+ServerCharacterPrimaryStatsBootstrap
+```
+
+---
+
+# 76. SERVER RECALCULA EL BUDGET
+
+El Game Server NO confía ciegamente en:
+
+```text
+level_points
+reset_points
+spent_points
+total_points
+unspent_points
+```
+
+recibidos desde Laravel.
+
+Recalcula:
+
+```text
+expected_level_points
+expected_reset_points
+expected_spent_points
+expected_total_points
+expected_unspent_points
+```
+
+y compara el snapshot Backend contra sus reglas.
+
+Inconsistencia:
+
+```text
+→ bootstrap null
+→ PlayerWorldSession invalid
+→ session creation rejected
+```
+
+---
+
+# 77. FAIL-CLOSED CONDITIONS F22-C
+
+La sesión no puede arrancar si aparece, por ejemplo:
+
+```text
+unknown class_id
+stats missing
+stats not dictionary
+revision negativa
+level inválido
+reset_count negativo
+stats.progression.level != character.level
+stats.progression.reset_count != character.reset_count
+allocated negativo
+bonus negativo
+points_per_level mismatch
+points_per_reset mismatch
+level_points mismatch
+reset_points mismatch
+spent mismatch
+total mismatch
+unspent mismatch
+overspend
+revision 0 con points gastados
+```
+
+No se crea una sesión parcialmente válida.
+
+---
+
+# 78. PLAYER WORLD SESSION — STATS
+
+`PlayerWorldSession` ahora posee:
+
+```text
+reset_count
+primary_stats
+```
+
+Tipo:
+
+```text
+ServerCharacterPrimaryStatsState
+```
+
+`is_valid()` exige:
+
+```text
+primary_stats != null
+primary_stats.is_valid()
+primary_stats.class_id == class_id
+primary_stats.level == level
+primary_stats.reset_count == reset_count
+```
+
+`class_id` se normaliza:
+
+```text
+trim
+lowercase
+```
+
+---
+
+# 79. CLIENT PROTOCOL DELIBERADAMENTE NO CAMBIÓ
+
+Durante F22-C NO se agregó Primary Stats a:
+
+```text
+PlayerWorldSession.to_snapshot()
+```
+
+Por lo tanto el Client sigue recibiendo el mismo contrato previo.
+
+Esto fue intencional:
+
+```text
+F22-C
+=
+Backend durable data
+→ Game Server authoritative runtime
+```
+
+No:
+
+```text
+Game Server
+→ Client Stats UI
+```
+
+Ese contrato pertenece a F22-D.
+
+---
+
+# 80. F22-C2 — AUDIT REAL ATILIO
+
+Character:
+
+```text
+Atilio
+ID 1
+Warrior
+Level 124
+EXP 50
+Reset 0
+```
+
+Durable allocation Backend:
+
+```text
+revision 1
+STR 10
+AGI 0
+VIT 0
+ENE 0
+```
+
+Game Server reconstruyó:
+
+```text
+Base Warrior:
+STR 25
+AGI 15
+VIT 25
+ENE 10
+
+Allocated:
+STR 10
+AGI 0
+VIT 0
+ENE 0
+
+Permanent:
+STR 35
+AGI 15
+VIT 25
+ENE 10
+```
+
+Log real:
+
+```text
+Stats revision: 1
+Stats STR B/A/P: 25/10/35
+AGI B/A/P: 15/0/15
+VIT B/A/P: 25/0/25
+ENE B/A/P: 10/0/10
+Stat Points: 10/615
+Unspent: 605
+```
+
+---
+
+# 81. F22-C2 — REGRESSION FUNCIONAL
+
+Con Primary Stats runtime activo siguieron funcionando:
+
+```text
+ticket consume
+login
+world snapshot
+runtime restore
+world presence
+skills
+inventory loading
+equipment loading
+HP/MP restore
+mob roster
+NPC roster
+```
+
+Ejemplo Atilio:
+
+```text
+HP 100000/100000
+MP 62/350
+Skills ["heal"]
+Inventory 7
+Equipment 1
+Level 124
+EXP 50/100
+```
+
+No se conectaron Stats con HP/MP ni damage.
+
+---
+
+# 82. F22-C3 — RECONNECT + PER-CHARACTER ISOLATION AUDIT
+
+F22-C3 no requirió cambios de código.
+
+Audit real:
+
+```text
+Atilio reconnect
+→ Lyra
+→ Atilio final
+```
+
+Objetivo:
+
+```text
+reconstrucción desde durable data
++
+aislamiento por Character
++
+ausencia de leakage entre sesiones
+```
+
+---
+
+# 83. F22-C3 — ATILIO RECONNECT
+
+Reconnect real de Atilio:
+
+```text
+Character ID 1
+Warrior
+Level 124
+Reset 0
+
+Stats revision 1
+
+STR B/A/P 25/10/35
+AGI B/A/P 15/0/15
+VIT B/A/P 25/0/25
+ENE B/A/P 10/0/10
+
+Stat Points 10/615
+Unspent 605
+```
+
+Runtime revision observado:
+
+```text
+18
+```
+
+El reconnect NO alteró:
+
+```text
+Stat revision
+allocation
+permanent stats
+budget
+```
+
+---
+
+# 84. F22-C3 — LYRA ISOLATION
+
+Lyra:
+
+```text
+Character ID 2
+Archer
+Level 85
+EXP 0
+Reset 0
+```
+
+Skills observadas:
+
+```text
+heal
+poison
+```
+
+Durable Stats:
+
+```text
+revision 0
+sin allocation durable
+```
+
+Game Server reconstruyó:
+
+```text
+Archer Base:
+STR 15
+AGI 30
+VIT 15
+ENE 15
+
+Allocated:
+STR 0
+AGI 0
+VIT 0
+ENE 0
+
+Permanent:
+STR 15
+AGI 30
+VIT 15
+ENE 15
+
+Stat Points:
+0/420
+
+Unspent:
+420
+```
+
+Log real:
+
+```text
+Stats revision: 0
+Stats STR B/A/P: 15/0/15
+AGI B/A/P: 30/0/30
+VIT B/A/P: 15/0/15
+ENE B/A/P: 15/0/15
+Stat Points: 0/420
+Unspent: 420
+```
+
+Atilio `allocated STR = 10` NO se filtró a Lyra.
+
+---
+
+# 85. F22-C3 — ATILIO FINAL
+
+Después de Lyra, Atilio volvió a reconstruirse como:
+
+```text
+revision 1
+
+STR 25/10/35
+AGI 15/0/15
+VIT 25/0/25
+ENE 10/0/10
+
+Stat Points 10/615
+Unspent 605
+```
+
+Secuencia confirmada:
+
+```text
+Atilio
+→ correct state
+
+Lyra
+→ independent correct state
+
+Atilio
+→ original correct state again
+```
+
+---
+
+# 86. MULTI-SESSION OBSERVATION
+
+Durante el audit final existieron Atilio y Lyra simultáneamente como sesiones/presencias distintas.
+
+El Client de Atilio recibió:
+
+```text
+Remotos: 1
+```
+
+y representó a Lyra como remoto.
+
+Esto refuerza que el Primary Stat Runtime vive por:
+
+```text
+PlayerWorldSession
+```
+
+y no como singleton global compartido.
+
+No se enviaron todavía Primary Stats de players remotos al Client.
+
+---
+
+# 87. F22-C — GIT / ERRORS FINAL
+
+Al cierre:
+
+```text
+git status
+→ nothing to commit, working tree clean
+```
+
+C3 no generó cambios.
+
+Audits C1/C2/C3:
+
+```text
+0 parser errors
+0 warnings nuevos
+0 errors
+```
+
+No fue necesario hotfix.
+
+---
+
+# 88. F22-C — RESULTADO ARQUITECTÓNICO
+
+Ahora existen tres verdades correctamente separadas:
+
+```text
+Backend
+→ Durable Allocated Stats
+
+Game Server Class Catalog
+→ Base Stats
+
+Game Server Character Runtime
+→ Base + Allocated = Permanent
+```
+
+Ejemplo Atilio:
+
+```text
+Backend allocated STR = 10
+Warrior base STR = 25
+GS Permanent STR = 35
+```
+
+No se persiste `35` como verdad durable.
+
+Se deriva.
+
+---
+
+# 89. QUÉ F22-C NO HIZO
+
+Todavía NO:
+
+```text
+Client Stats snapshot
+Stat Window
++ buttons
+bulk allocation
+GS allocation request protocol
+Backend stat repository in GS
+live Primary Stat runtime mutation
+derived Vitals
+Physical Power
+Magic Power
+Healing Power
+Armor
+Resistances
+Crit
+Attack Speed
+Movement Speed modifiers
+Equipment stat modifiers
+Skill scaling
+Skill stat requirements
+Reset NPC
+Respec
+```
+
+---
+
+# 90. F22 ROADMAP — ESTADO ACTUAL
+
+```text
+F22-A
+Stats / Progression / Reset Contract
+✅ CLOSED
+
+F22-B
+Durable Primary Stat Backend
+✅ CLOSED
+
+F22-C
+Class Stats Catalog + Game Server Runtime
+✅ CLOSED
+
+F22-D
+Stat Allocation Protocol + UI
+⏳ NEXT
+
+F22-E
+Progressive EXP + Max Level 400
+⏳ FUTURE
+
+F22-F
+Derived Vitals / Physical / Magic / Heal
+⏳ FUTURE
+
+F22-G
+Armor / Resistances / Crit
+⏳ FUTURE
+
+F22-H
+Attack Speed + Movement Speed
+⏳ FUTURE
+
+F22-I
+Equipment Stat Modifiers
+⏳ FUTURE
+
+F22-J
+Skill Scaling + Stat Requirements + reset-safe usability
+⏳ FUTURE
+
+F22-K
+Integrated Balance Audit
+⏳ FUTURE
+```
+
+---
+
+# 91. F22-D — SIGUIENTE CHECKPOINT
+
+Siguiente fase:
+
+```text
+F22-D — Stat Allocation Protocol + UI
+```
+
+Objetivo general:
+
+```text
+Client Stat Window
+↓
+player allocation intent
+↓
+Game Server validation
+↓
+Backend durable PATCH
+↓
+authoritative updated Primary Stats runtime
+↓
+Client authoritative Stats update
+```
+
+Backend mutation ya existe desde F22-B.
+
+No reimplementar allocation en Laravel.
+
+---
+
+# 92. F22-D — ARQUITECTURA ESPERADA
+
+Flujo conceptual:
+
+```text
+Client
+→ allocation intent
+
+Game Server
+→ request_id validation
+→ Character/session validation
+→ desired final allocation
+→ Backend internal PATCH
+
+Backend
+→ optimistic revision
+→ budget validation
+→ durable commit
+
+Game Server
+→ authoritative response
+→ update/rebuild Primary Stats runtime
+
+Client
+→ authoritative Stats update
+→ UI refresh
+```
+
+Cliente NO escribe directo a Backend.
+
+Cliente NO decide budget final.
+
+---
+
+# 93. F22-D — PAYLOAD DURABLE YA EXISTENTE
+
+Backend PATCH:
+
+```text
+PATCH
+/api/internal/accounts/{accountId}/characters/{characterId}/stats
+```
+
+Semántica:
+
+```text
+expected_revision
++
+next final allocation
+```
+
+Ejemplo:
+
+```json
+{
+  "expected_revision": 1,
+  "next": {
+	"strength": 15,
+	"agility": 0,
+	"vitality": 0,
+	"energy": 0
+  }
+}
+```
+
+No usar delta durable tipo:
+
+```text
++5 STR
+```
+
+Game Server puede transformar una intención Client en final desired state antes de persistir.
+
+---
+
+# 94. F22-D — IDEMPOTENCIA A PRESERVAR
+
+Backend ya soporta:
+
+```text
+lost response
+→ exact retry
+→ idempotent true
+```
+
+Game Server debe preservar esa propiedad.
+
+No convertir una retransmisión Client en doble gasto.
+
+Roles distintos:
+
+```text
+request_id
+→ Client ↔ Game Server protocol ordering/idempotence
+
+revision
+→ Game Server ↔ Backend durable optimistic concurrency
+```
+
+No confundirlos.
+
+---
+
+# 95. F22-D — CLIENT SNAPSHOT
+
+Durante F22-C Stats NO entraron en `PlayerWorldSession.to_snapshot()`.
+
+F22-D deberá definir explícitamente el contrato Client.
+
+Preferencia:
+
+```text
+initial world snapshot
+→ incluye Primary Stats autoritativos
+```
+
+Live mutation:
+
+```text
+dedicated stat allocation result/update
+```
+
+No reenviar roster completo por cada allocation.
+
+---
+
+# 96. F22-D — UI PRINCIPLES
+
+UI prevista estilo MMORPG clásico:
+
+```text
+Strength
+Agility
+Vitality
+Energy
+
+Permanent/current display
+Available points
++ buttons
+```
+
+Debe soportar cómodamente muchos puntos libres.
+
+No diseñar todavía:
+
+```text
+Respec UI
+Reset UI
+giant derived character sheet
+```
+
+Primero allocation foundation.
+
+---
+
+# 97. F22-D — NO CONECTAR TODAVÍA A DAMAGE
+
+Asignar STR/AGI/VIT/ENE en F22-D debe:
+
+```text
+persistir
+actualizar GS runtime
+actualizar Client
+actualizar UI
+```
+
+pero todavía NO cambiar necesariamente:
+
+```text
+Basic Attack damage
+HP
+MP
+Heal
+Fire Ball
+Poison
+Armor
+Movement Speed
+```
+
+Eso llega en F22-F+.
+
+---
+
+# 98. CHECKPOINT DE CONTINUIDAD ACTUALIZADO
+
+Estado real:
+
+```text
+F22-A ✅
+F22-B ✅
+F22-C ✅
+F22-D NEXT
+```
+
+Repos:
+
+```text
+Backend
+→ durable allocation complete
+
+Game Server
+→ class catalog complete
+→ primary stat runtime complete
+
+Client
+→ todavía no conoce Primary Stats
+```
+
+Antes de F22-D:
+
+```text
+reemplazar este PROJECT_MEMORY_3.md completo
+git status
+commit
+push
+esperar "pusheado"
+verificar remoto
+```
+
+No iniciar F22-D antes del push documental.
+
+---
+
+# 99. BASELINES DESPUÉS DE F22-C
+
+Game Server:
+
+```text
+b4544af42da7e4065ab5a96f250c98be867f08dc
+feat: add authoritative class stats catalog
+
+7ab3f081f51506e1d68e8b991be516bdbd378e6d
+feat: bootstrap authoritative character primary stats
+```
+
+Backend F22-B:
+
+```text
+715d4c00d92c386a5eae7d946df67cb009fe41b7
+feat: add durable character stat allocation schema
+
+d27a435b55d41aec28b81a49a52f43a2fbbd5de6
+feat: add character stat budget snapshot
+
+9e84c8c76580c72a5f0bcd309e37b23b1c3d9d31
+feat: expose durable character stat snapshot
+
+a77506185a97539bb5322a38c630b0137d07317d
+feat: add durable character stat allocation persistence
+
+ce0b202561dfee2e412f6edaf4e8df7bd422842e
+feat: expose durable character stat allocation
+```
+
+Client/memory F22-B:
+
+```text
+b619429ab502f658a2f06e1be07e49b256585628
+docs: close F22 durable stat backend
+```
+
+Siguiente commit documental:
+
+```text
+docs: close F22 class stats runtime
+```
+
+---
+
+# 100. CONTINUATION RULE
+
+Al retomar:
+
+```text
+NO rediseñar F22-A.
+NO rehacer F22-B.
+NO rehacer F22-C.
+
+NO borrar Atilio STR10.
+NO crear allocation ficticia para Lyra.
+
+NO conectar Stats a combat todavía.
+NO derivar HP/MP todavía.
+NO introducir Reset todavía.
+```
+
+Continuar desde:
+
+```text
+F22-D — Stat Allocation Protocol + UI
+```
+
+con el ciclo:
+
+```text
+small stage
+→ manual implementation
+→ test
+→ clean warnings/errors
+→ git status
+→ commit
+→ push
+→ "pusheado"
+→ next stage
 ```
