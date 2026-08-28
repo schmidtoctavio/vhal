@@ -255,7 +255,8 @@ func center_in_viewport() -> void:
 # =========================================================
 # FORWARD DEL BOTÓN
 #
-# D3 conectará este signal hacia networking.
+# La ventana sólo forwardea la intención.
+# No decide si una Skill puede aprenderse.
 # =========================================================
 
 func _on_offer_learn_requested(

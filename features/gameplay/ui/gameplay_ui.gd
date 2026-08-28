@@ -48,6 +48,11 @@ signal inventory_item_activation_requested(
 
 signal authorized_skill_trainer_closed
 
+signal skill_trainer_learn_requested(
+	skill_id: String,
+	scroll_uid: String
+)
+
 # =========================================================
 # BARRAS
 # =========================================================
@@ -676,6 +681,13 @@ func _ready() -> void:
 			_on_skill_trainer_close_requested
 		)
 
+	if not skill_trainer_window.learn_requested.is_connected(
+		_on_skill_trainer_learn_requested
+	):
+		skill_trainer_window.learn_requested.connect(
+			_on_skill_trainer_learn_requested
+		)
+
 	# =====================================================
 	# PLAYER STATE
 	# =====================================================
@@ -1090,6 +1102,7 @@ func _toggle_inventory() -> void:
 func _close_inventory() -> void:
 	inventory_window.visible = false
 
+
 # =========================================================
 # SKILL TRAINER
 # =========================================================
@@ -1135,6 +1148,15 @@ func close_authorized_skill_trainer() -> void:
 
 	print(
 		"GameplayUI | Skill Trainer cerrado por Game Server."
+	)
+
+func _on_skill_trainer_learn_requested(
+	skill_id: String,
+	scroll_uid: String
+) -> void:
+	skill_trainer_learn_requested.emit(
+		skill_id,
+		scroll_uid
 	)
 
 # =========================================================

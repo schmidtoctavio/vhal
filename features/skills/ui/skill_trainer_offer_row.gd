@@ -213,8 +213,11 @@ func _get_status_text(
 # =========================================================
 # APRENDER
 #
-# En D2 este signal todavía NO llega al Game Server.
-# D3 conectará esta intención.
+# Esta intención sólo nace desde una oferta autoritativa
+# del Skill Trainer.
+#
+# El Game Server vuelve a validar todos los requisitos
+# antes de persistir cualquier aprendizaje.
 # =========================================================
 
 func _on_learn_button_pressed() -> void:
@@ -244,6 +247,10 @@ func _on_learn_button_pressed() -> void:
 
 	if scroll_uid.is_empty():
 		return
+
+	learn_button.disabled = true
+
+	status_label.text = "Procesando..."
 
 
 	learn_requested.emit(

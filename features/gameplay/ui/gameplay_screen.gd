@@ -229,6 +229,13 @@ func _ready() -> void:
 			_on_authorized_skill_trainer_closed
 		)
 
+	if not gameplay_ui.skill_trainer_learn_requested.is_connected(
+		_on_skill_trainer_learn_requested
+	):
+		gameplay_ui.skill_trainer_learn_requested.connect(
+			_on_skill_trainer_learn_requested
+		)
+
 	if not gameplay_ui.item_container_transfer_requested.is_connected(
 		_on_item_container_transfer_requested
 	):
@@ -267,13 +274,6 @@ func _ready() -> void:
 	):
 		gameplay_ui.equipment_item_unequip_requested.connect(
 			_on_equipment_item_unequip_requested
-		)
-
-	if not gameplay_ui.inventory_item_activation_requested.is_connected(
-		_on_inventory_item_activation_requested
-	):
-		gameplay_ui.inventory_item_activation_requested.connect(
-			_on_inventory_item_activation_requested
 		)
 
 	_apply_states()
@@ -1641,6 +1641,60 @@ func _on_authorized_skill_trainer_closed() -> void:
 	npc_service_end_requested.emit()
 
 # =========================================================
+# APRENDER SKILL DESDE TRAINER AUTORIZADO
+# =========================================================
+
+func _on_skill_trainer_learn_requested(
+	skill_id: String,
+	scroll_uid: String
+) -> void:
+	if not authorized_skill_trainer_active:
+		return
+
+
+	if authorized_skill_trainer_npc_id.is_empty():
+		return
+
+
+	var normalized_skill_id := (
+		skill_id
+		.strip_edges()
+		.to_lower()
+	)
+
+
+	var normalized_scroll_uid := (
+		scroll_uid
+		.strip_edges()
+		.to_lower()
+	)
+
+
+	if normalized_skill_id.is_empty():
+		return
+
+
+	if normalized_scroll_uid.is_empty():
+		return
+
+
+	print(
+		"GameplayScreen | Aprendizaje solicitado desde Skill Trainer",
+		" | Skill: ",
+		normalized_skill_id,
+		" | Scroll UID: ",
+		normalized_scroll_uid,
+		" | Trainer: ",
+		authorized_skill_trainer_npc_id
+	)
+
+
+	skill_learning_intent_requested.emit(
+		normalized_skill_id,
+		normalized_scroll_uid
+	)
+
+# =========================================================
 # OFERTAS AUTORITATIVAS DEL SKILL TRAINER
 # =========================================================
 
@@ -1895,133 +1949,6 @@ func refresh_authoritative_vault() -> bool:
 
 
 	return true
-
-# =========================================================
-# ACTIVACIÓN DE ITEM AUTORITATIVO
-# =========================================================
-
-func _on_inventory_item_activation_requested(
-	uid: String,
-	item_id: String
-) -> void:
-	if player_state == null:
-		return
-
-
-	if player_state.inventory == null:
-		return
-
-
-	var normalized_uid := (
-		uid
-		.strip_edges()
-		.to_lower()
-	)
-
-
-	var normalized_item_id := (
-		item_id
-		.strip_edges()
-		.to_lower()
-	)
-
-
-	if normalized_uid.is_empty():
-		return
-
-
-	if normalized_item_id.is_empty():
-		return
-
-
-	# -----------------------------------------------------
-	# ¿ES UN SKILL SCROLL?
-	#
-	# Items normales simplemente no tienen handler todavía.
-	# -----------------------------------------------------
-
-	var skill_id := (
-		ClientSkillLearningCatalog.get_skill_id_for_scroll(
-			normalized_item_id
-		)
-	)
-
-
-	if skill_id.is_empty():
-		return
-
-
-	# -----------------------------------------------------
-	# CONTRATO CLIENTE VÁLIDO
-	#
-	# Esto NO autoriza gameplay.
-	# Sólo evita que un mapping local roto mande basura.
-	# -----------------------------------------------------
-
-	if ClientSkillCatalog.get_definition(
-		skill_id
-	) == null:
-		push_warning(
-			(
-				"GameplayScreen | "
-				+
-				"Skill Scroll apunta a una Skill "
-				+
-				"desconocida por el catálogo cliente: %s"
-			)
-			%
-			skill_id
-		)
-
-
-		return
-
-
-	# -----------------------------------------------------
-	# TRAINER
-	#
-	# UX gating basado exclusivamente en una autorización
-	# previamente recibida del Game Server.
-	#
-	# Incluso después de pasar esto, el Server vuelve a
-	# validar el servicio activo.
-	# -----------------------------------------------------
-
-	if not authorized_skill_trainer_active:
-		print(
-			"GameplayScreen | Aprendizaje omitido",
-			" | Skill: ",
-			skill_id,
-			" | Scroll UID: ",
-			normalized_uid,
-			" | Reason: skill_trainer_required"
-		)
-
-
-		return
-
-
-	if authorized_skill_trainer_npc_id.is_empty():
-		return
-
-
-	print(
-		"GameplayScreen | Intención de aprendizaje",
-		" | Skill: ",
-		skill_id,
-		" | Scroll: ",
-		normalized_item_id,
-		" | Scroll UID: ",
-		normalized_uid,
-		" | Trainer: ",
-		authorized_skill_trainer_npc_id
-	)
-
-
-	skill_learning_intent_requested.emit(
-		skill_id,
-		normalized_uid
-	)
 
 # =========================================================
 # INVENTORY AUTORITATIVO
