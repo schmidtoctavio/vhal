@@ -203,6 +203,41 @@ func _process_world_snapshot(
 		progression_value
 	)
 
+	# =====================================================
+	# PRIMARY STATS AUTORITATIVOS
+	# =====================================================
+
+	var primary_stats_value: Variant = (
+		snapshot.get(
+			"primary_stats",
+			null
+		)
+	)
+
+
+	if typeof(primary_stats_value) != TYPE_DICTIONARY:
+		_fail_connection(
+			"El snapshot no posee Primary Stats válidos."
+		)
+
+
+		return
+
+
+	var primary_stats_candidate := (
+		PrimaryStatsState.new()
+	)
+
+
+	if not primary_stats_candidate.apply_snapshot(
+		primary_stats_value
+	):
+		_fail_connection(
+			"Los Primary Stats del snapshot son inválidos."
+		)
+
+
+		return
 
 	# =====================================================
 	# SKILLS AUTORITATIVAS
@@ -293,6 +328,13 @@ func _process_world_snapshot(
 		)
 	)
 
+	if primary_stats_candidate.level != level:
+		_fail_connection(
+			"Level inconsistente en Primary Stats."
+		)
+
+
+		return
 
 	var experience := int(
 		progression_data.get(
@@ -543,6 +585,10 @@ func _process_world_snapshot(
 			),
 		},
 
+		"primary_stats": (
+			primary_stats_candidate.to_snapshot()
+		),
+
 		"skills": {
 			"learned_skill_ids": (
 				learned_skill_ids.duplicate()
@@ -595,6 +641,10 @@ func _process_world_snapshot(
 		experience_required,
 		" | Skills: ",
 		learned_skill_ids,
+		" | Stats revision: ",
+		primary_stats_candidate.revision,
+		" | Unspent: ",
+		primary_stats_candidate.unspent_points,
 	)
 
 

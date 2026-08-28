@@ -27,6 +27,12 @@ var vitals: VitalsState = null
 var experience: ExperienceState = null
 
 # =========================================================
+# PRIMARY STATS
+# =========================================================
+
+var primary_stats: PrimaryStatsState = null
+
+# =========================================================
 # INVENTARIO
 # =========================================================
 
@@ -75,6 +81,7 @@ func _init(
 
 	experience = ExperienceState.new()
 
+	primary_stats = PrimaryStatsState.new()
 
 	inventory = InventoryData.new()
 
@@ -264,6 +271,99 @@ func apply_progression_snapshot(
 		current_experience,
 		"/",
 		experience_required
+	)
+
+
+	return true
+
+# =========================================================
+# PRIMARY STATS AUTORITATIVOS
+# =========================================================
+
+func apply_primary_stats_snapshot(
+	snapshot: Dictionary
+) -> bool:
+	if primary_stats == null:
+		return false
+
+
+	if character_summary == null:
+		return false
+
+
+	var progression_value: Variant = (
+		snapshot.get(
+			"progression",
+			null
+		)
+	)
+
+
+	if typeof(progression_value) != TYPE_DICTIONARY:
+		return false
+
+
+	var progression: Dictionary = (
+		progression_value
+	)
+
+
+	var snapshot_level := int(
+		progression.get(
+			"level",
+			0
+		)
+	)
+
+
+	if (
+		snapshot_level
+		!=
+		character_summary.level
+	):
+		return false
+
+
+	if not primary_stats.apply_snapshot(
+		snapshot
+	):
+		return false
+
+
+	print(
+		"PlayerRuntimeState | Primary Stats autoritativos aplicados",
+		" | Revision: ",
+		primary_stats.revision,
+		" | STR B/A/P: ",
+		primary_stats.base_strength,
+		"/",
+		primary_stats.allocated_strength,
+		"/",
+		primary_stats.permanent_strength,
+		" | AGI B/A/P: ",
+		primary_stats.base_agility,
+		"/",
+		primary_stats.allocated_agility,
+		"/",
+		primary_stats.permanent_agility,
+		" | VIT B/A/P: ",
+		primary_stats.base_vitality,
+		"/",
+		primary_stats.allocated_vitality,
+		"/",
+		primary_stats.permanent_vitality,
+		" | ENE B/A/P: ",
+		primary_stats.base_energy,
+		"/",
+		primary_stats.allocated_energy,
+		"/",
+		primary_stats.permanent_energy,
+		" | Points: ",
+		primary_stats.spent_points,
+		"/",
+		primary_stats.total_points,
+		" | Unspent: ",
+		primary_stats.unspent_points
 	)
 
 

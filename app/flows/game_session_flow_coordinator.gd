@@ -648,6 +648,13 @@ func _apply_authoritative_world_snapshot(
 		)
 	)
 
+	var primary_stats_value: Variant = (
+		pending_world_snapshot.get(
+			"primary_stats",
+			null
+		)
+	)
+
 	var skills_value: Variant = (
 		pending_world_snapshot.get(
 			"skills",
@@ -671,6 +678,14 @@ func _apply_authoritative_world_snapshot(
 		progression_value
 	)
 
+	if typeof(primary_stats_value) != TYPE_DICTIONARY:
+		return false
+
+
+	var primary_stats_snapshot: Dictionary = (
+		primary_stats_value
+	)
+
 	if typeof(skills_value) != TYPE_DICTIONARY:
 		return false
 
@@ -687,6 +702,11 @@ func _apply_authoritative_world_snapshot(
 
 	if not player_state.apply_progression_snapshot(
 		progression_snapshot
+	):
+		return false
+
+	if not player_state.apply_primary_stats_snapshot(
+		primary_stats_snapshot
 	):
 		return false
 
