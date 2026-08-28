@@ -552,7 +552,6 @@ func _on_world_snapshot_received(
 		character_id
 	)
 
-
 	_try_start_game_session_from_authoritative_snapshots()
 
 

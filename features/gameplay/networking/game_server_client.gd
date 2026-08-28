@@ -129,6 +129,15 @@ signal character_progression_updated(
 	snapshot: Dictionary
 )
 
+signal primary_stat_allocation_result_received(
+	request_id: int,
+	accepted: bool,
+	stat_id: String,
+	points: int,
+	reason: String,
+	primary_stats_snapshot: Dictionary
+)
+
 # =========================================================
 # CONFIGURACIÓN DE TRANSPORTE
 # =========================================================
@@ -178,6 +187,8 @@ var npc_protocol: GameServerNpcProtocol = null
 var item_protocol: GameServerItemProtocol = null
 
 var progression_protocol: GameServerProgressionProtocol = null
+
+var primary_stats_protocol: GameServerPrimaryStatsProtocol = null
 
 # =========================================================
 # COMPATIBILIDAD DE ESTADO PÚBLICO
@@ -292,6 +303,10 @@ func _setup_protocols() -> bool:
 		GameServerProgressionProtocol.new()
 	)
 
+	primary_stats_protocol = (
+		GameServerPrimaryStatsProtocol.new()
+	)
+
 	if not world_protocol.setup(
 		_get_local_peer_id,
 		_fail_connection
@@ -300,6 +315,12 @@ func _setup_protocols() -> bool:
 
 	if not progression_protocol.setup(
 		_get_latest_world_snapshot,
+		_fail_connection
+	):
+		return false
+
+	if not primary_stats_protocol.setup(
+		_send_protocol_message,
 		_fail_connection
 	):
 		return false
@@ -372,6 +393,13 @@ func _bind_protocol_signals() -> void:
 	):
 		progression_protocol.character_progression_updated.connect(
 			_on_protocol_character_progression_updated
+		)
+
+	if not primary_stats_protocol.primary_stat_allocation_result_received.is_connected(
+		_on_protocol_primary_stat_allocation_result_received
+	):
+		primary_stats_protocol.primary_stat_allocation_result_received.connect(
+			_on_protocol_primary_stat_allocation_result_received
 		)
 
 	if not movement_protocol.authoritative_movement_state_received.is_connected(
@@ -878,6 +906,7 @@ func _on_peer_packet(
 		return
 
 
+
 	var message_type := String(
 		message.get(
 			"type",
@@ -901,6 +930,12 @@ func _on_peer_packet(
 		return
 
 	if progression_protocol.process_message(
+		message_type,
+		data_value
+	):
+		return
+
+	if primary_stats_protocol.process_message(
 		message_type,
 		data_value
 	):
@@ -1088,6 +1123,9 @@ func _reset_connection_state() -> void:
 	if progression_protocol != null:
 		progression_protocol.reset()
 
+	if primary_stats_protocol != null:
+		primary_stats_protocol.reset()
+
 	if skill_protocol != null:
 		skill_protocol.reset()
 
@@ -1178,6 +1216,27 @@ func send_skill_learning_request(
 	return skill_protocol.send_skill_learning_request(
 		skill_id,
 		scroll_uid
+	)
+
+# =========================================================
+# API PÚBLICA — PRIMARY STATS
+# =========================================================
+
+func send_primary_stat_allocation_request(
+	stat_id: String,
+	points: int
+) -> Error:
+	if not connected:
+		return ERR_UNAVAILABLE
+
+
+	if primary_stats_protocol == null:
+		return ERR_UNAVAILABLE
+
+
+	return primary_stats_protocol.send_allocation_request(
+		stat_id,
+		points
 	)
 
 # =========================================================
@@ -1366,6 +1425,27 @@ func _on_protocol_skill_trainer_offers_received(
 ) -> void:
 	skill_trainer_offers_received.emit(
 		snapshot
+	)
+
+# =========================================================
+# FORWARD — PRIMARY STATS
+# =========================================================
+
+func _on_protocol_primary_stat_allocation_result_received(
+	request_id: int,
+	accepted: bool,
+	stat_id: String,
+	points: int,
+	reason: String,
+	primary_stats_snapshot: Dictionary
+) -> void:
+	primary_stat_allocation_result_received.emit(
+		request_id,
+		accepted,
+		stat_id,
+		points,
+		reason,
+		primary_stats_snapshot
 	)
 
 # =========================================================
