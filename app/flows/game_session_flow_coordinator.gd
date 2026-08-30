@@ -164,6 +164,13 @@ func _bind_services() -> void:
 			_on_character_progression_updated
 		)
 
+	if not game_server_client.primary_stat_allocation_result_received.is_connected(
+		_on_primary_stat_allocation_result_received
+	):
+		game_server_client.primary_stat_allocation_result_received.connect(
+			_on_primary_stat_allocation_result_received
+		)
+
 	if not game_server_client.skill_cast_result_received.is_connected(
 		_on_skill_cast_result_received
 	):
@@ -996,7 +1003,6 @@ func _on_game_session_started(
 	_show_gameplay(
 		player_state
 	)
-
 
 func _on_game_session_failed(
 	message: String
@@ -2455,3 +2461,76 @@ func _on_character_progression_updated(
 
 
 	game_session_service.end_session()
+
+# =========================================================
+# PRIMARY STATS AUTORITATIVOS → GAMEPLAY
+# =========================================================
+
+func _on_primary_stat_allocation_result_received(
+	request_id: int,
+	accepted: bool,
+	stat_id: String,
+	points: int,
+	reason: String,
+	primary_stats_snapshot: Dictionary
+) -> void:
+	var gameplay_screen := (
+		_get_gameplay_screen()
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	if gameplay_screen.player_state == null:
+		return
+
+
+	if not gameplay_screen.player_state.apply_primary_stats_snapshot(
+		primary_stats_snapshot
+	):
+		print(
+			"GameSessionFlowCoordinator | "
+			+
+			"No se pudo aplicar Primary Stats autoritativos.",
+			" | Request: ",
+			request_id,
+			" | Stat: ",
+			stat_id,
+			" | Points: ",
+			points,
+			" | Accepted: ",
+			accepted,
+			" | Reason: ",
+			reason
+		)
+
+
+		game_session_service.end_session()
+
+
+		return
+
+
+	print(
+		"GameSessionFlowCoordinator | "
+		+
+		"Primary Stats autoritativos aplicados en vivo",
+		" | Request: ",
+		request_id,
+		" | Stat: ",
+		stat_id,
+		" | Points: ",
+		points,
+		" | Accepted: ",
+		accepted,
+		" | Reason: ",
+		reason,
+		" | Revision: ",
+		gameplay_screen.player_state.primary_stats.revision,
+		" | STR allocated: ",
+		gameplay_screen.player_state.primary_stats.allocated_strength,
+		" | Unspent: ",
+		gameplay_screen.player_state.primary_stats.unspent_points
+	)
