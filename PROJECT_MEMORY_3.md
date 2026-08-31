@@ -28,17 +28,25 @@ F22-D4-B1 ✅
 F22-D4-B2 ✅
 F22-D4-B3 ✅
 F22-D ✅ CLOSED
+
+F22-E1 ✅
+F22-E2 ✅
+F22-E3 ✅
+F22-E4 ✅
+F22-E5 ✅
+F22-E ✅ CLOSED
 ```
 
 **Siguiente checkpoint real:**
 
 ```text
-F22-E1
-EXP Curve Foundation
+F22-F1
+Derived Stats Foundation
 ```
 
-Todavía NO conectar Primary Stats con damage, HP/MP, Heal, Skills,
-Attack Speed, Movement Speed, Equipment modifiers ni Reset.
+F22-F1 debe crear la foundation de Derived Stats sin conectar todavía
+damage real, Heal real, Skills, Attack Speed, Movement Speed,
+Equipment modifiers ni Reset.
 
 ---
 
@@ -138,20 +146,29 @@ dev
 ## Client / memoria
 
 ```text
-5d5e8515e97ce01f4596024e901e7f7dc3ba2088
-feat: add primary stat allocation feedback
+f04cf63a8259e26e8bc86fd5cd23a640f1dd63b9
+feat: apply live primary stats after level up
 ```
 
 Padre:
 
 ```text
-1de03a87f99f735abb32ef28e438713d3684d49e
-docs: update primary stats UI allocation state
+8496f7068f371959c778e1643d6f14a3a98f9443
+docs: close F22 primary stats allocation
 ```
 
 Commits relevantes recientes:
 
 ```text
+f04cf63a8259e26e8bc86fd5cd23a640f1dd63b9
+feat: apply live primary stats after level up
+
+8496f7068f371959c778e1643d6f14a3a98f9443
+docs: close F22 primary stats allocation
+
+5d5e8515e97ce01f4596024e901e7f7dc3ba2088
+feat: add primary stat allocation feedback
+
 1de03a87f99f735abb32ef28e438713d3684d49e
 docs: update primary stats UI allocation state
 
@@ -161,38 +178,37 @@ feat: add primary stat allocation controls
 ddb3a60731d7468c29876dfad5f49cd6f211a2fd
 feat: add primary stats character window
 
-04388d4eec4fd27fa3b0b5d776f4c82b5d428d81
-docs: update F22 durable stat allocation state
-
 b0b6516e4ec95c21f3232be25bb0ca05f49c8896
 feat: apply live primary stat updates
 
 871bd0675a70ab6836d8594cbb3d694b4f99a76c
 feat: add primary stat allocation client protocol
-
-5e281b58238c4074d6570ac7cdf7502cf3a70137
-feat: consume authoritative primary stats snapshot
-
-312fbebe673fef240507ff4bc46a05150fada89d
-docs: close F22 class stats runtime
-
-b619429ab502f658a2f06e1be07e49b256585628
-docs: close F22 durable stat backend
-
-91f746733629f9b4544fb40a711a708175e30d43
-docs: define F22 stats progression and reset contract
 ```
 
 ## Game Server
 
+HEAD:
+
 ```text
-8e6d02e304a0743dcdcdf1400f9ad6966e8cc736
-feat: connect durable primary stat allocation
+7a54eeb61fc614faaa9053e583155a1f12284360
+feat: enforce max level progression cap
 ```
 
-Commits relevantes:
+Commits relevantes recientes:
 
 ```text
+7a54eeb61fc614faaa9053e583155a1f12284360
+feat: enforce max level progression cap
+
+3234ef38faee8417b27a29860585dfff67d59cf6
+feat: rebuild primary stats after level up
+
+263f9c50f3f863d998c3882a40e3b6a99b00a05f
+feat: establish authoritative experience curve
+
+8e6d02e304a0743dcdcdf1400f9ad6966e8cc736
+feat: connect durable primary stat allocation
+
 235379d8e970df764710987553ed33305629eaf7
 feat: add backend character stats repository
 
@@ -201,12 +217,6 @@ feat: add primary stat allocation transport
 
 765e4e560dc419f716db9315b3e535e201e24f67
 feat: expose primary stats in world snapshot
-
-7ab3f081f51506e1d68e8b991be516bdbd378e6d
-feat: bootstrap authoritative character primary stats
-
-b4544af42da7e4065ab5a96f250c98be867f08dc
-feat: add authoritative class stats catalog
 ```
 
 ## Backend
@@ -237,6 +247,11 @@ ce0b202561dfee2e412f6edaf4e8df7bd422842e
 feat: expose durable character stat allocation
 ```
 
+Backend NO se modificó durante F22-E.
+
+La regla de gameplay `MAX_LEVEL = 400` y la curva de EXP
+permanecen propiedad del Game Server.
+
 Última regresión Backend conocida al cierre F22-B:
 
 ```text
@@ -244,7 +259,6 @@ feat: expose durable character stat allocation
 337 assertions
 0 failures
 ```
-
 ---
 
 # 4. ESTADO CERRADO ANTES DE F22
@@ -2577,27 +2591,36 @@ No reabrir F22-D sólo por no tener +5/+10/custom/all.
 
 ---
 
-# 62. SIGUIENTE ETAPA REAL — F22-E1
+# 62. F22-E — CLOSED / SIGUIENTE ETAPA F22-F1
+
+F22-E quedó cerrado de punta a punta:
+
+```text
+curva EXP autoritativa ✅
+multi-level progression ✅
+persistencia durable ✅
+fresh reconnect ✅
+Level-Up → Primary Stat budget live ✅
+MAX_LEVEL 400 ✅
+cap sin writes inútiles ✅
+```
 
 Siguiente etapa pequeña:
 
 ```text
-F22-E1
-EXP Curve Foundation
+F22-F1
+Derived Stats Foundation
 ```
 
-Objetivo:
+Objetivo inicial:
 
 ```text
-formalizar MAX_LEVEL = 400
-centralizar XP_TO_NEXT(level)
-eliminar thresholds dispersos/de prueba
-definir comportamiento de EXP por nivel
-preparar authoritative multi-level progression
-mantener persistencia y UI actuales intactas
+definir dominio Derived Stats autoritativo
+separarlo de Primary Stats
+derivar valores desde Permanent Primary Stats
+no persistir Derived Stats como verdad durable
+no conectar todavía formulas a combate real
 ```
-
-En E1 todavía NO hace falta conectar Primary Stats a combat/derived stats.
 
 Bulk allocation permanece diferido.
 
@@ -2638,7 +2661,7 @@ cientos de puntos
 
 Evitar UX donde asignar 300 puntos requiera necesariamente 300 clicks.
 
-Bulk allocation queda como mejora UX futura y no bloquea F22-E.
+Bulk allocation queda como mejora UX futura y no bloquea F22-F.
 
 ---
 
@@ -3108,31 +3131,43 @@ Stat Allocation Protocol + UI
 
 F22-E
 Progressive EXP + Max Level 400
-🟡 IN PROGRESS
+✅ CLOSED
 
 	F22-E1
 	EXP Curve Foundation
-	⏳ NEXT
+	✅
 
 	F22-E2
 	Authoritative multi-level progression
-	⏳ FUTURE
+	✅
 
 	F22-E3
 	Durable progression reconnect audit
-	⏳ FUTURE
+	✅
 
 	F22-E4
 	Level-up → Primary Stat budget integration
-	⏳ FUTURE
+	✅
 
 	F22-E5
 	Max Level 400 behavior
-	⏳ FUTURE
+	✅
 
 F22-F
 Derived Vitals / Physical / Magic / Heal
-⏳ FUTURE
+🟡 IN PROGRESS
+
+	F22-F1
+	Derived Stats Foundation
+	⏳ NEXT
+
+	F22-F2
+	Max HP / Max MP derivation
+	⏳ FUTURE
+
+	F22-F3
+	Physical / Magic / Healing Power
+	⏳ FUTURE
 
 F22-G
 Armor / Resistances / Crit
@@ -3677,13 +3712,14 @@ No commitear triggers de audit.
 Próximo ciclo:
 
 ```text
-F22-E1
-→ revisar Progression foundation actual
-→ centralizar EXP curve
-→ formalizar MAX_LEVEL = 400
-→ definir XP_TO_NEXT(level)
-→ evitar thresholds hardcodeados dispersos
-→ tests de curva sin mutar durable Character si es posible
+F22-F1
+→ revisar runtime actual de Vitals / Combat / Primary Stats
+→ localizar cualquier derived value existente
+→ definir ownership y snapshot de Derived Stats
+→ crear foundation sin conectar damage/Heal todavía
+→ evitar persistir Derived Stats
+→ evitar duplicar fórmulas entre Client y Game Server
+→ test con Atilio / Lyra / ProgAudit sin durable mutation si es posible
 → 0 warnings/errors
 → git diff --check
 → git status
@@ -3699,44 +3735,36 @@ Bulk allocation:
 ⏸️ deferred
 ```
 
-No conectar todavía Primary Stats a derived combat systems.
+Reset:
+
+```text
+⏳ future
+```
 
 ---
 
 # 85. RESUMEN EJECUTIVO ACTUAL
 
-VHAL ya tiene este camino completo:
+VHAL ya tiene este camino completo de Primary Stats:
 
 ```text
-MySQL durable Primary Stat allocation
+MySQL durable allocation
 ↓
-Laravel snapshot + optimistic mutation
-↓
-Game Session Ticket
+Laravel optimistic durable mutation
 ↓
 Game Server Class Base + Allocated
 ↓
 Permanent Primary Stats
-↓
-initial authoritative world snapshot
 ↓
 Client PrimaryStatsState
 ↓
 CharacterStatsWindow
 ```
 
-Y el camino live completo:
+También tiene el camino live de allocation:
 
 ```text
 CharacterStatsWindow [+]
-↓
-GameplayUI
-↓
-GameplayScreen
-↓
-GameSessionFlowCoordinator
-↓
-GameServerClient
 ↓
 Game Server validation
 ↓
@@ -3744,74 +3772,77 @@ Backend durable PATCH
 ↓
 Game Server runtime rebuild
 ↓
-authoritative allocation result
+authoritative result
 ↓
 Client live PlayerRuntimeState
-↓
-PrimaryStatsState changed
 ↓
 CharacterStatsWindow refresh
 ```
 
-Mutations reales acumuladas de Atilio:
+Y desde F22-E tiene el camino real de Progression:
 
 ```text
-Audit Backend/D3:
-revision 0 → 1
-STR allocated 0 → 10
-
-D3-C:
-revision 1 → 2
-STR allocated 10 → 11
-Permanent STR 35 → 36
-unspent 605 → 604
-
-D4-B2 UI:
-revision 2 → 3
-STR allocated 11 → 12
-Permanent STR 36 → 37
-unspent 604 → 603
+Mob kill
+↓
+EXP reward
+↓
+Game Server EXP curve
+↓
+multi-level calculation
+↓
+Backend durable progression
+↓
+Game Server Level runtime
+↓
+Primary Stat budget rebuild
+↓
+Progression snapshot
+↓
+Primary Stats Updated
+↓
+Client Level / EXP
+↓
+Client Primary Stats
+↓
+CharacterStatsWindow
 ```
 
-Fresh reconnect posterior a B2 reconstruyó exactamente:
+F22-E confirmó además:
 
 ```text
-revision 3
-STR B/A/P 25/12/37
-spent 12/615
-unspent 603
+MAX_LEVEL = 400
+al entrar al cap → EXP = 0
+sobrante hacia Level 401 se descarta
+en cap → combat/drops siguen funcionando
+en cap → no se encola/persiste EXP
 ```
 
-La foundation UI de Primary Stats + `+1` durable + feedback está cerrada.
+F22-D ✅ CLOSED  
+F22-E ✅ CLOSED
 
-Audit B3 confirmó:
+Bulk allocation continúa diferido.
+
+Siguiente foco:
 
 ```text
-insufficient_points
-→ rejection visible
-→ authoritative resync
-→ sin persistencia
-→ baseline durable intacto
+F22-F1
+Derived Stats Foundation
 ```
 
-F22-D queda CLOSED.
-
-Bulk allocation queda diferido y no bloquea progresión.
-
-Siguiente foco: F22-E — EXP / Level progression.
-
-No conectar todavía derived combat systems.
+Todavía NO conectar derived formulas a daño/Heal real.
 
 ---
 
 # 86. BASELINE DE CONTINUIDAD INMEDIATO
 
+Repos remotos verificados:
+
 ```text
 Client dev:
-5d5e8515e97ce01f4596024e901e7f7dc3ba2088
+f04cf63a8259e26e8bc86fd5cd23a640f1dd63b9
 
 Game Server dev:
-8e6d02e304a0743dcdcdf1400f9ad6966e8cc736
+7a54eeb61fc614faaa9053e583155a1f12284360
 
 Backend dev:
 ce0b202561dfee2e412f6edaf4e8df7bd422842e
@@ -3820,7 +3851,13 @@ ce0b202561dfee2e412f6edaf4e8df7bd422842e
 Atilio durable:
 
 ```text
-revision 3
+Character ID 1
+Warrior
+Level 124
+EXP 50
+Reset 0
+
+Primary Stats revision 3
 STR B/A/P 25/12/37
 AGI B/A/P 15/0/15
 VIT B/A/P 25/0/25
@@ -3832,23 +3869,46 @@ unspent 603
 Lyra durable:
 
 ```text
-revision 0
+Character ID 2
+Archer
+Level 85
+EXP 0
+Reset 0
+
+Primary Stats revision 0
 Allocated 0/0/0/0
 unspent 420
 ```
 
+ProgAudit durable:
+
+```text
+Character ID 5
+Warrior
+Level 6
+EXP 0
+Reset 0
+
+Primary Stats revision 0
+Base 25/15/25/10
+Allocated 0/0/0/0
+Permanent 25/15/25/10
+spent 0/25
+unspent 25
+```
+
+ProgAudit es personaje explícito de auditoría.
+
+No revertir manualmente sus Level-Ups reales.
+
 Siguiente trabajo:
 
 ```text
-F22-E1
-EXP Curve Foundation
+F22-F1
+Derived Stats Foundation
 ```
 
-F22-D ya está cerrado.
-
-Bulk allocation queda diferido.
-
-No avanzar a F22-F hasta cerrar F22-E de forma explícita.
+F22-D y F22-E ya están cerrados.
 
 
 ---
@@ -3974,66 +4034,65 @@ No priorizarlo ahora.
 
 ---
 
-# 90. F22-E — OBJETIVO GENERAL
+# 90. F22-E — CLOSED ✅
 
-F22-E convierte la foundation de Progression en un loop MMORPG más real.
+F22-E convirtió la foundation previa de Progression en un loop
+MMORPG autoritativo y durable.
 
-Objetivo conceptual:
+Flujo cerrado:
 
 ```text
 mob / reward
 ↓
 authoritative EXP gain
 ↓
-XP threshold
+EXP curve
 ↓
-Level Up
+multi-level Level Up
 ↓
 durable progression
+↓
+Game Server runtime
 ↓
 Client progression update
 ↓
 Primary Stat budget derivado del nuevo Level
 ```
 
-Debe respetar:
+Ownership preservado:
 
 ```text
-Game Server = autoridad runtime
-Backend = durable mutation
-Client = representación
+Game Server = autoridad runtime y curva EXP
+Backend = persistencia durable de Level / EXP
+Client = representación autoritativa recibida
 ```
 
-Primary Stats siguen derivando budget desde Level.
+`unspent` continúa siendo derivado.
 
-No persistir `unspent`.
+No se convirtió al Backend en segundo dueño de la curva EXP.
 
 ---
 
-# 91. F22-E1 — EXP CURVE FOUNDATION — NEXT
+# 91. F22-E1 — EXP CURVE FOUNDATION ✅
 
-Primera etapa:
+Commit Game Server:
 
 ```text
-F22-E1
-EXP Curve Foundation
+263f9c50f3f863d998c3882a40e3b6a99b00a05f
+feat: establish authoritative experience curve
 ```
 
-Alcance recomendado:
+Scope:
+
+```text
+core/progression/server_character_progression_rules.gd
+```
+
+Reglas:
 
 ```text
 MAX_LEVEL = 400
-XP_TO_NEXT(level) centralizada
-validación de level válido
-threshold determinístico
-sin hardcodes dispersos
-sin tocar derived Stats
-sin Reset todavía
-```
 
-Curva foundation acordada previamente:
-
-```text
 n = level - 1
 
 XP_TO_NEXT(level)
@@ -4045,170 +4104,375 @@ XP_TO_NEXT(level)
 2*n²
 ```
 
-Antes de implementarla:
+Ejemplos auditados/conocidos:
 
 ```text
-revisar código real de Progression en Backend / Game Server / Client
-localizar thresholds actuales
-decidir ubicación autoritativa de la fórmula
-evitar duplicar la fórmula como verdad en varias capas
+Level 1   → 50
+Level 2   → 67
+Level 3   → 88
+Level 4   → 113
+Level 5   → 142
+Level 6   → 175
+Level 124 → 32153
 ```
 
-Client puede recibir/mostrar thresholds autoritativos,
-pero no debe ser la autoridad de la curva.
-
----
-
-# 92. F22-E2 — AUTHORITATIVE MULTI-LEVEL PROGRESSION — FUTURE
-
-Después de E1:
-
-```text
-F22-E2
-```
-
-Debe soportar EXP suficiente para subir más de un Level en una sola recompensa.
-
-Ejemplo conceptual:
-
-```text
-Level N
-EXP cerca del threshold
-+ reward grande
-↓
-consume threshold
-↓
-Level N+1
-↓
-recalcula siguiente threshold
-↓
-continúa con EXP restante
-```
-
-No permitir:
-
-```text
-EXP 340 / 100
-```
-
-como estado final incoherente si correspondían varios level-ups.
-
----
-
-# 93. F22-E3 — DURABLE PROGRESSION RECONNECT — FUTURE
-
-Después de una subida real controlada:
-
-```text
-disconnect
-↓
-fresh ticket
-↓
-fresh PlayerWorldSession
-```
-
-debe reconstruirse exactamente:
-
-```text
-Level
-EXP remanente
-Primary Stat budget derivado
-```
-
-No confiar en cache Client.
-
----
-
-# 94. F22-E4 — LEVEL UP → PRIMARY STAT BUDGET — FUTURE
-
-Con foundation actual:
-
-```text
-5 puntos por Level
-```
-
-Atilio hoy:
+Atilio se probó sin durable mutation:
 
 ```text
 Level 124
-total budget 615
-spent 12
+EXP 50/32153
+```
+
+Primary Stats permanecieron:
+
+```text
+revision 3
+STR B/A/P 25/12/37
+spent 12/615
 unspent 603
 ```
 
-Si eventualmente pasa:
+Client no calcula la curva como autoridad.
 
-```text
-124 → 125
-```
-
-el nuevo budget esperado será:
-
-```text
-(125 - 1) * 5
-= 620
-
-spent 12
-unspent 608
-```
-
-Esperado:
-
-```text
-603 → 608 available
-```
-
-sin persistir manualmente `unspent`.
-
-Ese flujo deberá reflejarse automáticamente en:
-
-```text
-Game Server Primary Stats runtime
-↓
-Client PrimaryStatsState
-↓
-CharacterStatsWindow
-```
+Backend no calcula la curva como autoridad.
 
 ---
 
-# 95. F22-E5 — MAX LEVEL 400 — FUTURE
+# 92. F22-E2 — AUTHORITATIVE MULTI-LEVEL PROGRESSION ✅
 
-Regla:
+Se creó el personaje de auditoría:
+
+```text
+ProgAudit
+Character ID 5
+Warrior
+Level 1
+EXP 0/50
+```
+
+Audit temporal:
+
+```text
+Training Goblin reward
+50 → 205
+```
+
+Cálculo:
+
+```text
+L1 → L2 = 50
+L2 → L3 = 67
+L3 → L4 = 88
+Total     205
+```
+
+Una sola muerte produjo:
+
+```text
+Level 1 / EXP 0
+→
+Level 4 / EXP 0/113
+
+levels_gained = 3
+```
+
+Game Server:
+
+```text
+Estado 1/0 -> 4/0
+Progresión confirmada
+```
+
+Client:
+
+```text
+Level 4
+EXP 0/113
+Gained +205
+Levels gained 3
+```
+
+El reward temporal se restauró:
+
+```text
+205 → 50
+```
+
+No hubo commit específico para E2 porque la lógica multi-level ya existía.
+
+ProgAudit Level 4 fue una mutation durable real y válida.
+
+---
+
+# 93. F22-E3 — DURABLE PROGRESSION RECONNECT ✅
+
+Fresh reconnect de ProgAudit reconstruyó:
+
+```text
+Level 4
+EXP 0/113
+```
+
+Y, sin persistir `unspent`, reconstruyó automáticamente:
+
+```text
+Primary Stats revision 0
+spent 0/15
+unspent 15
+```
+
+CharacterStatsWindow mostró:
+
+```text
+PUNTOS DISPONIBLES
+15
+```
+
+Esto confirmó:
+
+```text
+durable Level/EXP
+↓
+fresh PlayerWorldSession
+↓
+Primary Stat budget derivado
+```
+
+No depende de cache Client.
+
+---
+
+# 94. F22-E4 — LEVEL UP → PRIMARY STAT BUDGET LIVE ✅
+
+## Game Server
+
+Commit:
+
+```text
+3234ef38faee8417b27a29860585dfff67d59cf6
+feat: rebuild primary stats after level up
+```
+
+Scope:
+
+```text
+app/coordinators/character_progression_coordinator.gd
+core/networking/game_server.gd
+core/stats/server_character_primary_stats_bootstrap.gd
+```
+
+Implementado:
+
+```text
+Level cambia
+↓
+rebuild_for_progression(...)
+↓
+mantener revision
+mantener allocations
+mantener bonus
+↓
+recalcular level_points
+recalcular total
+recalcular unspent
+↓
+session.primary_stats actualizado
+```
+
+Nuevo mensaje semántico:
+
+```text
+primary_stats_updated
+```
+
+No se reutiliza falsamente:
+
+```text
+primary_stat_allocation_result
+```
+
+para un Level-Up.
+
+Orden reliable elegido:
+
+```text
+Progression
+↓
+Primary Stats Updated
+```
+
+El Client necesita conocer primero el nuevo Level antes de validar
+el snapshot de Primary Stats.
+
+## Client
+
+Commit:
+
+```text
+f04cf63a8259e26e8bc86fd5cd23a640f1dd63b9
+feat: apply live primary stats after level up
+```
+
+Scope:
+
+```text
+app/flows/game_session_flow_coordinator.gd
+features/gameplay/networking/game_server_client.gd
+features/gameplay/networking/protocols/game_server_primary_stats_protocol.gd
+```
+
+Audit real con reward normal `50`:
+
+```text
+ProgAudit
+Level 4
+EXP 0/113
+unspent 15
+```
+
+Después de tres goblins:
+
+```text
+50/113
+100/113
+↓
+Level 5
+EXP 37/142
+```
+
+Primary Stats live:
+
+```text
+spent 0/20
+unspent 20
+```
+
+CharacterStatsWindow cambió:
+
+```text
+15 → 20
+```
+
+sin reconnect.
+
+---
+
+# 95. F22-E5 — MAX LEVEL 400 ✅
+
+Commit Game Server:
+
+```text
+7a54eeb61fc614faaa9053e583155a1f12284360
+feat: enforce max level progression cap
+```
+
+Scope:
+
+```text
+app/coordinators/character_progression_coordinator.gd
+core/progression/server_character_progression_rules.gd
+```
+
+Semántica canónica:
 
 ```text
 MAX_LEVEL = 400
 ```
 
-Debe definirse explícitamente:
+Al alcanzar cap:
 
 ```text
-no Level 401
-cómo tratar EXP adicional en cap
-qué snapshot enviar
-qué persistir
+Level = 400
+EXP = 0
 ```
 
-Reset seguirá siendo una etapa posterior.
+EXP sobrante que conceptualmente iría hacia Level 401:
+
+```text
+se descarta
+```
+
+Ya estando en cap:
+
+```text
+combat continúa
+drops continúan
+respawn continúa
+
+NO reward de Progression
+NO queue de EXP
+NO PATCH durable de Progression
+NO Level 401
+```
+
+El Client sigue recibiendo un `experience_required` positivo porque
+su contrato actual valida:
+
+```text
+experience_required > 0
+experience < experience_required
+```
+
+No se introdujo `0/0` en el contrato.
+
+## Audit temporal de frontera
+
+Para probar la misma regla sin llevar un personaje a 400:
+
+```text
+MAX_LEVEL
+400 → 6
+```
+
+ProgAudit antes del cap:
+
+```text
+Level 5
+EXP 137/142
+unspent 20
+```
+
+Siguiente reward:
+
+```text
++50
+```
+
+Resultado:
+
+```text
+Level 6
+EXP 0/175
+unspent 25
+```
+
+Los `45` puntos de EXP sobrantes se descartaron.
+
+Cuarto goblin ya en cap temporal:
+
+```text
+muerte ✅
+drop ✅
+respawn ✅
+
+Progression reward ❌
+Progression persistence ❌
+Client progression update ❌
+```
+
+Después del audit se restauró obligatoriamente:
+
+```text
+MAX_LEVEL = 400
+```
+
+El valor temporal `6` NO quedó en remoto.
 
 ---
 
-# 96. BASELINE AL INICIAR F22-E
+# 96. BASELINE DURABLE ACTUAL AL CIERRE F22-E
 
-Repos:
-
-```text
-Client:
-5d5e8515e97ce01f4596024e901e7f7dc3ba2088
-
-Game Server:
-8e6d02e304a0743dcdcdf1400f9ad6966e8cc736
-
-Backend:
-ce0b202561dfee2e412f6edaf4e8df7bd422842e
-```
-
-Atilio:
+## Atilio
 
 ```text
 Character ID 1
@@ -4234,7 +4498,9 @@ total 615
 unspent 603
 ```
 
-Lyra:
+No fue modificado durante F22-E.
+
+## Lyra
 
 ```text
 Character ID 2
@@ -4242,37 +4508,287 @@ Archer
 Level 85
 EXP 0
 Reset 0
+
 Primary Stats revision 0
 Allocated 0/0/0/0
 unspent 420
 ```
 
-No modificar estos baselines sin una mutation real explícitamente auditada.
+No fue modificada durante F22-E.
+
+## ProgAudit
+
+```text
+Character ID 5
+Warrior
+Level 6
+EXP 0
+Reset 0
+
+Primary Stats revision 0
+
+Base:
+25 / 15 / 25 / 10
+
+Allocated:
+0 / 0 / 0 / 0
+
+Permanent:
+25 / 15 / 25 / 10
+
+Budget:
+spent 0
+total 25
+unspent 25
+```
+
+ProgAudit sí recibió Level-Ups durables reales durante los audits.
+
+No revertirlo manualmente.
 
 ---
 
-# 97. CONTINUACIÓN INMEDIATA
+# 97. INVARIANTES CERRADOS POR F22-E
+
+```text
+1. Game Server es único dueño de XP_TO_NEXT(level).
+2. Backend persiste Level/EXP pero no calcula curva.
+3. Client recibe experience_required autoritativo.
+4. Una recompensa puede subir múltiples Levels.
+5. EXP remanente entre Levels se preserva normalmente.
+6. Al alcanzar MAX_LEVEL, el remanente se descarta.
+7. MAX_LEVEL = 400.
+8. Nunca existe Level 401.
+9. En cap no se generan writes durables inútiles de Progression.
+10. Level-Up reconstruye Primary Stat budget en vivo.
+11. Revision de allocation no cambia por subir Level.
+12. Allocated Primary Stats no cambian por subir Level.
+13. unspent sigue siendo derivado.
+14. Reconnect reconstruye Level/EXP y budget correctamente.
+15. Client aplica Progression antes de Primary Stats post Level-Up.
+```
+
+---
+
+# 98. F22-F — OBJETIVO GENERAL
+
+Siguiente bloque:
+
+```text
+F22-F
+Derived Vitals / Physical / Magic / Heal
+```
+
+F22-F debe transformar Primary Stats permanentes en valores secundarios
+útiles para gameplay sin mezclar todavía todas las integraciones.
+
+Principio:
+
+```text
+Primary Stats
+STR / AGI / VIT / ENE
+↓
+Derived Stats
+↓
+futuros sistemas de combat / vitals / skills
+```
+
+Derived Stats NO deben convertirse en nueva verdad durable independiente
+si pueden recalcularse determinísticamente.
+
+---
+
+# 99. F22-F1 — DERIVED STATS FOUNDATION — NEXT
+
+Etapa inmediata:
+
+```text
+F22-F1
+Derived Stats Foundation
+```
+
+Objetivo:
+
+```text
+crear dominio explícito de Derived Stats
+definir ownership autoritativo en Game Server
+definir snapshot/estado Client si corresponde
+derivar desde Permanent Primary Stats
+mantener cálculo determinístico
+no conectar todavía damage real
+no conectar todavía Heal real
+no conectar todavía Attack Speed
+no conectar todavía Movement Speed
+```
+
+Antes de crear archivos nuevos se debe inspeccionar el repo real.
+
+---
+
+# 100. DERIVED STATS — PRINCIPIOS DE ARQUITECTURA
+
+Regla:
+
+```text
+MySQL / Backend
+NO guarda Derived Stats como verdad final
+```
+
+Fuente durable:
+
+```text
+class identity
+Level / Reset
+Primary Stat allocation
+future durable equipment
+future durable bonuses
+```
+
+Game Server:
+
+```text
+reconstruye Derived Stats
+valida Derived Stats
+usa Derived Stats en gameplay cuando cada etapa lo habilite
+```
+
+Client:
+
+```text
+recibe representación autoritativa
+NO inventa fórmulas distintas
+```
+
+Evitar:
+
+```text
+misma fórmula duplicada como autoridad
+en Backend + Game Server + Client
+```
+
+---
+
+# 101. OUTPUTS DERIVADOS CANDIDATOS
+
+El dominio podrá incluir progresivamente:
+
+```text
+Max HP
+Max MP
+
+Physical Power
+Magic Power
+Healing Power
+
+HP Regeneration
+MP Regeneration
+```
+
+Más adelante, en otros bloques:
+
+```text
+Armor
+Magic Resistance
+Elemental Resistances
+Accuracy
+Crit
+Attack Speed
+Movement Speed
+```
+
+No definir coeficientes finales sin auditar primero el runtime existente.
+
+---
+
+# 102. REGLA DE ENTRADA PARA F22-F1
+
+Antes de implementar:
+
+```text
+revisar Game Server Vitals runtime
+revisar Client VitalsState
+revisar BasicAttack actual
+revisar Heal / Skill Cast actual
+revisar Class Stats Catalog
+revisar PlayerWorldSession
+localizar valores hardcodeados actuales de HP/MP/power
+```
+
+Objetivo del audit:
+
+```text
+saber qué existe
+qué es temporal
+qué se debe reemplazar
+qué NO debemos acoplar todavía
+```
+
+No empezar F22-F1 desde fórmulas inventadas.
+
+Primero estructura y ownership.
+
+---
+
+# 103. F22-F1 — SCOPE RECOMENDADO
+
+Primer commit de F22-F1 debería ser pequeño.
+
+Preferencia:
+
+```text
+Game Server foundation primero
+```
+
+Posible alcance, sujeto al audit real:
+
+```text
+Derived Stats rules/state
+snapshot interno
+validación determinística
+bootstrap desde Permanent Primary Stats
+```
+
+En esta primera subetapa evitar si es posible:
+
+```text
+Backend changes
+DB migrations
+UI nueva
+.tscn changes
+combat formula replacement
+Heal formula replacement
+```
+
+Luego se conectará Client/runtime en una subetapa separada si hace falta.
+
+---
+
+# 104. CONTINUACIÓN INMEDIATA
 
 Al retomar:
 
 ```text
-1. verificar remoto Client / Game Server / Backend
-2. revisar Progression code real en los tres repos
-3. localizar fórmula/threshold actual
-4. diseñar F22-E1 mínimo
+1. verificar HEAD Client / Game Server / Backend
+2. inspeccionar Vitals / Combat / Skill runtime real
+3. localizar hardcodes actuales
+4. diseñar F22-F1 mínimo
 5. implementar manualmente
 6. test
 7. 0 warnings/errors
 8. git diff --check
 9. git status
-10. commit
-11. push
-12. esperar "pusheado"
-13. verificar remoto
+10. revisar scope
+11. commit
+12. push
+13. esperar "pusheado"
+14. verificar remoto
 ```
 
 Siguiente etapa exacta:
 
 ```text
-F22-E1 — EXP Curve Foundation
+F22-F1 — Derived Stats Foundation
 ```
+
+No avanzar a integración de daño/Heal hasta cerrar explícitamente
+la foundation correspondiente.
