@@ -37,6 +37,10 @@ signal primary_stat_allocation_requested(
 	$ContentMargin/Content/Body/StatsContent/AvailablePointsRow/ValueLabel
 )
 
+@onready var allocation_feedback_label: Label = (
+	$ContentMargin/Content/Body/StatsContent/AllocationFeedbackLabel
+)
+
 
 # =========================================================
 # REFERENCIAS — ALLOCATION
@@ -157,6 +161,8 @@ func bind_primary_stats(
 
 
 	if is_node_ready():
+		allocation_feedback_label.text = ""
+
 		_refresh_from_state()
 
 
@@ -188,6 +194,45 @@ func _on_primary_stats_changed(
 
 
 	_refresh_from_state()
+
+
+# =========================================================
+# RESULTADO DE ALLOCATION
+# =========================================================
+
+func apply_primary_stat_allocation_result(
+	request_id: int,
+	accepted: bool,
+	stat_id: String,
+	points: int,
+	reason: String
+) -> void:
+	if request_id <= 0:
+		return
+
+
+	allocation_pending = false
+
+
+	if accepted:
+		allocation_feedback_label.text = (
+			"%s +%d APLICADA"
+			% [
+				_get_stat_display_name(
+					stat_id
+				),
+				points,
+			]
+		)
+	else:
+		allocation_feedback_label.text = (
+			_get_rejection_message(
+				reason
+			)
+		)
+
+
+	_refresh_allocation_controls()
 
 
 # =========================================================
@@ -288,6 +333,14 @@ func _request_primary_stat_allocation(
 	allocation_pending = true
 
 
+	allocation_feedback_label.text = (
+		"APLICANDO %s..."
+		% _get_stat_display_name(
+			stat_id
+		)
+	)
+
+
 	_refresh_allocation_controls()
 
 
@@ -295,6 +348,60 @@ func _request_primary_stat_allocation(
 		stat_id,
 		1
 	)
+
+
+# =========================================================
+# DISPLAY DE STAT
+# =========================================================
+
+func _get_stat_display_name(
+	stat_id: String
+) -> String:
+	match stat_id.strip_edges().to_lower():
+		"strength":
+			return "FUERZA"
+
+		"agility":
+			return "AGILIDAD"
+
+		"vitality":
+			return "VITALIDAD"
+
+		"energy":
+			return "ENERGÍA"
+
+		_:
+			return "ATRIBUTO"
+
+
+# =========================================================
+# FEEDBACK DE RECHAZO
+# =========================================================
+
+func _get_rejection_message(
+	reason: String
+) -> String:
+	match reason.strip_edges().to_lower():
+		"insufficient_points":
+			return "PUNTOS INSUFICIENTES"
+
+		"allocation_busy":
+			return "ASIGNACIÓN EN PROCESO"
+
+		"stale_request":
+			return "SOLICITUD DESACTUALIZADA"
+
+		"stale_revision":
+			return "ATRIBUTOS ACTUALIZADOS"
+
+		"invalid_points":
+			return "CANTIDAD DE PUNTOS INVÁLIDA"
+
+		"invalid_stat":
+			return "ATRIBUTO INVÁLIDO"
+
+		_:
+			return "NO SE PUDO ASIGNAR EL PUNTO"
 
 
 # =========================================================

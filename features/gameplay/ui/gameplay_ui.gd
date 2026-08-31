@@ -1178,6 +1178,21 @@ func _on_primary_stat_allocation_requested(
 		points
 	)
 
+func apply_primary_stat_allocation_result_feedback(
+	request_id: int,
+	accepted: bool,
+	stat_id: String,
+	points: int,
+	reason: String
+) -> void:
+	character_stats_window.apply_primary_stat_allocation_result(
+		request_id,
+		accepted,
+		stat_id,
+		points,
+		reason
+	)
+
 func _on_character_button_pressed() -> void:
 	_toggle_character_window()
 

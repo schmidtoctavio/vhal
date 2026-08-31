@@ -2556,6 +2556,13 @@ func _on_primary_stat_allocation_result_received(
 
 		return
 
+	gameplay_screen.apply_primary_stat_allocation_result_feedback(
+		request_id,
+		accepted,
+		stat_id,
+		points,
+		reason
+	)
 
 	print(
 		"GameSessionFlowCoordinator | "

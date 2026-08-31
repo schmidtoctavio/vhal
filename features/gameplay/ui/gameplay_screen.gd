@@ -321,6 +321,25 @@ func _on_primary_stat_allocation_requested(
 	)
 
 # =========================================================
+# PRIMARY STAT ALLOCATION FEEDBACK
+# =========================================================
+
+func apply_primary_stat_allocation_result_feedback(
+	request_id: int,
+	accepted: bool,
+	stat_id: String,
+	points: int,
+	reason: String
+) -> void:
+	gameplay_ui.apply_primary_stat_allocation_result_feedback(
+		request_id,
+		accepted,
+		stat_id,
+		points,
+		reason
+	)
+
+# =========================================================
 # PREPARAR GAMEPLAY
 # =========================================================
 
