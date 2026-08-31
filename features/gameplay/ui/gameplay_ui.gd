@@ -97,6 +97,20 @@ var skill_book_data: SkillBookData = null
 var skill_cooldown_state: SkillCooldownState = null
 
 # =========================================================
+# PERSONAJE / PRIMARY STATS
+# =========================================================
+
+@onready var character_button: HudActionButton = (
+	$BottomHUD/HudActionsArea/ButtonsRow/CharacterButton
+)
+
+@onready var character_stats_window: CharacterStatsWindow = (
+	$WindowsLayer/CharacterStatsWindow
+)
+
+
+
+# =========================================================
 # INVENTARIO
 # =========================================================
 
@@ -197,9 +211,30 @@ func _activate_player_state() -> void:
 
 	_activate_experience_state()
 
+	_activate_primary_stats_state()
+
 	_activate_skill_state()
 
 	_activate_inventory_state()
+
+# =========================================================
+# PRIMARY STATS STATE
+# =========================================================
+
+func _activate_primary_stats_state() -> void:
+	if player_state == null:
+		character_stats_window.bind_primary_stats(
+			null
+		)
+
+
+		return
+
+
+	character_stats_window.bind_primary_stats(
+		player_state.primary_stats
+	)
+
 
 
 # =========================================================
@@ -458,6 +493,16 @@ func _disconnect_player_state() -> void:
 				_on_hotbar_selection_changed
 			)
 
+	# -----------------------------------------------------
+	# PRIMARY STATS
+	# -----------------------------------------------------
+
+	if is_node_ready():
+		character_stats_window.bind_primary_stats(
+			null
+		)
+
+
 
 	# -----------------------------------------------------
 	# SKILL BOOK
@@ -553,6 +598,26 @@ func _ready() -> void:
 		mp_bar.value_changed.connect(
 			_on_mana_changed
 		)
+
+	# =====================================================
+	# PERSONAJE / PRIMARY STATS
+	# =====================================================
+
+	if not character_button.pressed.is_connected(
+		_on_character_button_pressed
+	):
+		character_button.pressed.connect(
+			_on_character_button_pressed
+		)
+
+
+	if not character_stats_window.close_requested.is_connected(
+		_on_character_window_close_requested
+	):
+		character_stats_window.close_requested.connect(
+			_on_character_window_close_requested
+		)
+
 
 
 	# =====================================================
@@ -1071,6 +1136,14 @@ func _unhandled_input(
 	):
 		_toggle_inventory()
 
+	# =====================================================
+	# PERSONAJE / PRIMARY STATS
+	# =====================================================
+
+	if event.is_action_pressed(
+		&"toggle_character"
+	):
+		_toggle_character_window()
 
 	# =====================================================
 	# SKILLS
@@ -1080,6 +1153,29 @@ func _unhandled_input(
 		&"toggle_skills"
 	):
 		_toggle_skills_window()
+
+# =========================================================
+# PERSONAJE / PRIMARY STATS
+# =========================================================
+
+func _on_character_button_pressed() -> void:
+	_toggle_character_window()
+
+
+func _on_character_window_close_requested() -> void:
+	_close_character_window()
+
+
+func _toggle_character_window() -> void:
+	character_stats_window.visible = (
+		not character_stats_window.visible
+	)
+
+
+func _close_character_window() -> void:
+	character_stats_window.visible = false
+
+
 
 # =========================================================
 # INVENTARIO

@@ -1,0 +1,121 @@
+[gd_scene format=3 uid="uid://da4jt20psmwuv"]
+
+[ext_resource type="PackedScene" uid="uid://ck6ftdrkiei54" path="res://shared/ui/base_window.tscn" id="1_o7f5n"]
+[ext_resource type="Script" uid="uid://p2lgasy7xdy" path="res://features/player/ui/character_stats_window.gd" id="2_ethq7"]
+
+[node name="CharacterStatsWindow" unique_id=1417963305 instance=ExtResource("1_o7f5n")]
+custom_minimum_size = Vector2(320, 360)
+script = ExtResource("2_ethq7")
+window_title = "PERSONAJE"
+
+[node name="TitleLabel" parent="ContentMargin/Content/Header" parent_id_path=PackedInt32Array(1938107997) index="0" unique_id=1114458321]
+text = "PERSONAJE"
+
+[node name="StatsContent" type="VBoxContainer" parent="ContentMargin/Content/Body" parent_id_path=PackedInt32Array(521580399) index="0" unique_id=1339822345]
+layout_mode = 2
+offset_transform_enabled = true
+theme_override_constants/separation = 10
+
+[node name="SectionLabel" type="Label" parent="ContentMargin/Content/Body/StatsContent" index="0" unique_id=1488770405]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "ATRIBUTOS PERMANENTES"
+horizontal_alignment = 1
+
+[node name="TopSeparator" type="HSeparator" parent="ContentMargin/Content/Body/StatsContent" index="1" unique_id=1659648764]
+layout_mode = 2
+
+[node name="StrengthRow" type="HBoxContainer" parent="ContentMargin/Content/Body/StatsContent" index="2" unique_id=1896554332]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="ContentMargin/Content/Body/StatsContent/StrengthRow" index="0" unique_id=1293250551]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "FUERZA"
+vertical_alignment = 1
+
+[node name="ValueLabel" type="Label" parent="ContentMargin/Content/Body/StatsContent/StrengthRow" index="1" unique_id=707262816]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="AgilityRow" type="HBoxContainer" parent="ContentMargin/Content/Body/StatsContent" index="3" unique_id=1111064280]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="ContentMargin/Content/Body/StatsContent/AgilityRow" index="0" unique_id=1557722943]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "AGILIDAD"
+vertical_alignment = 1
+
+[node name="ValueLabel" type="Label" parent="ContentMargin/Content/Body/StatsContent/AgilityRow" index="1" unique_id=1010840477]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="VitalityRow" type="HBoxContainer" parent="ContentMargin/Content/Body/StatsContent" index="4" unique_id=1842643168]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="ContentMargin/Content/Body/StatsContent/VitalityRow" index="0" unique_id=2096442325]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "VITALIDAD"
+vertical_alignment = 1
+
+[node name="ValueLabel" type="Label" parent="ContentMargin/Content/Body/StatsContent/VitalityRow" index="1" unique_id=593343748]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="EnergyRow" type="HBoxContainer" parent="ContentMargin/Content/Body/StatsContent" index="5" unique_id=1200322861]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="ContentMargin/Content/Body/StatsContent/EnergyRow" index="0" unique_id=1000348320]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ENERGÍA"
+vertical_alignment = 1
+
+[node name="ValueLabel" type="Label" parent="ContentMargin/Content/Body/StatsContent/EnergyRow" index="1" unique_id=820558420]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+text = "0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="BottomSeparator" type="HSeparator" parent="ContentMargin/Content/Body/StatsContent" index="6" unique_id=713630962]
+layout_mode = 2
+
+[node name="AvailablePointsRow" type="HBoxContainer" parent="ContentMargin/Content/Body/StatsContent" index="7" unique_id=1369318969]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NameLabel" type="Label" parent="ContentMargin/Content/Body/StatsContent/AvailablePointsRow" index="0" unique_id=1506214493]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+text = "PUNTOS DISPONIBLES"
+vertical_alignment = 1
+
+[node name="ValueLabel" type="Label" parent="ContentMargin/Content/Body/StatsContent/AvailablePointsRow" index="1" unique_id=1820125745]
+custom_minimum_size = Vector2(80, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "0"
+horizontal_alignment = 2
+vertical_alignment = 1
