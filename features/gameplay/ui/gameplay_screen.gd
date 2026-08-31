@@ -49,6 +49,11 @@ signal skill_learning_intent_requested(
 	scroll_uid: String
 )
 
+signal primary_stat_allocation_intent_requested(
+	stat_id: String,
+	points: int
+)
+
 signal basic_attack_intent_requested(
 	target: Dictionary
 )
@@ -236,6 +241,13 @@ func _ready() -> void:
 			_on_skill_trainer_learn_requested
 		)
 
+	if not gameplay_ui.primary_stat_allocation_requested.is_connected(
+		_on_primary_stat_allocation_requested
+	):
+		gameplay_ui.primary_stat_allocation_requested.connect(
+			_on_primary_stat_allocation_requested
+		)
+
 	if not gameplay_ui.item_container_transfer_requested.is_connected(
 		_on_item_container_transfer_requested
 	):
@@ -280,6 +292,33 @@ func _ready() -> void:
 
 	_refresh_character_debug()
 
+# =========================================================
+# PRIMARY STAT ALLOCATION INTENT
+# =========================================================
+
+func _on_primary_stat_allocation_requested(
+	stat_id: String,
+	points: int
+) -> void:
+	var normalized_stat_id := (
+		stat_id
+		.strip_edges()
+		.to_lower()
+	)
+
+
+	if normalized_stat_id.is_empty():
+		return
+
+
+	if points <= 0:
+		return
+
+
+	primary_stat_allocation_intent_requested.emit(
+		normalized_stat_id,
+		points
+	)
 
 # =========================================================
 # PREPARAR GAMEPLAY

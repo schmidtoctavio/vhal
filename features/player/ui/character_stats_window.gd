@@ -4,7 +4,17 @@ extends BaseWindow
 
 
 # =========================================================
-# REFERENCIAS
+# SEÑALES
+# =========================================================
+
+signal primary_stat_allocation_requested(
+	stat_id: String,
+	points: int
+)
+
+
+# =========================================================
+# REFERENCIAS — VALORES
 # =========================================================
 
 @onready var strength_value_label: Label = (
@@ -29,10 +39,38 @@ extends BaseWindow
 
 
 # =========================================================
+# REFERENCIAS — ALLOCATION
+# =========================================================
+
+@onready var strength_add_button: Button = (
+	$ContentMargin/Content/Body/StatsContent/StrengthRow/AddButton
+)
+
+@onready var agility_add_button: Button = (
+	$ContentMargin/Content/Body/StatsContent/AgilityRow/AddButton
+)
+
+@onready var vitality_add_button: Button = (
+	$ContentMargin/Content/Body/StatsContent/VitalityRow/AddButton
+)
+
+@onready var energy_add_button: Button = (
+	$ContentMargin/Content/Body/StatsContent/EnergyRow/AddButton
+)
+
+
+# =========================================================
 # MODELO
 # =========================================================
 
 var primary_stats: PrimaryStatsState = null
+
+
+# =========================================================
+# ESTADO DE ALLOCATION
+# =========================================================
+
+var allocation_pending: bool = false
 
 
 # =========================================================
@@ -45,6 +83,38 @@ func _ready() -> void:
 
 	if Engine.is_editor_hint():
 		return
+
+
+	if not strength_add_button.pressed.is_connected(
+		_on_strength_add_pressed
+	):
+		strength_add_button.pressed.connect(
+			_on_strength_add_pressed
+		)
+
+
+	if not agility_add_button.pressed.is_connected(
+		_on_agility_add_pressed
+	):
+		agility_add_button.pressed.connect(
+			_on_agility_add_pressed
+		)
+
+
+	if not vitality_add_button.pressed.is_connected(
+		_on_vitality_add_pressed
+	):
+		vitality_add_button.pressed.connect(
+			_on_vitality_add_pressed
+		)
+
+
+	if not energy_add_button.pressed.is_connected(
+		_on_energy_add_pressed
+	):
+		energy_add_button.pressed.connect(
+			_on_energy_add_pressed
+		)
 
 
 	_refresh_from_state()
@@ -71,6 +141,8 @@ func bind_primary_stats(
 
 	_disconnect_primary_stats()
 
+
+	allocation_pending = false
 
 	primary_stats = state
 
@@ -112,6 +184,9 @@ func _disconnect_primary_stats() -> void:
 func _on_primary_stats_changed(
 	_snapshot: Dictionary
 ) -> void:
+	allocation_pending = false
+
+
 	_refresh_from_state()
 
 
@@ -136,6 +211,9 @@ func _refresh_from_state() -> void:
 		available_points_value_label.text = "-"
 
 
+		_refresh_allocation_controls()
+
+
 		return
 
 
@@ -157,4 +235,91 @@ func _refresh_from_state() -> void:
 
 	available_points_value_label.text = str(
 		primary_stats.unspent_points
+	)
+
+
+	_refresh_allocation_controls()
+
+
+# =========================================================
+# CONTROLES DE ALLOCATION
+# =========================================================
+
+func _refresh_allocation_controls() -> void:
+	var should_disable: bool = true
+
+
+	if primary_stats != null:
+		should_disable = (
+			allocation_pending
+			or
+			primary_stats.unspent_points <= 0
+		)
+
+
+	strength_add_button.disabled = should_disable
+
+	agility_add_button.disabled = should_disable
+
+	vitality_add_button.disabled = should_disable
+
+	energy_add_button.disabled = should_disable
+
+
+# =========================================================
+# REQUEST DE ALLOCATION
+# =========================================================
+
+func _request_primary_stat_allocation(
+	stat_id: String
+) -> void:
+	if allocation_pending:
+		return
+
+
+	if primary_stats == null:
+		return
+
+
+	if primary_stats.unspent_points <= 0:
+		return
+
+
+	allocation_pending = true
+
+
+	_refresh_allocation_controls()
+
+
+	primary_stat_allocation_requested.emit(
+		stat_id,
+		1
+	)
+
+
+# =========================================================
+# BOTONES
+# =========================================================
+
+func _on_strength_add_pressed() -> void:
+	_request_primary_stat_allocation(
+		"strength"
+	)
+
+
+func _on_agility_add_pressed() -> void:
+	_request_primary_stat_allocation(
+		"agility"
+	)
+
+
+func _on_vitality_add_pressed() -> void:
+	_request_primary_stat_allocation(
+		"vitality"
+	)
+
+
+func _on_energy_add_pressed() -> void:
+	_request_primary_stat_allocation(
+		"energy"
 	)

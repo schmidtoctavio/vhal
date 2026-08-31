@@ -1147,6 +1147,13 @@ func _show_gameplay(
 			_on_gameplay_skill_learning_intent_requested
 		)
 
+	if not gameplay_screen.primary_stat_allocation_intent_requested.is_connected(
+		_on_gameplay_primary_stat_allocation_requested
+	):
+		gameplay_screen.primary_stat_allocation_intent_requested.connect(
+			_on_gameplay_primary_stat_allocation_requested
+		)
+
 	if not gameplay_screen.basic_attack_intent_requested.is_connected(
 		_on_gameplay_basic_attack_intent_requested
 	):
@@ -1294,6 +1301,43 @@ func _on_gameplay_skill_cast_intent_requested(
 
 
 	game_session_service.end_session()
+
+# =========================================================
+# PRIMARY STAT ALLOCATION → GAME SERVER
+# =========================================================
+
+func _on_gameplay_primary_stat_allocation_requested(
+	stat_id: String,
+	points: int
+) -> void:
+	var result := (
+		game_server_client.send_primary_stat_allocation_request(
+			stat_id,
+			points
+		)
+	)
+
+
+	if result == OK:
+		return
+
+
+	print(
+		"GameSessionFlowCoordinator | "
+		+
+		"No se pudo enviar la intención de Primary Stat Allocation.",
+		" | Stat: ",
+		stat_id,
+		" | Points: ",
+		points,
+		" | Error: ",
+		result
+	)
+
+
+	game_session_service.end_session()
+
+
 
 # =========================================================
 # SKILL LEARNING → GAME SERVER

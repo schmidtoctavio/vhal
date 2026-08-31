@@ -53,6 +53,11 @@ signal skill_trainer_learn_requested(
 	scroll_uid: String
 )
 
+signal primary_stat_allocation_requested(
+	stat_id: String,
+	points: int
+)
+
 # =========================================================
 # BARRAS
 # =========================================================
@@ -618,6 +623,12 @@ func _ready() -> void:
 			_on_character_window_close_requested
 		)
 
+	if not character_stats_window.primary_stat_allocation_requested.is_connected(
+		_on_primary_stat_allocation_requested
+	):
+		character_stats_window.primary_stat_allocation_requested.connect(
+			_on_primary_stat_allocation_requested
+		)
 
 
 	# =====================================================
@@ -1157,6 +1168,15 @@ func _unhandled_input(
 # =========================================================
 # PERSONAJE / PRIMARY STATS
 # =========================================================
+
+func _on_primary_stat_allocation_requested(
+	stat_id: String,
+	points: int
+) -> void:
+	primary_stat_allocation_requested.emit(
+		stat_id,
+		points
+	)
 
 func _on_character_button_pressed() -> void:
 	_toggle_character_window()
