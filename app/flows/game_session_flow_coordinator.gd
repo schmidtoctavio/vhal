@@ -178,6 +178,13 @@ func _bind_services() -> void:
 			_on_primary_stats_updated
 		)
 
+	if not game_server_client.character_vitals_updated.is_connected(
+		_on_character_vitals_updated
+	):
+		game_server_client.character_vitals_updated.connect(
+			_on_character_vitals_updated
+		)
+
 	if not game_server_client.skill_cast_result_received.is_connected(
 		_on_skill_cast_result_received
 	):
@@ -2684,4 +2691,96 @@ func _on_primary_stats_updated(
 		gameplay_screen.player_state.primary_stats.total_points,
 		" | Unspent: ",
 		gameplay_screen.player_state.primary_stats.unspent_points
+	)
+
+
+# =========================================================
+# VITALS AUTORITATIVOS → GAMEPLAY
+# =========================================================
+
+func _on_character_vitals_updated(
+	character_id: int,
+	vitals_snapshot: Dictionary
+) -> void:
+	var gameplay_screen := (
+		_get_gameplay_screen()
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	if gameplay_screen.player_state == null:
+		return
+
+
+	if (
+		gameplay_screen.player_state.character_summary
+		==
+		null
+	):
+		return
+
+
+	if (
+		gameplay_screen.player_state
+			.character_summary
+			.character_id
+		!=
+		character_id
+	):
+		print(
+			(
+				"GameSessionFlowCoordinator | "
+				+
+				"Vitals Updated pertenece "
+				+
+				"a otro personaje."
+			)
+		)
+
+
+		game_session_service.end_session()
+
+
+		return
+
+
+	if not gameplay_screen.player_state.apply_vitals_snapshot(
+		vitals_snapshot
+	):
+		print(
+			(
+				"GameSessionFlowCoordinator | "
+				+
+				"No se pudieron aplicar "
+				+
+				"Vitals autoritativos en vivo."
+			)
+		)
+
+
+		game_session_service.end_session()
+
+
+		return
+
+
+	print(
+		(
+			"GameSessionFlowCoordinator | "
+			+
+			"Vitals autoritativos aplicados en vivo"
+		),
+		" | Character ID: ",
+		character_id,
+		" | HP: ",
+		gameplay_screen.player_state.vitals.hp,
+		"/",
+		gameplay_screen.player_state.vitals.max_hp,
+		" | MP: ",
+		gameplay_screen.player_state.vitals.mp,
+		"/",
+		gameplay_screen.player_state.vitals.max_mp
 	)
