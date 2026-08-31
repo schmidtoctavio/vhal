@@ -984,6 +984,7 @@ func apply_movement_decision(
 	authoritative_position: Vector3,
 	authoritative_rotation_y: float,
 	authorized_target: Vector3,
+	movement_speed: float,
 	reason: String
 ) -> void:
 	if active_player_actor == null:
@@ -1002,6 +1003,7 @@ func apply_movement_decision(
 		authoritative_position,
 		authoritative_rotation_y,
 		authorized_target,
+		movement_speed,
 		reason
 	)
 

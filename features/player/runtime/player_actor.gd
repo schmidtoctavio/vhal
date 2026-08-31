@@ -6,8 +6,6 @@ extends CharacterBody3D
 # MOVIMIENTO
 # =========================================================
 
-const MOVE_SPEED: float = 4.0
-
 const ROTATION_SPEED: float = 10.0
 
 const TARGET_REACHED_DISTANCE: float = 0.3
@@ -71,6 +69,8 @@ var player_state: PlayerRuntimeState = null
 var move_target: Vector3 = Vector3.ZERO
 
 var has_move_target: bool = false
+
+var authorized_movement_speed: float = 0.0
 
 # =========================================================
 # ESTADO DE RECONCILIACIÓN
@@ -399,6 +399,10 @@ func _process_navigation(
 
 		return
 
+	if authorized_movement_speed <= 0.0:
+		stop_movement()
+
+		return
 
 	if navigation_agent == null:
 		stop_movement()
@@ -482,13 +486,13 @@ func _process_navigation(
 	velocity.x = (
 		direction.x
 		*
-		MOVE_SPEED
+		authorized_movement_speed
 	)
 
 	velocity.z = (
 		direction.z
 		*
-		MOVE_SPEED
+		authorized_movement_speed
 	)
 
 
@@ -819,9 +823,21 @@ func apply_movement_decision(
 	authoritative_position: Vector3,
 	authoritative_rotation_y: float,
 	authorized_target: Vector3,
+	movement_speed: float,
 	reason: String
 ) -> void:
 	if accepted:
+		if movement_speed <= 0.0:
+			stop_movement()
+
+			return
+
+
+		authorized_movement_speed = (
+			movement_speed
+		)
+
+
 		set_move_target(
 			authorized_target
 		)
@@ -832,7 +848,9 @@ func apply_movement_decision(
 			" | Request: ",
 			request_id,
 			" | Target: ",
-			authorized_target
+			authorized_target,
+			" | Movement Speed: ",
+			authorized_movement_speed
 		)
 
 
@@ -841,10 +859,12 @@ func apply_movement_decision(
 
 	# -----------------------------------------------------
 	# RECHAZADO
-	# -----------------------------------------------------
 	#
 	# La predicción no tiene permiso para continuar.
 	# -----------------------------------------------------
+
+	authorized_movement_speed = 0.0
+
 
 	global_position = Vector3(
 		authoritative_position.x,

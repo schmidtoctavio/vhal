@@ -27,6 +27,7 @@ signal movement_decision_received(
 	authoritative_position: Vector3,
 	authoritative_rotation_y: float,
 	authorized_target: Vector3,
+	movement_speed: float,
 	reason: String
 )
 
@@ -282,7 +283,6 @@ func _process_movement_state(
 		)
 	)
 
-
 	var moving := bool(
 		data.get(
 			"moving",
@@ -473,6 +473,16 @@ func _process_movement_decision(
 		)
 	)
 
+	var movement_speed := float(
+		data.get(
+			"movement_speed",
+			0.0
+		)
+	)
+
+
+	if movement_speed <= 0.0:
+		return
 
 	var authorized_target := Vector3.ZERO
 
@@ -527,7 +537,9 @@ func _process_movement_decision(
 		" | Accepted: ",
 		accepted,
 		" | Target autorizado: ",
-		authorized_target
+		authorized_target,
+		" | Movement Speed: ",
+		movement_speed
 	)
 
 
@@ -537,6 +549,7 @@ func _process_movement_decision(
 		authoritative_position,
 		authoritative_rotation_y,
 		authorized_target,
+		movement_speed,
 		reason
 	)
 

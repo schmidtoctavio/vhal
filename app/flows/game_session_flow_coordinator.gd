@@ -1546,6 +1546,7 @@ func _on_movement_decision_received(
 	authoritative_position: Vector3,
 	authoritative_rotation_y: float,
 	authorized_target: Vector3,
+	movement_speed: float,
 	reason: String
 ) -> void:
 	var gameplay_screen := _get_gameplay_screen()
@@ -1561,6 +1562,7 @@ func _on_movement_decision_received(
 		authoritative_position,
 		authoritative_rotation_y,
 		authorized_target,
+		movement_speed,
 		reason
 	)
 

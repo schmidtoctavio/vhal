@@ -49,6 +49,7 @@ signal movement_decision_received(
 	authoritative_position: Vector3,
 	authoritative_rotation_y: float,
 	authorized_target: Vector3,
+	movement_speed: float,
 	reason: String
 )
 
@@ -160,7 +161,7 @@ const SERVER_PEER_ID: int = 1
 
 const AUTH_TIMEOUT_SECONDS: float = 10.0
 
-const NETWORK_PROTOCOL_VERSION: int = 1
+const NETWORK_PROTOCOL_VERSION: int = 2
 
 
 # =========================================================
@@ -1555,6 +1556,7 @@ func _on_protocol_movement_decision_received(
 	authoritative_position: Vector3,
 	authoritative_rotation_y: float,
 	authorized_target: Vector3,
+	movement_speed: float,
 	reason: String
 ) -> void:
 	movement_decision_received.emit(
@@ -1563,6 +1565,7 @@ func _on_protocol_movement_decision_received(
 		authoritative_position,
 		authoritative_rotation_y,
 		authorized_target,
+		movement_speed,
 		reason
 	)
 
