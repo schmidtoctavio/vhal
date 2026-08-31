@@ -15,6 +15,10 @@ signal primary_stat_allocation_result_received(
 	primary_stats_snapshot: Dictionary
 )
 
+signal primary_stats_updated(
+	character_id: int,
+	primary_stats_snapshot: Dictionary
+)
 
 # =========================================================
 # MENSAJES
@@ -28,6 +32,9 @@ const MESSAGE_PRIMARY_STAT_ALLOCATION_RESULT: String = (
 	"primary_stat_allocation_result"
 )
 
+const MESSAGE_PRIMARY_STATS_UPDATED: String = (
+	"primary_stats_updated"
+)
 
 # =========================================================
 # DEPENDENCIAS
@@ -79,6 +86,28 @@ func process_message(
 	message_type: String,
 	data_value: Variant
 ) -> bool:
+	if (
+		message_type
+		==
+		MESSAGE_PRIMARY_STATS_UPDATED
+	):
+		if typeof(data_value) != TYPE_DICTIONARY:
+			_fail_connection(
+				"El update de Primary Stats es inválido."
+			)
+
+
+			return true
+
+
+		_process_primary_stats_updated(
+			data_value
+		)
+
+
+		return true
+
+
 	if (
 		message_type
 		!=
@@ -482,6 +511,91 @@ func _process_allocation_result(
 		)
 	)
 
+# =========================================================
+# PRIMARY STATS UPDATED
+# =========================================================
+
+func _process_primary_stats_updated(
+	data: Dictionary
+) -> void:
+	var character_id := int(
+		data.get(
+			"character_id",
+			0
+		)
+	)
+
+
+	if character_id <= 0:
+		_fail_connection(
+			"Primary Stats Updated sin Character ID válido."
+		)
+
+
+		return
+
+
+	var primary_stats_value: Variant = (
+		data.get(
+			"primary_stats",
+			null
+		)
+	)
+
+
+	if typeof(primary_stats_value) != TYPE_DICTIONARY:
+		_fail_connection(
+			"Primary Stats Updated sin snapshot válido."
+		)
+
+
+		return
+
+
+	var primary_stats_snapshot: Dictionary = (
+		primary_stats_value
+	)
+
+
+	var validation_state := (
+		PrimaryStatsState.new()
+	)
+
+
+	if not validation_state.apply_snapshot(
+		primary_stats_snapshot
+	):
+		_fail_connection(
+			"Primary Stats Updated contiene un snapshot inválido."
+		)
+
+
+		return
+
+
+	print(
+		"GameServerClient | Primary Stats autoritativos actualizados",
+		" | Character ID: ",
+		character_id,
+		" | Level: ",
+		validation_state.level,
+		" | Revision: ",
+		validation_state.revision,
+		" | Points: ",
+		validation_state.spent_points,
+		"/",
+		validation_state.total_points,
+		" | Unspent: ",
+		validation_state.unspent_points
+	)
+
+
+	primary_stats_updated.emit(
+		character_id,
+		primary_stats_snapshot.duplicate(
+			true
+		)
+	)
 
 # =========================================================
 # VALIDAR STAT ID

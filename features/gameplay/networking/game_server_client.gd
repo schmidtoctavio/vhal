@@ -138,6 +138,11 @@ signal primary_stat_allocation_result_received(
 	primary_stats_snapshot: Dictionary
 )
 
+signal primary_stats_updated(
+	character_id: int,
+	primary_stats_snapshot: Dictionary
+)
+
 # =========================================================
 # CONFIGURACIÓN DE TRANSPORTE
 # =========================================================
@@ -400,6 +405,13 @@ func _bind_protocol_signals() -> void:
 	):
 		primary_stats_protocol.primary_stat_allocation_result_received.connect(
 			_on_protocol_primary_stat_allocation_result_received
+		)
+
+	if not primary_stats_protocol.primary_stats_updated.is_connected(
+		_on_protocol_primary_stats_updated
+	):
+		primary_stats_protocol.primary_stats_updated.connect(
+			_on_protocol_primary_stats_updated
 		)
 
 	if not movement_protocol.authoritative_movement_state_received.is_connected(
@@ -1445,6 +1457,15 @@ func _on_protocol_primary_stat_allocation_result_received(
 		stat_id,
 		points,
 		reason,
+		primary_stats_snapshot
+	)
+
+func _on_protocol_primary_stats_updated(
+	character_id: int,
+	primary_stats_snapshot: Dictionary
+) -> void:
+	primary_stats_updated.emit(
+		character_id,
 		primary_stats_snapshot
 	)
 

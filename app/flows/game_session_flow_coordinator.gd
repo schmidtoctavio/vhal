@@ -171,6 +171,13 @@ func _bind_services() -> void:
 			_on_primary_stat_allocation_result_received
 		)
 
+	if not game_server_client.primary_stats_updated.is_connected(
+		_on_primary_stats_updated
+	):
+		game_server_client.primary_stats_updated.connect(
+			_on_primary_stats_updated
+		)
+
 	if not game_server_client.skill_cast_result_received.is_connected(
 		_on_skill_cast_result_received
 	):
@@ -2582,6 +2589,99 @@ func _on_primary_stat_allocation_result_received(
 		gameplay_screen.player_state.primary_stats.revision,
 		" | STR allocated: ",
 		gameplay_screen.player_state.primary_stats.allocated_strength,
+		" | Unspent: ",
+		gameplay_screen.player_state.primary_stats.unspent_points
+	)
+
+# =========================================================
+# PRIMARY STATS UPDATED → GAMEPLAY
+# =========================================================
+
+func _on_primary_stats_updated(
+	character_id: int,
+	primary_stats_snapshot: Dictionary
+) -> void:
+	var gameplay_screen := (
+		_get_gameplay_screen()
+	)
+
+
+	if gameplay_screen == null:
+		return
+
+
+	if gameplay_screen.player_state == null:
+		return
+
+
+	if (
+		gameplay_screen.player_state.character_summary
+		==
+		null
+	):
+		return
+
+
+	if (
+		gameplay_screen.player_state
+			.character_summary
+			.character_id
+		!=
+		character_id
+	):
+		print(
+			(
+				"GameSessionFlowCoordinator | "
+				+
+				"Primary Stats Updated pertenece "
+				+
+				"a otro personaje."
+			)
+		)
+
+
+		game_session_service.end_session()
+
+
+		return
+
+
+	if not gameplay_screen.player_state.apply_primary_stats_snapshot(
+		primary_stats_snapshot
+	):
+		print(
+			(
+				"GameSessionFlowCoordinator | "
+				+
+				"No se pudo aplicar Primary Stats "
+				+
+				"post Level Up."
+			)
+		)
+
+
+		game_session_service.end_session()
+
+
+		return
+
+
+	print(
+		(
+			"GameSessionFlowCoordinator | "
+			+
+			"Primary Stats post Level Up aplicados en vivo"
+		),
+		" | Character ID: ",
+		character_id,
+		" | Level: ",
+		gameplay_screen.player_state.character_summary.level,
+		" | Revision: ",
+		gameplay_screen.player_state.primary_stats.revision,
+		" | Points: ",
+		gameplay_screen.player_state.primary_stats.spent_points,
+		"/",
+		gameplay_screen.player_state.primary_stats.total_points,
 		" | Unspent: ",
 		gameplay_screen.player_state.primary_stats.unspent_points
 	)
