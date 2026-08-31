@@ -143,6 +143,11 @@ signal primary_stats_updated(
 	primary_stats_snapshot: Dictionary
 )
 
+signal character_vitals_updated(
+	character_id: int,
+	vitals_snapshot: Dictionary
+)
+
 # =========================================================
 # CONFIGURACIÓN DE TRANSPORTE
 # =========================================================
@@ -194,6 +199,8 @@ var item_protocol: GameServerItemProtocol = null
 var progression_protocol: GameServerProgressionProtocol = null
 
 var primary_stats_protocol: GameServerPrimaryStatsProtocol = null
+
+var vitals_protocol: GameServerVitalsProtocol = null
 
 # =========================================================
 # COMPATIBILIDAD DE ESTADO PÚBLICO
@@ -312,6 +319,10 @@ func _setup_protocols() -> bool:
 		GameServerPrimaryStatsProtocol.new()
 	)
 
+	vitals_protocol = (
+		GameServerVitalsProtocol.new()
+	)
+
 	if not world_protocol.setup(
 		_get_local_peer_id,
 		_fail_connection
@@ -326,6 +337,12 @@ func _setup_protocols() -> bool:
 
 	if not primary_stats_protocol.setup(
 		_send_protocol_message,
+		_fail_connection
+	):
+		return false
+
+	if not vitals_protocol.setup(
+		_get_latest_world_snapshot,
 		_fail_connection
 	):
 		return false
@@ -412,6 +429,13 @@ func _bind_protocol_signals() -> void:
 	):
 		primary_stats_protocol.primary_stats_updated.connect(
 			_on_protocol_primary_stats_updated
+		)
+
+	if not vitals_protocol.character_vitals_updated.is_connected(
+		_on_protocol_character_vitals_updated
+	):
+		vitals_protocol.character_vitals_updated.connect(
+			_on_protocol_character_vitals_updated
 		)
 
 	if not movement_protocol.authoritative_movement_state_received.is_connected(
@@ -953,6 +977,12 @@ func _on_peer_packet(
 	):
 		return
 
+	if vitals_protocol.process_message(
+		message_type,
+		data_value
+	):
+		return
+
 	if movement_protocol.process_message(
 		message_type,
 		data_value
@@ -1137,6 +1167,9 @@ func _reset_connection_state() -> void:
 
 	if primary_stats_protocol != null:
 		primary_stats_protocol.reset()
+
+	if vitals_protocol != null:
+		vitals_protocol.reset()
 
 	if skill_protocol != null:
 		skill_protocol.reset()
@@ -1467,6 +1500,19 @@ func _on_protocol_primary_stats_updated(
 	primary_stats_updated.emit(
 		character_id,
 		primary_stats_snapshot
+	)
+
+# =========================================================
+# FORWARD — VITALS
+# =========================================================
+
+func _on_protocol_character_vitals_updated(
+	character_id: int,
+	vitals_snapshot: Dictionary
+) -> void:
+	character_vitals_updated.emit(
+		character_id,
+		vitals_snapshot
 	)
 
 # =========================================================
