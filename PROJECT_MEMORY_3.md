@@ -24,13 +24,15 @@ F22-D3-A ✅
 F22-D3-B ✅
 F22-D3-C ✅
 F22-D4-A ✅
+F22-D4-B1 ✅
+F22-D4-B2 ✅
 ```
 
 **Siguiente checkpoint real:**
 
 ```text
-F22-D4-B
-Primary Stats UI foundation
+F22-D4-B3
+Primary Stats allocation feedback / rejection UX
 ```
 
 Todavía NO conectar Primary Stats con damage, HP/MP, Heal, Skills,
@@ -86,6 +88,8 @@ Preferir etapas pequeñas.
 Testear antes de commit.
 Corregir warnings/errors antes de continuar.
 Actualizar memoria canónica al cerrar bloques importantes.
+Escenas `.tscn` se crean/editan SIEMPRE manualmente desde Godot Editor.
+Nunca entregar escenas como texto/código para reemplazar.
 ```
 
 Objetivo habitual:
@@ -132,20 +136,32 @@ dev
 ## Client / memoria
 
 ```text
-b0b6516e4ec95c21f3232be25bb0ca05f49c8896
-feat: apply live primary stat updates
+79938d4ccaa3b7d464a7e7ecb2a613aaaf1b240c
+feat: add primary stat allocation controls
 ```
 
 Padre:
 
 ```text
-871bd0675a70ab6836d8594cbb3d694b4f99a76c
-feat: add primary stat allocation client protocol
+ddb3a60731d7468c29876dfad5f49cd6f211a2fd
+feat: add primary stats character window
 ```
 
 Commits relevantes recientes:
 
 ```text
+ddb3a60731d7468c29876dfad5f49cd6f211a2fd
+feat: add primary stats character window
+
+04388d4eec4fd27fa3b0b5d776f4c82b5d428d81
+docs: update F22 durable stat allocation state
+
+b0b6516e4ec95c21f3232be25bb0ca05f49c8896
+feat: apply live primary stat updates
+
+871bd0675a70ab6836d8594cbb3d694b4f99a76c
+feat: add primary stat allocation client protocol
+
 5e281b58238c4074d6570ac7cdf7502cf3a70137
 feat: consume authoritative primary stats snapshot
 
@@ -1686,7 +1702,7 @@ No copiar Stats de Atilio a Lyra.
 Objetivo general:
 
 ```text
-Client Stats
+Client Stats UI
 ↓
 allocation intent
 ↓
@@ -1698,7 +1714,7 @@ authoritative GS Primary Stats runtime
 ↓
 Client authoritative Primary Stats runtime
 ↓
-UI
+live UI refresh
 ```
 
 Estado:
@@ -1710,7 +1726,9 @@ F22-D3-A ✅
 F22-D3-B ✅
 F22-D3-C ✅
 F22-D4-A ✅
-F22-D4-B NEXT
+F22-D4-B1 ✅
+F22-D4-B2 ✅
+F22-D4-B3 NEXT
 ```
 
 ---
@@ -2218,7 +2236,7 @@ Runtime revision observado: 18
 Primary Stats:
 
 ```text
-revision 2
+revision 3
 bonus 0
 ```
 
@@ -2234,7 +2252,7 @@ ENE 10
 Allocated:
 
 ```text
-STR 11
+STR 12
 AGI 0
 VIT 0
 ENE 0
@@ -2243,7 +2261,7 @@ ENE 0
 Permanent:
 
 ```text
-STR 36
+STR 37
 AGI 15
 VIT 25
 ENE 10
@@ -2257,16 +2275,17 @@ reset_points 0
 bonus_points 0
 
 total 615
-spent 11
-unspent 604
+spent 12
+unspent 603
 ```
 
 REGLA CRÍTICA:
 
 ```text
-NO revertir Atilio a STR10.
-NO bajar revision a 1.
-NO gastar otro punto sólo para probar sin necesidad.
+NO revertir Atilio a STR11 ni STR10.
+NO bajar revision 3 a revision 2/1.
+NO editar manualmente MySQL para "deshacer" audits válidos.
+No gastar puntos reales innecesarios fuera de audits controlados.
 ```
 
 ---
@@ -2392,14 +2411,17 @@ Persistencia iniciada
 Allocation durable confirmada
 ```
 
-por lo tanto:
+por lo tanto, EN ESE AUDIT:
 
 ```text
 Backend/MySQL no mutaron
-Atilio sigue revision 2 / STR11
+Atilio permaneció revision 2 / STR11
 ```
 
-Todo el trigger temporal fue eliminado antes del commit.
+Más tarde F22-D4-B2 realizó una nueva mutation real y válida,
+llevando el baseline actual a revision 3 / STR12.
+
+Todo el trigger temporal de D4-A fue eliminado antes del commit.
 
 ---
 
@@ -2421,12 +2443,22 @@ GameSessionFlowCoordinator
 PlayerRuntimeState.apply_primary_stats_snapshot
 ↓
 PrimaryStatsState
+↓
+CharacterStatsWindow
 ```
 
-Live mutation:
+Live mutation actual:
 
 ```text
-UI/player intent futuro
+CharacterStatsWindow [+]
+↓
+primary_stat_allocation_requested
+↓
+GameplayUI
+↓
+GameplayScreen
+↓
+GameSessionFlowCoordinator
 ↓
 GameServerClient.send_primary_stat_allocation_request
 ↓
@@ -2444,10 +2476,14 @@ GameSessionFlowCoordinator
 ↓
 PlayerRuntimeState.apply_primary_stats_snapshot
 ↓
-PrimaryStatsState
+PrimaryStatsState.primary_stats_changed
 ↓
-UI refresh futuro
+CharacterStatsWindow live refresh
 ```
+
+La UI NO muta PrimaryStatsState de manera optimista.
+
+Los cuatro botones `+` se bloquean mientras hay una allocation pendiente.
 
 ---
 
@@ -2468,6 +2504,23 @@ GS runtime rebuild after persistence ✅
 End-to-end real durable mutation ✅
 Fresh-ticket reconnect ✅
 Live Client runtime application ✅
+
+Character Stats Window ✅
+C toggle_character integration ✅
+HUD Character button ✅
+BaseWindow drag/clamp/close reuse ✅
+Per-character UI binding Atilio/Lyra ✅
+Permanent STR/AGI/VIT/ENE display ✅
+Available Points display ✅
+
++1 allocation controls ✅
+UI intent propagation ✅
+One pending allocation at a time ✅
+All four + buttons disabled while pending ✅
+No optimistic local Stat mutation ✅
+Authoritative live UI refresh ✅
+Real +1 STR UI mutation audit ✅
+Fresh reconnect after UI mutation ✅
 ```
 
 ---
@@ -2477,12 +2530,11 @@ Live Client runtime application ✅
 Principalmente:
 
 ```text
-Primary Stats UI
-allocation controls
-available points display
-comfortable bulk allocation UX
-live UI refresh
-visual feedback for rejected/busy requests
+visual feedback for allocation result/rejection
+pending visual feedback más explícito
+mapping amigable de reason codes
+bulk allocation UX
++5 / +10 / custom / all — todavía TBD por etapas
 ```
 
 Todavía no crear:
@@ -2494,35 +2546,32 @@ giant derived character sheet
 combat scaling sheet
 ```
 
+La foundation funcional de UI + `+1` durable YA existe.
+
 ---
 
-# 62. SIGUIENTE ETAPA REAL — F22-D4-B
+# 62. SIGUIENTE ETAPA REAL — F22-D4-B3
 
 Siguiente etapa pequeña:
 
 ```text
-F22-D4-B
-Primary Stats UI foundation
+F22-D4-B3
+Primary Stats allocation feedback / rejection UX
 ```
 
 Objetivo:
 
 ```text
-mostrar:
-Strength
-Agility
-Vitality
-Energy
-
-mostrar Permanent/current foundation
-mostrar Available Points
-preparar + controls
-refrescar desde PrimaryStatsState
+mantener UI autoritativa
+mostrar estado pending de forma clara
+mostrar resultado accepted/rejected de forma discreta
+mapear reasons relevantes a feedback amigable
+probar rechazo sin gastar otro punto real
 ```
 
-La UI debe ser representación del runtime.
+NO agregar todavía bulk allocation.
 
-NO debe guardar verdad independiente.
+NO conectar todavía Primary Stats a combat/derived stats.
 
 ---
 
@@ -2537,7 +2586,21 @@ legible
 sin convertirlo en una mega Character Sheet todavía
 ```
 
-Debe soportar cómodamente:
+Implementado actualmente:
+
+```text
+CharacterStatsWindow heredada de BaseWindow
+tamaño fijo
+draggable
+clamped al viewport
+C para abrir/cerrar
+HUD CharacterButton
+STR/AGI/VIT/ENE Permanent
+Available Points
++1 por stat
+```
+
+Debe soportar cómodamente a futuro:
 
 ```text
 pocos puntos
@@ -2547,7 +2610,7 @@ cientos de puntos
 
 Evitar UX donde asignar 300 puntos requiera necesariamente 300 clicks.
 
-Pero implementar bulk allocation en etapas pequeñas y seguras.
+Bulk allocation se implementará después de feedback/rejection UX.
 
 ---
 
@@ -2579,46 +2642,63 @@ Puede mostrarlos, pero vienen del snapshot autoritativo.
 
 # 65. CLIENT INTENT RULE
 
-Cuando exista el botón `+`:
+El botón `+` actual sigue este camino:
 
 ```text
 UI click
 ↓
-intent
+CharacterStatsWindow emite intención
 ↓
-GameSessionFlowCoordinator / GameServerClient
+GameplayUI
+↓
+GameplayScreen
+↓
+GameSessionFlowCoordinator
+↓
+GameServerClient
 ↓
 Game Server
 ```
 
-No:
+Nunca:
 
 ```text
 UI
 → mutar PrimaryStatsState local optimísticamente
 ```
 
-No mostrar STR incrementado permanentemente antes de respuesta autoritativa.
+El valor visual sólo cambia cuando vuelve el snapshot autoritativo y
+`PrimaryStatsState.primary_stats_changed` actualiza la ventana.
 
 ---
 
-# 66. CONCURRENCY / BUSY UX
+# 66. CONCURRENCY / PENDING UX
 
-Game Server ya permite:
+Game Server permite:
 
 ```text
 máximo una durable allocation en vuelo por Peer
 ```
 
-UI futura debería contemplar:
+Client UI ya implementa:
 
 ```text
-disable/lock controls while request pending
-o
-feedback allocation_busy
+allocation_pending = true
+↓
+deshabilitar STR/AGI/VIT/ENE AddButton
+↓
+esperar snapshot autoritativo
+↓
+primary_stats_changed
+↓
+allocation_pending = false
+↓
+rehabilitar controles si unspent > 0
 ```
 
-No enviar spam de mutaciones paralelas.
+Esto evita spam de mutaciones paralelas desde la ventana.
+
+F22-D4-B3 agregará feedback visual explícito de pending/resultado.
 
 ---
 
@@ -2836,8 +2916,8 @@ No renombrar `unarmed`.
 44. GS runtime se reconstruye desde snapshot durable confirmado.
 45. Client live runtime aplica authoritative allocation result.
 46. Rejected results también pueden resincronizar Client.
-47. Atilio baseline actual es revision 2 / STR allocated 11.
-48. NO revertir Atilio a STR10.
+47. Atilio baseline actual es revision 3 / STR allocated 12.
+48. NO revertir Atilio a STR11/STR10.
 49. Lyra sigue revision 0 / allocation 0.
 50. No crear allocation ficticia para Lyra.
 51. No conectar Stats a combat todavía.
@@ -2849,7 +2929,14 @@ No renombrar `unarmed`.
 57. `insufficient_points` se rechaza antes de Backend.
 58. D3-C demostró persistencia real y fresh reconnect.
 59. D4-A demostró aplicación live al PlayerRuntimeState.
-60. Cualquier audit temporal debe eliminarse antes del commit.
+60. D4-B1 demostró binding UI per-character Atilio/Lyra.
+61. D4-B2 demostró +1 UI → durable → live refresh.
+62. D4-B2 fresh reconnect reconstruyó revision 3 / STR12 / unspent603.
+63. Los cuatro `+` se bloquean mientras allocation_pending.
+64. No implementar bulk allocation antes de cerrar feedback/rejection UX.
+65. Escenas `.tscn` se editan manualmente desde Godot Editor.
+66. No entregar `.tscn` como código para copiar/reemplazar.
+67. Cualquier audit temporal debe eliminarse antes del commit.
 ```
 
 ---
@@ -2865,20 +2952,20 @@ Level 124
 EXP 50
 Reset 0
 
-Primary Stats revision 2
+Primary Stats revision 3
 
 Base:
 25 / 15 / 25 / 10
 
 Allocated:
-11 / 0 / 0 / 0
+12 / 0 / 0 / 0
 
 Permanent:
-36 / 15 / 25 / 10
+37 / 15 / 25 / 10
 
 Budget:
-11 / 615
-Unspent 604
+12 / 615
+Unspent 603
 ```
 
 ## Lyra
@@ -2905,6 +2992,8 @@ Budget:
 0 / 420
 Unspent 420
 ```
+
+Lyra permanece como personaje de control sin allocations durables.
 
 ---
 
@@ -2951,9 +3040,20 @@ Stat Allocation Protocol + UI
 	Live Client runtime application
 	✅
 
-	F22-D4-B
-	Primary Stats UI foundation
+	F22-D4-B1
+	Character Stats Window read-only foundation
+	✅
+
+	F22-D4-B2
+	+1 durable allocation controls
+	✅
+
+	F22-D4-B3
+	Allocation feedback / rejection UX
 	⏳ NEXT
+
+	Bulk allocation
+	⏳ AFTER B3
 
 F22-E
 Progressive EXP + Max Level 400
@@ -2986,38 +3086,100 @@ Integrated Balance Audit
 
 ---
 
-# 75. GIT / AUDIT STATUS AL CIERRE D4-A
+# 75. GIT / AUDIT STATUS AL CIERRE D4-B2
 
-F22-D4-A fue probado con:
-
-```text
-0 parser errors
-0 warnings nuevos
-0 errors
-git diff --check limpio
-```
-
-El audit temporal `605 > 604` fue eliminado.
+## F22-D4-B1
 
 Commit remoto verificado:
 
 ```text
-b0b6516e4ec95c21f3232be25bb0ca05f49c8896
-feat: apply live primary stat updates
+ddb3a60731d7468c29876dfad5f49cd6f211a2fd
+feat: add primary stats character window
 ```
 
-El commit modificó sólo:
+Scope:
+
+```text
+features/gameplay/ui/gameplay_ui.gd
+features/gameplay/ui/gameplay_ui.tscn
+features/player/ui/character_stats_window.gd
+features/player/ui/character_stats_window.gd.uid
+features/player/ui/character_stats_window.tscn
+```
+
+Audit funcional:
+
+```text
+Atilio:
+37 todavía no — B1 fue read-only con baseline anterior 36/604
+
+Atilio UI:
+36 / 15 / 25 / 10
+Available 604
+
+Lyra UI:
+15 / 30 / 15 / 15
+Available 420
+
+C / HUD / X / drag / viewport clamp
+✅
+```
+
+## F22-D4-B2
+
+Commit remoto verificado:
+
+```text
+79938d4ccaa3b7d464a7e7ecb2a613aaaf1b240c
+feat: add primary stat allocation controls
+```
+
+Scope:
 
 ```text
 app/flows/game_session_flow_coordinator.gd
+features/gameplay/ui/gameplay_screen.gd
+features/gameplay/ui/gameplay_ui.gd
+features/player/ui/character_stats_window.gd
+features/player/ui/character_stats_window.tscn
 ```
 
-Cambios conceptuales permanentes:
+No hubo cambios Game Server ni Backend.
+
+Mutation real controlada desde UI:
 
 ```text
-bind primary_stat_allocation_result_received
-+
-handler live PlayerRuntimeState apply
+Atilio
+request: strength +1
+
+revision 2 → 3
+allocated STR 11 → 12
+Permanent STR 36 → 37
+spent 11 → 12
+total 615
+unspent 604 → 603
+Idempotent: false
+```
+
+Fresh reconnect posterior:
+
+```text
+nuevo Peer
+nuevo Ticket
+Stats revision 3
+STR B/A/P 25/12/37
+Points 12/615
+Unspent 603
+```
+
+No hubo nueva allocation durante reconnect.
+
+Resultado:
+
+```text
+UI +1 durable end-to-end verified
+live refresh verified
+fresh durable reconnect verified
 ```
 
 ---
@@ -3031,64 +3193,97 @@ NO rediseñar F22-A.
 NO rehacer F22-B.
 NO rehacer F22-C.
 NO rehacer D1/D2/D3/D4-A.
+NO rehacer D4-B1.
+NO rehacer D4-B2.
 
-NO borrar Atilio STR11.
-NO volver revision 2 a revision 1.
+NO borrar Atilio STR12.
+NO volver revision 3 a revision 2/1.
 NO crear allocation ficticia para Lyra.
 
 NO conectar Stats a combat todavía.
 NO derivar HP/MP todavía.
 NO introducir Reset todavía.
 NO introducir Respec todavía.
+NO agregar bulk allocation antes de B3.
 ```
 
 Continuar desde:
 
 ```text
-F22-D4-B — Primary Stats UI foundation
+F22-D4-B3
+Primary Stats allocation feedback / rejection UX
 ```
 
 ---
 
-# 77. F22-D4-B — PRIMER OBJETIVO RECOMENDADO
+# 77. F22-D4-B — ESTADO CERRADO HASTA B2
 
-La primera UI debe resolver únicamente:
+## B1 — Character Stats Window
 
-```text
-abrir/cerrar Stats Window
-mostrar STR/AGI/VIT/ENE
-mostrar Permanent
-mostrar Available Points
-escuchar cambios de PrimaryStatsState
-```
-
-Después, en etapa posterior:
+Resuelto:
 
 ```text
-+1 allocation intent
+CharacterStatsWindow
+BaseWindow inheritance
+fixed size
+drag dentro de viewport
+close X
+toggle C
+HUD CharacterButton
+
+Permanent:
+STR
+AGI
+VIT
+ENE
+
+Available Points
 ```
 
-Después:
+Binding:
 
 ```text
-pending/busy feedback
+GameplayUI.player_state
+↓
+PlayerRuntimeState.primary_stats
+↓
+CharacterStatsWindow.bind_primary_stats
+↓
+PrimaryStatsState.primary_stats_changed
 ```
 
-Después:
+## B2 — +1 allocation
+
+Cada Stat posee:
 
 ```text
-bulk allocation UX
+AddButton "+"
 ```
 
-No mezclar todo en un único commit.
+Request actual:
+
+```text
++1 solamente
+```
+
+Mientras hay request:
+
+```text
+allocation_pending = true
+todos los AddButton disabled
+```
+
+La ventana no modifica sus números de forma optimista.
+
+El cambio visual llega sólo después de authoritative snapshot.
 
 ---
 
-# 78. CRITERIO DE DISEÑO DE LA VENTANA
+# 78. CRITERIO DE DISEÑO Y EDICIÓN DE ESCENAS
 
-Debe respetar la arquitectura UI actual del proyecto.
+La ventana respeta la arquitectura UI actual del proyecto.
 
-Reglas ya vigentes del proyecto UI:
+Reglas vigentes:
 
 ```text
 ventanas de tamaño fijo
@@ -3096,48 +3291,44 @@ draggables dentro del viewport
 no pueden salir del área visible del juego
 sin resize/expand/contract
 layout compacto estilo MMORPG clásico
+reutilizar BaseWindow / Theme / GenericButton
 ```
 
-Antes de crear una nueva ventana:
+REGLA DE TRABAJO OBLIGATORIA:
 
 ```text
-revisar BaseWindow
-revisar Theme
-revisar patrones actuales de Inventory/Equipment/NPC windows
-reutilizar foundation existente
+Toda escena `.tscn` se crea o modifica manualmente desde Godot Editor.
+El asistente debe indicar nodo por nodo y propiedad por propiedad.
+NO entregar `.tscn` como texto/código para reemplazar.
 ```
+
+Scripts `.gd` sí pueden entregarse completos cuando sea conveniente.
 
 No crear una segunda arquitectura de ventanas paralela.
 
 ---
 
-# 79. PRIMARY STATS UI — DATOS A MOSTRAR
+# 79. PRIMARY STATS UI — ESTADO ACTUAL
 
-Foundation recomendada:
+La UI actual muestra:
 
 ```text
-Strength
+Strength / FUERZA
 [Permanent STR] [+]
 
-Agility
+Agility / AGILIDAD
 [Permanent AGI] [+]
 
-Vitality
+Vitality / VITALIDAD
 [Permanent VIT] [+]
 
-Energy
+Energy / ENERGÍA
 [Permanent ENE] [+]
 
-Available Points: N
+PUNTOS DISPONIBLES: N
 ```
 
-Opcional más adelante:
-
-```text
-tooltip con Base + Allocated
-```
-
-No hace falta inicialmente mostrar:
+No muestra actualmente:
 
 ```text
 revision
@@ -3145,45 +3336,58 @@ spent
 total
 points_per_level
 points_per_reset
+Base/Allocated breakdown
 ```
 
-Esos datos son útiles para debug/modelo, no necesariamente para UI final.
+Esos datos siguen en modelo/debug.
+
+Tooltips de `+` explican allocation de 1 punto.
+
+Bulk controls todavía NO existen.
 
 ---
 
-# 80. LIVE REFRESH UI
+# 80. LIVE REFRESH UI — VERIFICADO
 
-La ventana deberá poder refrescar cuando:
+La ventana escucha:
 
 ```text
 PrimaryStatsState.primary_stats_changed
 ```
 
-se emita.
-
-Caso real esperado:
+Audit real B2:
 
 ```text
-UI muestra STR 36 / Available 604
-↓
-usuario asigna +1 futuro
-↓
+UI antes:
+STR 36
+Available 604
+
+click STR [+]
+
 Backend persiste
-↓
-GS responde authoritative snapshot
-↓
+GS confirma revision 3
 PlayerRuntimeState aplica
-↓
 PrimaryStatsState emite changed
-↓
-UI muestra nuevo authoritative state
+
+UI después:
+STR 37
+Available 603
 ```
 
-No refrescar desde valores inventados localmente.
+No hubo escritura manual de labels ni optimistic state.
+
+Fresh reconnect volvió a mostrar:
+
+```text
+STR 37
+Available 603
+```
+
+desde durable snapshot.
 
 ---
 
-# 81. REQUEST RESULT FEEDBACK FUTURO
+# 81. REQUEST RESULT FEEDBACK — NEXT
 
 Razones que UI podrá mapear a feedback amigable:
 
@@ -3198,7 +3402,18 @@ stale_revision
 backend/persistence error
 ```
 
-No hace falta resolver todos los textos visuales en D4-B foundation.
+F22-D4-B3 debe resolver feedback sin convertir la ventana en un panel de debug.
+
+Principio:
+
+```text
+accepted/rejected
+→ mensaje corto y claro
+→ authoritative snapshot sigue siendo la verdad
+```
+
+Para el audit de B3 preferir un rechazo no mutante y seguro,
+sin gastar otro punto real.
 
 ---
 
@@ -3255,11 +3470,12 @@ No commitear triggers de audit.
 Próximo ciclo:
 
 ```text
-F22-D4-B
-→ revisar arquitectura UI actual
-→ diseñar foundation mínima Stats Window
-→ implementar sólo representación/binding
-→ test visual + runtime
+F22-D4-B3
+→ revisar result flow actual
+→ agregar feedback visual mínimo
+→ mantener pending lock
+→ test accepted/rejected sin optimistic state
+→ preferir audit rejected no mutante
 → 0 warnings/errors
 → git diff --check
 → git status
@@ -3269,13 +3485,20 @@ F22-D4-B
 → verificar remoto
 ```
 
-Después recién decidir siguiente sub-etapa de botones/allocation UI.
+Después recién evaluar:
+
+```text
+bulk allocation UX
++5 / +10 / custom / all
+```
+
+No saltar a derived combat systems.
 
 ---
 
 # 85. RESUMEN EJECUTIVO ACTUAL
 
-Hoy VHAL ya tiene este camino completo:
+VHAL ya tiene este camino completo:
 
 ```text
 MySQL durable Primary Stat allocation
@@ -3291,12 +3514,22 @@ Permanent Primary Stats
 initial authoritative world snapshot
 ↓
 Client PrimaryStatsState
+↓
+CharacterStatsWindow
 ```
 
-Y también:
+Y el camino live completo:
 
 ```text
-Client allocation intent
+CharacterStatsWindow [+]
+↓
+GameplayUI
+↓
+GameplayScreen
+↓
+GameSessionFlowCoordinator
+↓
+GameServerClient
 ↓
 Game Server validation
 ↓
@@ -3306,22 +3539,45 @@ Game Server runtime rebuild
 ↓
 authoritative allocation result
 ↓
-Client live PlayerRuntimeState apply
+Client live PlayerRuntimeState
+↓
+PrimaryStatsState changed
+↓
+CharacterStatsWindow refresh
 ```
 
-Comprobado con una mutation real:
+Mutations reales acumuladas de Atilio:
 
 ```text
-Atilio
+Audit Backend/D3:
+revision 0 → 1
+STR allocated 0 → 10
+
+D3-C:
 revision 1 → 2
 STR allocated 10 → 11
 Permanent STR 35 → 36
 unspent 605 → 604
+
+D4-B2 UI:
+revision 2 → 3
+STR allocated 11 → 12
+Permanent STR 36 → 37
+unspent 604 → 603
 ```
 
-y un fresh reconnect que reconstruyó exactamente el mismo estado durable.
+Fresh reconnect posterior a B2 reconstruyó exactamente:
 
-La foundation de Primary Stats está lista para empezar la UI sin conectar todavía derived combat systems.
+```text
+revision 3
+STR B/A/P 25/12/37
+spent 12/615
+unspent 603
+```
+
+La foundation UI de Primary Stats + `+1` durable está cerrada.
+
+No conectar todavía derived combat systems.
 
 ---
 
@@ -3329,7 +3585,7 @@ La foundation de Primary Stats está lista para empezar la UI sin conectar todav
 
 ```text
 Client dev:
-b0b6516e4ec95c21f3232be25bb0ca05f49c8896
+79938d4ccaa3b7d464a7e7ecb2a613aaaf1b240c
 
 Game Server dev:
 8e6d02e304a0743dcdcdf1400f9ad6966e8cc736
@@ -3338,11 +3594,31 @@ Backend dev:
 ce0b202561dfee2e412f6edaf4e8df7bd422842e
 ```
 
+Atilio durable:
+
+```text
+revision 3
+STR B/A/P 25/12/37
+AGI B/A/P 15/0/15
+VIT B/A/P 25/0/25
+ENE B/A/P 10/0/10
+spent 12/615
+unspent 603
+```
+
+Lyra durable:
+
+```text
+revision 0
+Allocated 0/0/0/0
+unspent 420
+```
+
 Siguiente trabajo:
 
 ```text
-F22-D4-B
-Primary Stats UI foundation
+F22-D4-B3
+Primary Stats allocation feedback / rejection UX
 ```
 
 No avanzar a F22-E/F22-F hasta cerrar F22-D de forma explícita.
