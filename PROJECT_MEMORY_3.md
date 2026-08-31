@@ -26,13 +26,15 @@ F22-D3-C ✅
 F22-D4-A ✅
 F22-D4-B1 ✅
 F22-D4-B2 ✅
+F22-D4-B3 ✅
+F22-D ✅ CLOSED
 ```
 
 **Siguiente checkpoint real:**
 
 ```text
-F22-D4-B3
-Primary Stats allocation feedback / rejection UX
+F22-E1
+EXP Curve Foundation
 ```
 
 Todavía NO conectar Primary Stats con damage, HP/MP, Heal, Skills,
@@ -136,20 +138,26 @@ dev
 ## Client / memoria
 
 ```text
-79938d4ccaa3b7d464a7e7ecb2a613aaaf1b240c
-feat: add primary stat allocation controls
+5d5e8515e97ce01f4596024e901e7f7dc3ba2088
+feat: add primary stat allocation feedback
 ```
 
 Padre:
 
 ```text
-ddb3a60731d7468c29876dfad5f49cd6f211a2fd
-feat: add primary stats character window
+1de03a87f99f735abb32ef28e438713d3684d49e
+docs: update primary stats UI allocation state
 ```
 
 Commits relevantes recientes:
 
 ```text
+1de03a87f99f735abb32ef28e438713d3684d49e
+docs: update primary stats UI allocation state
+
+79938d4ccaa3b7d464a7e7ecb2a613aaaf1b240c
+feat: add primary stat allocation controls
+
 ddb3a60731d7468c29876dfad5f49cd6f211a2fd
 feat: add primary stats character window
 
@@ -1697,7 +1705,7 @@ No copiar Stats de Atilio a Lyra.
 
 ---
 
-# 42. F22-D — ESTADO ACTUAL
+# 42. F22-D — CLOSED ✅
 
 Objetivo general:
 
@@ -1728,7 +1736,9 @@ F22-D3-C ✅
 F22-D4-A ✅
 F22-D4-B1 ✅
 F22-D4-B2 ✅
-F22-D4-B3 NEXT
+F22-D4-B3 ✅
+
+F22-D ✅ CLOSED
 ```
 
 ---
@@ -2521,23 +2531,34 @@ No optimistic local Stat mutation ✅
 Authoritative live UI refresh ✅
 Real +1 STR UI mutation audit ✅
 Fresh reconnect after UI mutation ✅
+
+Allocation feedback label ✅
+Pending feedback ✅
+Accepted feedback ✅
+Rejected feedback ✅
+Friendly reason mapping ✅
+Rejected result resync ✅
+Non-mutating insufficient_points audit ✅
+Audit temporal 604 removido antes del commit ✅
 ```
 
 ---
 
-# 61. QUÉ FALTA EN F22-D
+# 61. F22-D — DIFERIDOS NO BLOQUEANTES
 
-Principalmente:
+F22-D queda cerrado con `+1` durable y feedback completo.
+
+Mejoras UX que pueden hacerse más adelante sin bloquear progresión:
 
 ```text
-visual feedback for allocation result/rejection
-pending visual feedback más explícito
-mapping amigable de reason codes
 bulk allocation UX
-+5 / +10 / custom / all — todavía TBD por etapas
++5
++10
+custom
+all
 ```
 
-Todavía no crear:
+También siguen fuera de este bloque:
 
 ```text
 Respec UI
@@ -2546,32 +2567,39 @@ giant derived character sheet
 combat scaling sheet
 ```
 
-La foundation funcional de UI + `+1` durable YA existe.
+Decisión canónica:
+
+```text
+Bulk allocation queda DEFERRED.
+No es requisito para iniciar F22-E.
+No reabrir F22-D sólo por no tener +5/+10/custom/all.
+```
 
 ---
 
-# 62. SIGUIENTE ETAPA REAL — F22-D4-B3
+# 62. SIGUIENTE ETAPA REAL — F22-E1
 
 Siguiente etapa pequeña:
 
 ```text
-F22-D4-B3
-Primary Stats allocation feedback / rejection UX
+F22-E1
+EXP Curve Foundation
 ```
 
 Objetivo:
 
 ```text
-mantener UI autoritativa
-mostrar estado pending de forma clara
-mostrar resultado accepted/rejected de forma discreta
-mapear reasons relevantes a feedback amigable
-probar rechazo sin gastar otro punto real
+formalizar MAX_LEVEL = 400
+centralizar XP_TO_NEXT(level)
+eliminar thresholds dispersos/de prueba
+definir comportamiento de EXP por nivel
+preparar authoritative multi-level progression
+mantener persistencia y UI actuales intactas
 ```
 
-NO agregar todavía bulk allocation.
+En E1 todavía NO hace falta conectar Primary Stats a combat/derived stats.
 
-NO conectar todavía Primary Stats a combat/derived stats.
+Bulk allocation permanece diferido.
 
 ---
 
@@ -2610,7 +2638,7 @@ cientos de puntos
 
 Evitar UX donde asignar 300 puntos requiera necesariamente 300 clicks.
 
-Bulk allocation se implementará después de feedback/rejection UX.
+Bulk allocation queda como mejora UX futura y no bloquea F22-E.
 
 ---
 
@@ -2698,11 +2726,23 @@ rehabilitar controles si unspent > 0
 
 Esto evita spam de mutaciones paralelas desde la ventana.
 
-F22-D4-B3 agregará feedback visual explícito de pending/resultado.
+Feedback visual ya implementado:
+
+```text
+APLICANDO <STAT>...
+<STAT> +N APLICADA
+PUNTOS INSUFICIENTES
+ASIGNACIÓN EN PROCESO
+SOLICITUD DESACTUALIZADA
+ATRIBUTOS ACTUALIZADOS
+CANTIDAD DE PUNTOS INVÁLIDA
+ATRIBUTO INVÁLIDO
+fallback genérico de rechazo
+```
 
 ---
 
-# 67. BULK ALLOCATION — DIRECCIÓN
+# 67. BULK ALLOCATION — DEFERRED
 
 El protocolo ya soporta:
 
@@ -2710,7 +2750,7 @@ El protocolo ya soporta:
 points > 1
 ```
 
-Por lo tanto UI futura puede soportar, por ejemplo:
+Por lo tanto una UI futura puede soportar:
 
 ```text
 +1
@@ -2719,9 +2759,16 @@ Por lo tanto UI futura puede soportar, por ejemplo:
 +all / custom
 ```
 
-Pero no implementar todo de golpe.
+Estado canónico:
 
-Primero foundation y binding correcto.
+```text
++1 ✅
+bulk UX ⏸️ DEFERRED
+```
+
+No es deuda bloqueante para progresión.
+
+Retomarlo sólo cuando aporte valor real de UX.
 
 ---
 
@@ -2933,10 +2980,14 @@ No renombrar `unarmed`.
 61. D4-B2 demostró +1 UI → durable → live refresh.
 62. D4-B2 fresh reconnect reconstruyó revision 3 / STR12 / unspent603.
 63. Los cuatro `+` se bloquean mientras allocation_pending.
-64. No implementar bulk allocation antes de cerrar feedback/rejection UX.
-65. Escenas `.tscn` se editan manualmente desde Godot Editor.
-66. No entregar `.tscn` como código para copiar/reemplazar.
-67. Cualquier audit temporal debe eliminarse antes del commit.
+64. D4-B3 implementó feedback pending/accepted/rejected.
+65. D4-B3 auditó `insufficient_points` sin mutar durable state.
+66. D4-B3 dejó remoto nuevamente `points = 1`; el 604 temporal fue removido.
+67. F22-D queda CLOSED.
+68. Bulk allocation queda diferido y NO bloquea F22-E.
+69. Escenas `.tscn` se editan manualmente desde Godot Editor.
+70. No entregar `.tscn` como código para copiar/reemplazar.
+71. Cualquier audit temporal debe eliminarse antes del commit.
 ```
 
 ---
@@ -3014,7 +3065,7 @@ Class Stats Catalog + Game Server Runtime
 
 F22-D
 Stat Allocation Protocol + UI
-🟡 IN PROGRESS
+✅ CLOSED
 
 	F22-D1
 	Primary Stats initial snapshot
@@ -3050,14 +3101,34 @@ Stat Allocation Protocol + UI
 
 	F22-D4-B3
 	Allocation feedback / rejection UX
-	⏳ NEXT
+	✅
 
 	Bulk allocation
-	⏳ AFTER B3
+	⏸️ DEFERRED UX
 
 F22-E
 Progressive EXP + Max Level 400
-⏳ FUTURE
+🟡 IN PROGRESS
+
+	F22-E1
+	EXP Curve Foundation
+	⏳ NEXT
+
+	F22-E2
+	Authoritative multi-level progression
+	⏳ FUTURE
+
+	F22-E3
+	Durable progression reconnect audit
+	⏳ FUTURE
+
+	F22-E4
+	Level-up → Primary Stat budget integration
+	⏳ FUTURE
+
+	F22-E5
+	Max Level 400 behavior
+	⏳ FUTURE
 
 F22-F
 Derived Vitals / Physical / Magic / Heal
@@ -3086,7 +3157,7 @@ Integrated Balance Audit
 
 ---
 
-# 75. GIT / AUDIT STATUS AL CIERRE D4-B2
+# 75. GIT / AUDIT STATUS AL CIERRE F22-D
 
 ## F22-D4-B1
 
@@ -3182,6 +3253,83 @@ live refresh verified
 fresh durable reconnect verified
 ```
 
+## F22-D4-B3
+
+Commit remoto verificado:
+
+```text
+5d5e8515e97ce01f4596024e901e7f7dc3ba2088
+feat: add primary stat allocation feedback
+```
+
+Scope:
+
+```text
+app/flows/game_session_flow_coordinator.gd
+features/gameplay/ui/gameplay_screen.gd
+features/gameplay/ui/gameplay_ui.gd
+features/player/ui/character_stats_window.gd
+features/player/ui/character_stats_window.tscn
+```
+
+Feedback implementado:
+
+```text
+pending:
+APLICANDO <STAT>...
+
+accepted:
+<STAT> +N APLICADA
+
+rejected:
+reason → mensaje amigable
+```
+
+Audit no mutante:
+
+```text
+Atilio baseline:
+revision 3
+STR allocated 12
+Permanent STR 37
+unspent 603
+
+request temporal:
+strength 604
+
+resultado:
+Accepted false
+Reason insufficient_points
+Revision 3
+STR allocated 12
+Unspent 603
+```
+
+Game Server rechazó antes de persistencia.
+
+No hubo nueva durable mutation.
+
+Antes del commit se restauró:
+
+```text
+primary_stat_allocation_requested.emit(
+	stat_id,
+	1
+)
+```
+
+El valor temporal `604` NO quedó en remoto.
+
+Resultado:
+
+```text
+pending feedback verified
+rejection feedback verified
+authoritative rejected resync verified
+durable state unchanged
+F22-D CLOSED
+```
+
 ---
 
 # 76. CHECKPOINT DE CONTINUIDAD ACTUAL
@@ -3195,6 +3343,8 @@ NO rehacer F22-C.
 NO rehacer D1/D2/D3/D4-A.
 NO rehacer D4-B1.
 NO rehacer D4-B2.
+NO rehacer D4-B3.
+NO reabrir F22-D por bulk allocation.
 
 NO borrar Atilio STR12.
 NO volver revision 3 a revision 2/1.
@@ -3204,19 +3354,19 @@ NO conectar Stats a combat todavía.
 NO derivar HP/MP todavía.
 NO introducir Reset todavía.
 NO introducir Respec todavía.
-NO agregar bulk allocation antes de B3.
+Bulk allocation queda diferido.
 ```
 
 Continuar desde:
 
 ```text
-F22-D4-B3
-Primary Stats allocation feedback / rejection UX
+F22-E1
+EXP Curve Foundation
 ```
 
 ---
 
-# 77. F22-D4-B — ESTADO CERRADO HASTA B2
+# 77. F22-D4-B — CLOSED ✅
 
 ## B1 — Character Stats Window
 
@@ -3276,6 +3426,53 @@ todos los AddButton disabled
 La ventana no modifica sus números de forma optimista.
 
 El cambio visual llega sólo después de authoritative snapshot.
+
+## B3 — Feedback de allocation
+
+`AllocationFeedbackLabel` muestra estados de UX sin convertirse en source of truth.
+
+Flujo:
+
+```text
+click +
+↓
+allocation_pending
+↓
+APLICANDO <STAT>...
+↓
+authoritative result
+↓
+PlayerRuntimeState aplica snapshot
+↓
+feedback accepted/rejected
+```
+
+Rechazos mapeados:
+
+```text
+insufficient_points
+allocation_busy
+stale_request
+stale_revision
+invalid_points
+invalid_stat
+fallback genérico
+```
+
+Audit real B3:
+
+```text
+604 solicitados
+603 disponibles
+→ insufficient_points
+→ revision 3 sin cambios
+→ STR12 / Permanent37
+→ unspent603
+```
+
+F22-D queda cerrado.
+
+Bulk allocation queda diferido.
 
 ---
 
@@ -3387,33 +3584,43 @@ desde durable snapshot.
 
 ---
 
-# 81. REQUEST RESULT FEEDBACK — NEXT
+# 81. REQUEST RESULT FEEDBACK — IMPLEMENTADO ✅
 
-Razones que UI podrá mapear a feedback amigable:
-
-```text
-ok
-insufficient_points
-allocation_busy
-invalid_points
-invalid_stat
-stale_request
-stale_revision
-backend/persistence error
-```
-
-F22-D4-B3 debe resolver feedback sin convertir la ventana en un panel de debug.
-
-Principio:
+La ventana implementa feedback breve de:
 
 ```text
-accepted/rejected
-→ mensaje corto y claro
-→ authoritative snapshot sigue siendo la verdad
+pending
+accepted
+rejected
 ```
 
-Para el audit de B3 preferir un rechazo no mutante y seguro,
-sin gastar otro punto real.
+Mensajes actuales:
+
+```text
+APLICANDO <STAT>...
+<STAT> +N APLICADA
+PUNTOS INSUFICIENTES
+ASIGNACIÓN EN PROCESO
+SOLICITUD DESACTUALIZADA
+ATRIBUTOS ACTUALIZADOS
+CANTIDAD DE PUNTOS INVÁLIDA
+ATRIBUTO INVÁLIDO
+NO SE PUDO ASIGNAR EL PUNTO
+```
+
+Principio preservado:
+
+```text
+feedback UX
+!=
+source of truth
+
+authoritative snapshot
+=
+source of truth
+```
+
+B3 se auditó con rechazo `insufficient_points` no mutante.
 
 ---
 
@@ -3470,12 +3677,13 @@ No commitear triggers de audit.
 Próximo ciclo:
 
 ```text
-F22-D4-B3
-→ revisar result flow actual
-→ agregar feedback visual mínimo
-→ mantener pending lock
-→ test accepted/rejected sin optimistic state
-→ preferir audit rejected no mutante
+F22-E1
+→ revisar Progression foundation actual
+→ centralizar EXP curve
+→ formalizar MAX_LEVEL = 400
+→ definir XP_TO_NEXT(level)
+→ evitar thresholds hardcodeados dispersos
+→ tests de curva sin mutar durable Character si es posible
 → 0 warnings/errors
 → git diff --check
 → git status
@@ -3485,14 +3693,13 @@ F22-D4-B3
 → verificar remoto
 ```
 
-Después recién evaluar:
+Bulk allocation:
 
 ```text
-bulk allocation UX
-+5 / +10 / custom / all
+⏸️ deferred
 ```
 
-No saltar a derived combat systems.
+No conectar todavía Primary Stats a derived combat systems.
 
 ---
 
@@ -3575,7 +3782,23 @@ spent 12/615
 unspent 603
 ```
 
-La foundation UI de Primary Stats + `+1` durable está cerrada.
+La foundation UI de Primary Stats + `+1` durable + feedback está cerrada.
+
+Audit B3 confirmó:
+
+```text
+insufficient_points
+→ rejection visible
+→ authoritative resync
+→ sin persistencia
+→ baseline durable intacto
+```
+
+F22-D queda CLOSED.
+
+Bulk allocation queda diferido y no bloquea progresión.
+
+Siguiente foco: F22-E — EXP / Level progression.
 
 No conectar todavía derived combat systems.
 
@@ -3585,7 +3808,7 @@ No conectar todavía derived combat systems.
 
 ```text
 Client dev:
-79938d4ccaa3b7d464a7e7ecb2a613aaaf1b240c
+5d5e8515e97ce01f4596024e901e7f7dc3ba2088
 
 Game Server dev:
 8e6d02e304a0743dcdcdf1400f9ad6966e8cc736
@@ -3617,8 +3840,439 @@ unspent 420
 Siguiente trabajo:
 
 ```text
-F22-D4-B3
-Primary Stats allocation feedback / rejection UX
+F22-E1
+EXP Curve Foundation
 ```
 
-No avanzar a F22-E/F22-F hasta cerrar F22-D de forma explícita.
+F22-D ya está cerrado.
+
+Bulk allocation queda diferido.
+
+No avanzar a F22-F hasta cerrar F22-E de forma explícita.
+
+
+---
+
+# 87. F22-D — CIERRE CANÓNICO
+
+F22-D se considera completamente cerrado para el alcance actual.
+
+Entrega funcional cerrada:
+
+```text
+initial Primary Stats snapshot
+strict Client PrimaryStatsState
+allocation transport
+durable optimistic mutation
+GS authoritative runtime rebuild
+live Client runtime update
+Character Stats Window
+per-character binding
++1 allocation controls
+pending lock
+accepted/rejected feedback
+durable reconnect
+safe rejection resync
+```
+
+No faltan dependencias funcionales para progresar a F22-E.
+
+Mejora explícitamente diferida:
+
+```text
+bulk allocation
++5
++10
+custom
+all
+```
+
+Reabrir esta UX sólo cuando sea útil para comodidad del jugador.
+
+---
+
+# 88. F22-D4-B3 — CIERRE Y AUDIT
+
+Commit remoto:
+
+```text
+5d5e8515e97ce01f4596024e901e7f7dc3ba2088
+feat: add primary stat allocation feedback
+```
+
+Resultado visual auditado:
+
+```text
+PUNTOS INSUFICIENTES
+```
+
+Request temporal de audit:
+
+```text
+strength
+604 points
+```
+
+Baseline durante audit:
+
+```text
+available 603
+revision 3
+allocated STR 12
+Permanent STR 37
+```
+
+Resultado autoritativo:
+
+```text
+accepted false
+reason insufficient_points
+revision 3
+allocated STR 12
+unspent 603
+```
+
+No hubo persistencia durable para ese rechazo.
+
+Remoto final confirmado:
+
+```text
+primary_stat_allocation_requested.emit(
+	stat_id,
+	1
+)
+```
+
+No quedó `604` temporal.
+
+---
+
+# 89. BULK ALLOCATION — DECISIÓN DE PRODUCTO
+
+El sistema actual de `+1` es suficiente para continuar desarrollo del juego.
+
+Bulk allocation no se considera deuda arquitectónica.
+
+Estado:
+
+```text
+DEFERRED
+```
+
+Podrá implementarse más adelante con alguna UX como:
+
+```text
++5
++10
+custom amount
+all available
+```
+
+sin cambiar el contrato durable fundamental, porque el protocolo ya soporta `points > 1`.
+
+No priorizarlo ahora.
+
+---
+
+# 90. F22-E — OBJETIVO GENERAL
+
+F22-E convierte la foundation de Progression en un loop MMORPG más real.
+
+Objetivo conceptual:
+
+```text
+mob / reward
+↓
+authoritative EXP gain
+↓
+XP threshold
+↓
+Level Up
+↓
+durable progression
+↓
+Client progression update
+↓
+Primary Stat budget derivado del nuevo Level
+```
+
+Debe respetar:
+
+```text
+Game Server = autoridad runtime
+Backend = durable mutation
+Client = representación
+```
+
+Primary Stats siguen derivando budget desde Level.
+
+No persistir `unspent`.
+
+---
+
+# 91. F22-E1 — EXP CURVE FOUNDATION — NEXT
+
+Primera etapa:
+
+```text
+F22-E1
+EXP Curve Foundation
+```
+
+Alcance recomendado:
+
+```text
+MAX_LEVEL = 400
+XP_TO_NEXT(level) centralizada
+validación de level válido
+threshold determinístico
+sin hardcodes dispersos
+sin tocar derived Stats
+sin Reset todavía
+```
+
+Curva foundation acordada previamente:
+
+```text
+n = level - 1
+
+XP_TO_NEXT(level)
+=
+50
++
+15*n
++
+2*n²
+```
+
+Antes de implementarla:
+
+```text
+revisar código real de Progression en Backend / Game Server / Client
+localizar thresholds actuales
+decidir ubicación autoritativa de la fórmula
+evitar duplicar la fórmula como verdad en varias capas
+```
+
+Client puede recibir/mostrar thresholds autoritativos,
+pero no debe ser la autoridad de la curva.
+
+---
+
+# 92. F22-E2 — AUTHORITATIVE MULTI-LEVEL PROGRESSION — FUTURE
+
+Después de E1:
+
+```text
+F22-E2
+```
+
+Debe soportar EXP suficiente para subir más de un Level en una sola recompensa.
+
+Ejemplo conceptual:
+
+```text
+Level N
+EXP cerca del threshold
++ reward grande
+↓
+consume threshold
+↓
+Level N+1
+↓
+recalcula siguiente threshold
+↓
+continúa con EXP restante
+```
+
+No permitir:
+
+```text
+EXP 340 / 100
+```
+
+como estado final incoherente si correspondían varios level-ups.
+
+---
+
+# 93. F22-E3 — DURABLE PROGRESSION RECONNECT — FUTURE
+
+Después de una subida real controlada:
+
+```text
+disconnect
+↓
+fresh ticket
+↓
+fresh PlayerWorldSession
+```
+
+debe reconstruirse exactamente:
+
+```text
+Level
+EXP remanente
+Primary Stat budget derivado
+```
+
+No confiar en cache Client.
+
+---
+
+# 94. F22-E4 — LEVEL UP → PRIMARY STAT BUDGET — FUTURE
+
+Con foundation actual:
+
+```text
+5 puntos por Level
+```
+
+Atilio hoy:
+
+```text
+Level 124
+total budget 615
+spent 12
+unspent 603
+```
+
+Si eventualmente pasa:
+
+```text
+124 → 125
+```
+
+el nuevo budget esperado será:
+
+```text
+(125 - 1) * 5
+= 620
+
+spent 12
+unspent 608
+```
+
+Esperado:
+
+```text
+603 → 608 available
+```
+
+sin persistir manualmente `unspent`.
+
+Ese flujo deberá reflejarse automáticamente en:
+
+```text
+Game Server Primary Stats runtime
+↓
+Client PrimaryStatsState
+↓
+CharacterStatsWindow
+```
+
+---
+
+# 95. F22-E5 — MAX LEVEL 400 — FUTURE
+
+Regla:
+
+```text
+MAX_LEVEL = 400
+```
+
+Debe definirse explícitamente:
+
+```text
+no Level 401
+cómo tratar EXP adicional en cap
+qué snapshot enviar
+qué persistir
+```
+
+Reset seguirá siendo una etapa posterior.
+
+---
+
+# 96. BASELINE AL INICIAR F22-E
+
+Repos:
+
+```text
+Client:
+5d5e8515e97ce01f4596024e901e7f7dc3ba2088
+
+Game Server:
+8e6d02e304a0743dcdcdf1400f9ad6966e8cc736
+
+Backend:
+ce0b202561dfee2e412f6edaf4e8df7bd422842e
+```
+
+Atilio:
+
+```text
+Character ID 1
+Warrior
+Level 124
+EXP 50
+Reset 0
+
+Primary Stats revision 3
+
+Base:
+25 / 15 / 25 / 10
+
+Allocated:
+12 / 0 / 0 / 0
+
+Permanent:
+37 / 15 / 25 / 10
+
+Budget:
+spent 12
+total 615
+unspent 603
+```
+
+Lyra:
+
+```text
+Character ID 2
+Archer
+Level 85
+EXP 0
+Reset 0
+Primary Stats revision 0
+Allocated 0/0/0/0
+unspent 420
+```
+
+No modificar estos baselines sin una mutation real explícitamente auditada.
+
+---
+
+# 97. CONTINUACIÓN INMEDIATA
+
+Al retomar:
+
+```text
+1. verificar remoto Client / Game Server / Backend
+2. revisar Progression code real en los tres repos
+3. localizar fórmula/threshold actual
+4. diseñar F22-E1 mínimo
+5. implementar manualmente
+6. test
+7. 0 warnings/errors
+8. git diff --check
+9. git status
+10. commit
+11. push
+12. esperar "pusheado"
+13. verificar remoto
+```
+
+Siguiente etapa exacta:
+
+```text
+F22-E1 — EXP Curve Foundation
+```
