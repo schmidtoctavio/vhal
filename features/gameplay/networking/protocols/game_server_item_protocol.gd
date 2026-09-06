@@ -757,7 +757,7 @@ func _process_character_equipment_snapshot(
 
 
 	_mark_equipment_transfer_equipment_synced()
-
+	_mark_equipment_enhancement_equipment_synced()
 
 # =========================================================
 # MOVER ITEM DE INVENTORY
