@@ -1396,6 +1396,20 @@ func send_equipment_unequip_request(
 		new_position
 	)
 
+func send_equipment_enhancement_request(
+	uid: String
+) -> Error:
+	if not connected:
+		return ERR_UNAVAILABLE
+
+
+	if item_protocol == null:
+		return ERR_UNAVAILABLE
+
+
+	return item_protocol.send_equipment_enhancement_request(
+		uid
+	)
 
 # =========================================================
 # HELPERS PARA PROTOCOLOS

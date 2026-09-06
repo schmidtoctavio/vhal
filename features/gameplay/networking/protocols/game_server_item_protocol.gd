@@ -61,6 +61,10 @@ const MESSAGE_EQUIPMENT_UNEQUIP_REQUEST: String = (
 	"equipment_unequip_request"
 )
 
+const MESSAGE_EQUIPMENT_ENHANCEMENT_REQUEST: String = (
+	"equipment_enhancement_request"
+)
+
 const MESSAGE_WORLD_DROP_PICKUP_REQUEST: String = (
 	"world_drop_pickup_request"
 )
@@ -107,6 +111,14 @@ var equipment_transfer_request_pending: bool = false
 var equipment_transfer_inventory_synced: bool = false
 
 var equipment_transfer_equipment_synced: bool = false
+
+var next_equipment_enhancement_request_id: int = 1
+
+var equipment_enhancement_request_pending: bool = false
+
+var equipment_enhancement_inventory_synced: bool = false
+
+var equipment_enhancement_equipment_synced: bool = false
 
 var next_world_drop_pickup_request_id: int = 1
 
@@ -235,6 +247,8 @@ func _has_item_mutation_pending() -> bool:
 		item_container_transfer_request_pending
 		or
 		equipment_transfer_request_pending
+		or
+		equipment_enhancement_request_pending
 		or
 		world_drop_pickup_request_pending
 	)
@@ -578,6 +592,7 @@ func _process_character_inventory_snapshot(
 
 	_mark_equipment_transfer_inventory_synced()
 
+	_mark_equipment_enhancement_inventory_synced()
 
 # =========================================================
 # SNAPSHOT DE EQUIPMENT DEL PERSONAJE
@@ -1277,6 +1292,72 @@ func send_equipment_unequip_request(
 
 	return OK
 
+# =========================================================
+# MEJORAR ITEM DE EQUIPMENT
+# =========================================================
+
+func send_equipment_enhancement_request(
+	uid: String
+) -> Error:
+	if _has_item_mutation_pending():
+		return ERR_BUSY
+
+
+	var normalized_uid := (
+		uid.strip_edges()
+	)
+
+
+	if (
+		normalized_uid.is_empty()
+		or
+		normalized_uid.length() > 64
+	):
+		return ERR_INVALID_PARAMETER
+
+
+	var request_id := (
+		next_equipment_enhancement_request_id
+	)
+
+
+	var result := int(
+		send_message.call(
+			MESSAGE_EQUIPMENT_ENHANCEMENT_REQUEST,
+			{
+				"request_id": request_id,
+
+				"uid": normalized_uid,
+			}
+		)
+	)
+
+
+	if result != OK:
+		return result as Error
+
+
+	equipment_enhancement_request_pending = true
+
+	equipment_enhancement_inventory_synced = false
+
+	equipment_enhancement_equipment_synced = false
+
+	next_equipment_enhancement_request_id += 1
+
+
+	print(
+		"GameServerClient | "
+		+
+		"Solicitud Enhancement enviada",
+		" | Request: ",
+		request_id,
+		" | UID: ",
+		normalized_uid
+	)
+
+
+	return OK
 
 # =========================================================
 # INVENTORY RECIBIDO DURANTE EQUIPMENT TRANSFER
@@ -1338,6 +1419,66 @@ func _try_finish_equipment_transfer_sync() -> void:
 
 
 # =========================================================
+# INVENTORY RECIBIDO DURANTE ENHANCEMENT
+# =========================================================
+
+func _mark_equipment_enhancement_inventory_synced() -> void:
+	if not equipment_enhancement_request_pending:
+		return
+
+
+	equipment_enhancement_inventory_synced = true
+
+
+	_try_finish_equipment_enhancement_sync()
+
+
+# =========================================================
+# EQUIPMENT RECIBIDO DURANTE ENHANCEMENT
+# =========================================================
+
+func _mark_equipment_enhancement_equipment_synced() -> void:
+	if not equipment_enhancement_request_pending:
+		return
+
+
+	equipment_enhancement_equipment_synced = true
+
+
+	_try_finish_equipment_enhancement_sync()
+
+
+# =========================================================
+# FINALIZAR SINCRONIZACIÓN DE ENHANCEMENT
+# =========================================================
+
+func _try_finish_equipment_enhancement_sync() -> void:
+	if not equipment_enhancement_request_pending:
+		return
+
+
+	if not equipment_enhancement_inventory_synced:
+		return
+
+
+	if not equipment_enhancement_equipment_synced:
+		return
+
+
+	equipment_enhancement_request_pending = false
+
+	equipment_enhancement_inventory_synced = false
+
+	equipment_enhancement_equipment_synced = false
+
+
+	print(
+		"GameServerClient | "
+		+
+		"Enhancement sincronizado desde estado autoritativo."
+	)
+
+# =========================================================
 # SERVICIO NPC FINALIZADO
 # =========================================================
 
@@ -1379,6 +1520,14 @@ func reset() -> void:
 	equipment_transfer_inventory_synced = false
 
 	equipment_transfer_equipment_synced = false
+
+	next_equipment_enhancement_request_id = 1
+
+	equipment_enhancement_request_pending = false
+
+	equipment_enhancement_inventory_synced = false
+
+	equipment_enhancement_equipment_synced = false
 
 	next_world_drop_pickup_request_id = 1
 	
