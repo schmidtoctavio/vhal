@@ -1230,13 +1230,6 @@ func _show_gameplay(
 			_on_gameplay_equipment_item_unequip_requested
 		)
 
-	if not gameplay_screen.equipment_enhancement_intent_requested.is_connected(
-		_on_gameplay_equipment_enhancement_requested
-	):
-		gameplay_screen.equipment_enhancement_intent_requested.connect(
-			_on_gameplay_equipment_enhancement_requested
-		)
-
 	if not gameplay_screen.world_drop_pickup_intent_requested.is_connected(
 		_on_gameplay_world_drop_pickup_requested
 	):
@@ -2792,42 +2785,4 @@ func _on_character_vitals_updated(
 		gameplay_screen.player_state.vitals.mp,
 		"/",
 		gameplay_screen.player_state.vitals.max_mp
-	)
-
-# =========================================================
-# EQUIPMENT ENHANCEMENT → GAME SERVER
-# =========================================================
-
-func _on_gameplay_equipment_enhancement_requested(
-	uid: String
-) -> void:
-	var normalized_uid := (
-		uid.strip_edges()
-	)
-
-
-	if normalized_uid.is_empty():
-		return
-
-
-	var result := (
-		game_server_client
-		.send_equipment_enhancement_request(
-			normalized_uid
-		)
-	)
-
-
-	if result == OK:
-		return
-
-
-	print(
-		"GameSessionFlowCoordinator | "
-		+
-		"No se pudo enviar Enhancement",
-		" | UID: ",
-		normalized_uid,
-		" | Error: ",
-		result
 	)
