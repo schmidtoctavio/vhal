@@ -1,4 +1,4 @@
-# VHAL — PROJECT MEMORY 5 / F22-G → F22-J CLOSURE
+# VHAL — PROJECT MEMORY 5 / F22-G → F22 COMPLETE
 
 **Volumen:** 5  
 **Inicio:** 06/09/2026  
@@ -11,6 +11,8 @@
 
 # 0. ORDEN DE LECTURA Y PRECEDENCIA
 
+Orden obligatorio:
+
 ```text
 1. PROJECT_MEMORY.md
 2. PROJECT_MEMORY_2.md
@@ -21,7 +23,9 @@
 7. repositorios reales branch dev
 ```
 
-Este volumen prevalece para F22-G, F22-H, F22-I, F22-J y decisiones posteriores cuando contradiga estados históricos anteriores.
+Precedencia:
+
+> Este volumen prevalece para F22-G, F22-H, F22-I, F22-J, F22-K y decisiones posteriores cuando contradiga estados históricos anteriores.
 
 Los repositorios reales en `dev` siguen prevaleciendo sobre memoria si el código cambió después de esta actualización.
 
@@ -30,6 +34,8 @@ Los repositorios reales en `dev` siguen prevaleciendo sobre memoria si el códig
 ---
 
 # 1. WORKFLOW OBLIGATORIO ACTUAL
+
+Ciclo de trabajo canónico:
 
 ```text
 ETAPA / FASE ACORDADA
@@ -61,8 +67,8 @@ Escenas y archivos:
 
 ```text
 .tscn → siempre editar manualmente desde Godot Editor.
-.gd   → completo o cambios exactos.
-.md canónico → archivo completo, nunca patch.
+.gd   → puede entregarse completo o con cambios exactos.
+.md canónico → siempre archivo completo, nunca patch.
 ```
 
 Objetivo habitual:
@@ -78,8 +84,11 @@ Hooks/audits temporales:
 pueden existir durante una prueba
 → se prueban
 → se eliminan
-→ recién después se cierra el bloque
+→ recién después se considera cerrado el bloque
 ```
+
+Los contracts permanentes de regresión sí pueden permanecer si representan
+reglas de dominio/gameplay y no nombres temporales del roadmap.
 
 ---
 
@@ -94,8 +103,11 @@ schmidtoctavio/vhal_game_server
 
 Backend:
 schmidtoctavio/vhal_backend
+```
 
 Branch habitual:
+
+```text
 dev
 ```
 
@@ -105,12 +117,21 @@ dev
 
 ## Client
 
+HEAD documental actual:
+
+```text
+80d071be1eb06c9c0909011edf8547e7010f777c
+docs: close F22 equipment and skill foundations
+```
+
+Último HEAD runtime anterior:
+
 ```text
 4ff9c79b1fa3376bb155d318e18856da3807ccf9
 chore: remove temporary enhancement debug trigger
 ```
 
-Relevantes:
+Commits relevantes de Enhancement Client:
 
 ```text
 5a3e14eb9bd729b06b33c4c50031d8aeb56ee0d8
@@ -122,12 +143,21 @@ feat: add equipment enhancement client transport
 
 ## Game Server
 
+HEAD actual:
+
+```text
+c6114f22c52630f190952c7f1c9360df2f6838b3
+feat: add integrated gameplay balance contract
+```
+
+Anterior:
+
 ```text
 cb84c83dfac5220b651159f09bab1af1a7bec563
 feat: add skill scaling and usage requirements
 ```
 
-Anterior:
+Anterior relevante:
 
 ```text
 1a5e117511f412fc110d53d7e10a472c6407e4f9
@@ -135,6 +165,8 @@ fix: normalize persisted item state from backend
 ```
 
 ## Backend
+
+HEAD actual relevante:
 
 ```text
 ce3e0b02dbb1772204e12d1c2bb29d777b28b750
@@ -152,6 +184,8 @@ feat: persist equipment enhancement transitions
 
 # 4. ESTADO GENERAL
 
+Estado canónico:
+
 ```text
 F19 ✅
 F20 ✅
@@ -168,16 +202,47 @@ F22-G ✅
 F22-H ✅
 F22-I ✅
 F22-J ✅
+F22-K ✅
 
-NEXT:
-F22-K — Integrated Balance Audit
+F22 ✅ COMPLETE
 ```
+
+El roadmap canónico existente no tenía un F23 ya definido.
+
+Siguiente decisión recomendada:
+
+```text
+F23 — Skill Combat Effects
+```
+
+Motivo:
+
+```text
+Magic Power consumer ofensivo real quedó explícitamente deferred.
+Fire Ball existe pero todavía responde skill_not_implemented.
+Poison existe pero todavía responde skill_not_implemented.
+Skill Scaling foundation ya está lista para consumidores reales.
+```
+
+Orden recomendado dentro de F23:
+
+```text
+F23-A Fire Ball / Magic Damage consumer
+F23-B Skill target/range/damage result integration
+F23-C Poison / Status Effect + DoT foundation
+```
+
+Esto es la continuación recomendada, no una fase histórica preexistente.
+
+El sistema futuro de Joyas de Enhancement queda fuera de F23 para no mezclar scopes.
 
 ---
 
 # 5. F22-G — ARMOR / CRIT ✅
 
-Integrado:
+F22-G quedó cerrado.
+
+Integraciones principales:
 
 ```text
 Critical Strike Chance
@@ -186,7 +251,7 @@ Physical Armor Mitigation
 Character Physical Defense Profile foundation
 ```
 
-Foundation actual:
+Critical foundation actual:
 
 ```text
 critical_strike_chance = 0.0
@@ -206,29 +271,47 @@ Physical Power
 → mob damage
 ```
 
-Mitigación física:
+Mitigación física canónica:
 
 ```text
-floor(pre_damage * 1000 / (armor + 1000))
+post_damage
+=
+floor(
+	pre_damage * 1000
+	/
+	(armor + 1000)
+)
 ```
 
-Mínimo:
+Mínimo de daño válido:
 
 ```text
 1
 ```
 
-Training Goblin:
+Training Goblin actual:
 
 ```text
 base_armor_rating = 100
 ```
 
-El Critical Roll ocurre sólo en Game Server.
+El Game Server realiza el Critical Roll.
+
+El Client nunca decide:
+
+```text
+critical roll
+critical success
+critical multiplier aplicado
+armor mitigation
+damage final
+```
 
 ---
 
 # 6. F22-H — ATTACK SPEED / MOVEMENT SPEED ✅
+
+F22-H quedó cerrado.
 
 Breakdown:
 
@@ -240,38 +323,51 @@ H2-A Class Attack Speed balance ✅
 H2-B AGI → Attack Speed formula ✅
 ```
 
-Movement Speed:
+Movement Speed actual:
 
 ```text
 4.0
 ```
 
-Attack Speed:
+Attack Speed usa saturación por clase.
+
+## Warrior
 
 ```text
-Warrior:
 1 + 0.35 * AGI / (AGI + 300)
+```
 
-Mage:
+## Mage
+
+```text
 1 + 0.25 * AGI / (AGI + 350)
+```
 
-Archer:
+## Archer
+
+```text
 1 + 0.60 * AGI / (AGI + 250)
 ```
 
-Basic Attack cooldown efectivo:
+El Basic Attack cooldown efectivo se resuelve desde:
 
 ```text
-base cooldown / attack_speed_multiplier
+base cooldown
+÷
+attack_speed_multiplier
 ```
 
-Client usa Movement Speed autoritativo para prediction; Game Server sigue siendo autoridad.
+El Movement Server usa Derived Movement Speed por sesión.
+
+El Client usa Movement Speed autoritativo para prediction, pero el Game Server sigue siendo autoridad.
 
 ---
 
 # 7. F22-I — EQUIPMENT + ENHANCEMENT FOUNDATION ✅
 
-Breakdown cerrado:
+F22-I queda cerrado.
+
+Breakdown completo:
 
 ```text
 I1-A Equipment Item Usage Contract ✅
@@ -314,6 +410,8 @@ I4-D-C Remove Temporary E2E Trigger ✅
 
 # 8. PRIMARY / EFFECTIVE / DERIVED — CONTRATO CANÓNICO
 
+Pipeline actual:
+
 ```text
 Permanent Primary
 +
@@ -338,38 +436,60 @@ Allocated
 futuros Permanent Bonuses
 ```
 
+Effective Primary:
+
+```text
+Permanent Primary
++
+Equipment
+```
+
 Regla crítica:
 
-> Equipment Usage Requirements se evalúan contra Permanent Primary, nunca contra Effective Primary.
+> Equipment Usage Requirements SIEMPRE se evalúan contra Permanent Primary, nunca contra Effective Primary.
 
 Por lo tanto:
 
 ```text
-Equipment bonus NO habilita su propio requisito.
-Equipment bonus NO habilita el requisito de otro Equipment.
+Equipment bonus NO puede habilitar su propio requisito.
+Equipment bonus NO puede habilitar el requisito de otro Equipment.
 ```
 
 ---
 
-# 9. EQUIPMENT MODIFIERS / BASIC ATTACK
+# 9. EQUIPMENT MODIFIERS
 
-Equipment puede aportar:
+Equipment puede contribuir a:
 
 ```text
+Primary:
 strength
 agility
 vitality
 energy
+
+Derived / combat:
 weapon_damage
 armor_rating
+otros vocabularios futuros
 ```
 
-Pipeline weapon:
+La agregación es autoritativa en Game Server.
+
+El Client representa snapshots; no calcula el resultado autoritativo final.
+
+---
+
+# 10. WEAPON DAMAGE → BASIC ATTACK
+
+Weapon Damage se resuelve desde Equipment.
+
+Pipeline:
 
 ```text
 Equipment Snapshot
 → main_hand
-→ weapon_damage
+→ resolved weapon_damage
 → BasicAttackProfile.base_damage
 → + Physical Power
 → Crit
@@ -377,95 +497,144 @@ Equipment Snapshot
 → daño final
 ```
 
-Bronze Sword foundation:
+Ejemplo foundation:
 
 ```text
-base weapon_damage = 1000
+Bronze Sword base weapon_damage = 1000
+```
+
+Basic Attack:
+
+```text
+pre_critical_damage
+=
+weapon/base attack damage
++
+derived physical_power
 ```
 
 ---
 
-# 10. ENHANCEMENT — ESTADO DURABLE
+# 11. ENHANCEMENT — ESTADO DURABLE
 
-Estado canónico:
+Estado canónico de instancia:
 
 ```gdscript
 {
 	"item_id": "bronze_sword",
+
 	"state": {
 		"enhancement_level": 4
 	}
 }
 ```
 
-Legacy:
+`enhancement_level` es parte del estado durable de la instancia.
+
+Semántica legacy:
 
 ```text
-state missing / null / [] / {}
+state missing
+state = null
+state = []
+state = {}
 → +0
 ```
 
-Array no vacío es inválido.
+Array no vacío inválido.
 
 `state` puede contener otros campos durables futuros.
 
 ---
 
-# 11. ENHANCEMENT — CURVAS ACTUALES
+# 12. ENHANCEMENT — CURVAS ACTUALES
 
-Máximo foundation:
+Maximum foundation actual:
 
 ```text
 +13
 ```
 
-Weapon cumulative percentage:
+IMPORTANTE:
+
+> Las curvas de Enhancement almacenan BONUS FLAT ACUMULADO.
+> NO representan porcentajes.
+
+## Weapon Damage cumulative flat bonus
 
 ```text
-+0   0%
-+1  20%
-+2  40%
-+3  60%
-+4  80%
-+5 100%
-+6 125%
-+7 150%
-+8 180%
-+9 220%
-+10 270%
-+11 330%
-+12 400%
-+13 500%
++0    +0
++1   +20
++2   +40
++3   +60
++4   +80
++5  +100
++6  +125
++7  +150
++8  +180
++9  +220
++10 +270
++11 +330
++12 +400
++13 +500
+```
+
+Semántica:
+
+```text
+resolved final
+=
+base intrinsic value
++
+flat cumulative enhancement bonus
 ```
 
 Ejemplo Bronze Sword base 1000:
 
 ```text
-+0  = 1000
-+7  = 1150
-+13 = 1500
++0:
+1000 + 0
+= 1000
+
++4:
+1000 + 80
+= 1080
+
++7:
+1000 + 150
+= 1150
+
++13:
+1000 + 500
+= 1500
 ```
 
-Armor flat bonus:
+NO es:
 
 ```text
-+0   0
-+1  +1
-+2  +2
-+3  +3
-+4  +4
-+5  +5
-+6  +6
-+7  +7
-+8  +9
-+9 +11
-+10 +14
-+11 +17
-+12 +21
-+13 +26
+1000 + 150%
 ```
 
-Leather Helmet base 20:
+## Armor Rating cumulative flat bonus
+
+```text
++0    +0
++1    +1
++2    +2
++3    +3
++4    +4
++5    +5
++6    +6
++7    +7
++8    +9
++9   +11
++10  +14
++11  +17
++12  +21
++13  +26
+```
+
+Ejemplo Leather Helmet base 20:
 
 ```text
 +0  = 20
@@ -475,11 +644,11 @@ Leather Helmet base 20:
 
 ---
 
-# 12. ENHANCEMENT — REQUIREMENTS
+# 13. ENHANCEMENT — REQUIREMENTS
 
-Enhancement puede elevar requirements.
+Enhancement puede elevar requirements del Equipment.
 
-Bronze Sword:
+Ejemplo Bronze Sword:
 
 ```text
 Base STR Requirement = 15
@@ -487,46 +656,64 @@ Base STR Requirement = 15
 Final +13            = 30
 ```
 
-Eligibility usa Permanent Primary.
+Usage Eligibility evalúa contra:
 
 ```text
-Permanent STR 27 → Sword +13 rechazada
-Permanent STR 30 → permitida
+Permanent Primary
+```
+
+Ejemplo:
+
+```text
+Permanent STR 27
+Bronze Sword +13 requires STR 30
+→ rechazo
+
+Permanent STR 30
+→ permitido
 ```
 
 ---
 
-# 13. ENHANCEMENT — TRANSITION / PERSISTENCE
+# 14. ENHANCEMENT — TRANSITION CONTRACT
 
-Foundation actual:
+Transition Rules foundation actual:
 
 ```text
-+N → +(N+1)
++N
+→
++(N+1)
 ```
 
-Transition Rules:
+La transición:
 
 ```text
 valida current item
 valida next level
-deep-copy
-preserva state adicional
+deep-copy del item
+preserva state durable adicional
 canonicaliza legacy +0
 ```
 
-Todavía NO decide:
+No decide todavía:
 
 ```text
 costos
 joyas
 RNG
-failure
+success/failure
 downgrade
 materiales
 UI
 ```
 
-Backend endpoint:
+---
+
+# 15. ENHANCEMENT — PERSISTENCIA
+
+Backend Laravel es autoridad durable junto a MySQL.
+
+Endpoint interno:
 
 ```text
 PATCH
@@ -543,43 +730,78 @@ Payload foundation:
 }
 ```
 
-Backend usa:
+Backend:
 
 ```text
 transaction
++
 lockForUpdate
++
 stale guard
++
 persist exact transition
 ```
 
 Laravel NO decide gameplay de Enhancement.
 
+No decide:
+
+```text
+max level gameplay
+RNG
+cost
+material requerido
+eligibility
+```
+
+Eso pertenece al Game Server.
+
 ---
 
-# 14. ENHANCEMENT — E2E PROBADO
+# 16. ENHANCEMENT — GAME SERVER ORCHESTRATION
 
-Pipeline:
+Pipeline probado:
 
 ```text
 Client
 → equipment_enhancement_request(uid)
-→ GameServer
+→ GameServer parser
 → EquipmentCoordinator
+→ resolve authoritative source
 → Transition Rules
 → Usage Eligibility si está equipado
-→ Repository
-→ Laravel/MySQL
-→ reload Inventory + Equipment
+→ Backend Repository
+→ Laravel
+→ MySQL
+→ reload Inventory
+→ reload Equipment
 → Client snapshots
 ```
 
-Client sólo envía:
+El Client sólo envía:
 
 ```text
 uid
 ```
 
-Probado durablemente:
+No envía:
+
+```text
+container
+current level
+next level
+requirements
+success
+failure
+```
+
+El Game Server resuelve todo eso.
+
+---
+
+# 17. ENHANCEMENT — E2E PROBADO
+
+Roundtrip real probado:
 
 ```text
 +1 → +2
@@ -587,13 +809,29 @@ Probado durablemente:
 +3 → +4
 ```
 
-El siguiente request siempre parte del nuevo nivel recibido por snapshot.
+Comprobado:
+
+```text
+Game Server resuelve transición
+Laravel persiste
+Game Server recarga snapshots
+Client reconstruye ItemInstance
+siguiente request parte del nuevo level durable
+```
+
+Bronze Sword durable alcanzó:
+
+```text
++4
+```
+
+en las pruebas de foundation.
 
 ---
 
-# 15. JSON ITEM STATE NORMALIZATION
+# 18. JSON ITEM STATE NORMALIZATION
 
-Problema detectado:
+Se detectó un problema real de frontera JSON:
 
 ```text
 enhancement_level JSON podía llegar a Godot como float
@@ -611,101 +849,122 @@ Semántica:
 1.0 → 1
 7.0 → 7
 
-1.5 queda float y el dominio rechaza
-"1" queda String y el dominio rechaza
+1.5 permanece float y dominio rechaza
+"1" permanece String y dominio rechaza
 ```
 
 No se relajó el dominio.
 
 ---
 
-# 16. ENHANCEMENT — DECISIÓN FUTURA DE JOYAS
+# 19. ENHANCEMENT — DECISIÓN FUTURA DE JOYAS
 
-DECIDIDO, PERO NO IMPLEMENTADO.
+IMPORTANTE: decidido pero NO implementado todavía.
 
 Mecánica inspirada en MU.
 
-Requirement:
+## Requirement de container
+
+Para mejorar un Equipment:
 
 ```text
-Equipment debe estar desequipado
-y dentro de Inventory
+debe estar desequipado
+debe estar dentro de Inventory
 ```
 
-Interacción futura:
+No debe poder mejorarse mientras está equipado.
+
+## Interacción Client
+
+Mecánica prevista:
 
 ```text
-arrastrar Joya
-→ soltar sobre Equipment target
+Inventory
+→ arrastrar una Joya
+→ soltarla encima del Equipment target
 → enviar intención
 ```
 
-Payload conceptual futuro:
+La intención conceptual futura debe contener algo equivalente a:
 
 ```text
 jewel_uid
 target_item_uid
 ```
 
-Client NO envía:
+El Client NO debe enviar:
 
 ```text
-current level
-next level
+current enhancement level
+next enhancement level
 probability
 success/failure
-container autoritativo
+container authoritative
 ```
 
-Tiers:
+## Tiers de Joyas
+
+Decisión actual:
 
 ```text
 +0 → +6
 Joya A
-(se usa sobre +0..+5)
 
 +6 → +9
 Joya B distinta
-(se usa sobre +6..+8)
 
 +9 → +13
-DEFERRED
+DEFERRED / definir más adelante
 ```
 
-Failure:
+Interpretación exacta:
+
+```text
+Joya A se usa sobre +0..+5 para intentar llegar hasta +6.
+Joya B se usa sobre +6..+8 para intentar llegar hasta +9.
+```
+
+## Failure
+
+Habrá probabilidad de fallo.
+
+Decisión actual:
 
 ```text
 si falla:
-baja 1 nivel
+enhancement_level baja 1
 ```
 
 Ejemplo:
 
 ```text
-+5 → fail → +4
++5
+→ intento
+→ falla
+→ +4
 ```
 
-Probabilidades exactas:
+Las probabilidades exactas todavía NO están definidas.
+
+## Autoridad
+
+El Game Server deberá validar:
 
 ```text
-DEFERRED
-```
+target pertenece al character
+target está en Inventory
+target está desequipado
+target es Equipment
 
-Autoridad del Game Server:
+jewel pertenece al character
+jewel está en Inventory
+jewel corresponde al tier
 
-```text
-ownership target
-target en inventory
-target desequipado
-target es equipment
-ownership jewel
-jewel en inventory
-jewel compatible con tier
-current level
-probability
+current enhancement level
+probability correspondiente
 RNG
 success/failure
-result level
+next resulting level
 ```
 
 RNG:
@@ -716,24 +975,34 @@ Client ❌
 Backend ❌
 ```
 
-Backend futuro debe persistir atómicamente:
+Backend deberá persistir atómicamente:
 
 ```text
 consumir Joya
 +
-persistir resultado de Enhancement
+persistir resultado del Enhancement
+```
+
+Nunca debe existir:
+
+```text
+Equipment mejorado pero Joya no consumida
+o
+Joya consumida pero Equipment sin transición
 ```
 
 ---
 
-# 17. F22-J — SKILL SCALING + REQUIREMENTS + RESET-SAFE USAGE ✅
+# 20. F22-J — SKILL SCALING + REQUIREMENTS + RESET-SAFE USABILITY ✅
 
-Implementado:
+F22-J quedó cerrado.
+
+Implementaciones:
 
 ```text
 Skill Scaling Profile ✅
 Authoritative Scaling Resolver ✅
-Permanent Primary Requirements para learning ✅
+Permanent Primary Stat Requirements para Learning ✅
 Reset-safe Skill Usage ✅
 Heal migrado al Scaling Resolver ✅
 ```
@@ -744,9 +1013,9 @@ Eso es intencional.
 
 ---
 
-# 18. SKILL SCALING
+# 21. SKILL SCALING PROFILE
 
-Power Sources:
+Power Sources soportados:
 
 ```text
 none
@@ -763,7 +1032,7 @@ power_source
 power_coefficient
 ```
 
-Fórmula:
+Fórmula canónica:
 
 ```text
 Effect
@@ -773,19 +1042,19 @@ Flat Effect
 Power Source * Coefficient
 ```
 
-Resolver autoritativo:
+Resolución autoritativa:
 
 ```text
 ServerSkillScalingResolver
 ```
 
-Client no calcula Skill Scaling autoritativo.
+El Client no calcula Skill Scaling autoritativo.
 
 ---
 
-# 19. HEAL
+# 22. HEAL — SCALING ACTUAL
 
-Balance actual:
+Heal actual:
 
 ```text
 Flat = 0
@@ -793,11 +1062,17 @@ Power Source = Healing Power
 Coefficient = 1.0
 ```
 
-Entonces:
+Fórmula:
 
 ```text
-Heal = 0 + Healing Power * 1.0
+Heal
+=
+0
++
+Healing Power * 1.0
 ```
+
+Esto preserva exactamente el comportamiento anterior.
 
 Prueba real:
 
@@ -805,9 +1080,10 @@ Prueba real:
 Atilio
 Healing Power = 10
 Requested Heal = 10
+Accepted = true
 ```
 
-Con HP completo:
+Cuando estaba en HP completo:
 
 ```text
 Requested Heal = 10
@@ -818,12 +1094,22 @@ Correcto:
 
 ```text
 Requested = efecto calculado
-Restored = HP realmente restaurado tras clamp
+Restored = HP realmente restaurado después del clamp
 ```
+
+En smoke test posterior de F22-K:
+
+```text
+MP = 22
+Heal mana cost = 40
+→ insufficient_mana
+```
+
+Eso fue un rechazo correcto por recursos, no un fallo del Scaling.
 
 ---
 
-# 20. SKILL LEARNING REQUIREMENTS
+# 23. SKILL LEARNING REQUIREMENTS
 
 Learning ya tenía:
 
@@ -840,9 +1126,13 @@ F22-J agregó:
 Permanent Primary Stat Requirements
 ```
 
-Equipment bonuses NO ayudan a aprender Skills.
+Regla:
 
-Balance foundation actual:
+> Los requirements para APRENDER una Skill usan Permanent Primary Stats.
+
+Equipment bonuses NO pueden ayudar a aprender una Skill.
+
+Requirements actuales:
 
 ## Fire Ball
 
@@ -868,13 +1158,13 @@ Minimum Level: 5
 Permanent Energy: 20
 ```
 
-Estos valores pueden revisarse en F22-K.
+Estos números fueron incluidos en el Integrated Balance Contract.
 
 ---
 
-# 21. RESET-SAFE SKILL USAGE
+# 24. RESET-SAFE SKILL USAGE
 
-Regla:
+Diferencia canónica:
 
 ```text
 LEARNING REQUIREMENTS
@@ -882,7 +1172,7 @@ LEARNING REQUIREMENTS
 CAST REQUIREMENTS
 ```
 
-Al aprender se valida:
+Al aprender:
 
 ```text
 class
@@ -892,13 +1182,13 @@ trainer
 scroll
 ```
 
-Una vez aprendida:
+Una vez durablemente aprendida:
 
 ```text
-ownership durable permanece
+ownership permanece
 ```
 
-Durante cast NO se revalida:
+Durante cast NO se vuelve a exigir:
 
 ```text
 learning minimum level
@@ -906,12 +1196,12 @@ learning primary stat requirements
 reset_count
 ```
 
-Esto permite que futuros Resets bajen Level/allocations sin borrar ni inutilizar automáticamente una Skill aprendida.
+Esto permite que futuros Resets bajen Level / allocations sin borrar ni inutilizar automáticamente una Skill ya aprendida.
 
-El cast sí sigue validando:
+El cast sigue validando:
 
 ```text
-ownership
+skill ownership
 character alive
 target
 mana
@@ -919,75 +1209,425 @@ cooldown
 effect-specific rules
 ```
 
-Prueba real:
+---
+
+# 25. RESET-SAFE — PRUEBA REAL
+
+Atilio tenía:
 
 ```text
-Atilio:
 Heal aprendido
-Permanent ENE = 10
-
-Nuevo requirement de aprendizaje:
-ENE >= 20
-
-Cast:
-Accepted = true
+Permanent Energy = 10
 ```
 
-Eso confirma reset-safe usage.
+Nuevo requirement para aprender Heal:
+
+```text
+Permanent Energy >= 20
+```
+
+Aun así:
+
+```text
+Heal cast Accepted = true
+```
+
+Esto prueba:
+
+```text
+skill ownership durable
+→ cast permitido
+
+sin revalidar requisito de aprendizaje
+```
 
 No significa que un personaje nuevo con ENE 10 pueda aprender Heal.
 
 ---
 
-# 22. FIRE BALL / POISON — ESTADO
+# 26. FIRE BALL / POISON — ESTADO ACTUAL
 
-Existen en catálogos, pero SkillCastCoordinator responde:
+Existen en:
+
+```text
+ServerSkillCatalog
+ServerSkillLearningCatalog
+```
+
+Pero SkillCastCoordinator todavía responde:
 
 ```text
 skill_not_implemented
 ```
 
-Intencional.
+Eso es intencional.
 
-Fire Ball requiere un bloque propio para:
+## Fire Ball necesita
 
 ```text
 Magic Power consumer real
-skill damage profile
-range
+Skill Damage Profile
+target/range
 damage application
-mitigation/resistance
+mitigation/resistance decision
 combat result payload
 ```
 
-Poison requiere:
+## Poison necesita
 
 ```text
-status effect / DoT runtime
-ticks
+Status Effect / DoT runtime
+tick authority
 duration
-stacking/refresh
+stacking/refresh semantics
+runtime/persistence decision
 replication
 ```
 
-No mezclar esos scopes dentro de F22-J.
+No mezclar esas decisiones dentro de F22.
 
 ---
 
-# 23. ARQUITECTURA AUTORITATIVA VIGENTE
+# 27. F22-K — INTEGRATED BALANCE CONTRACT ✅
+
+F22-K quedó cerrado y remoto verificado.
+
+El artifact permanente se llama:
+
+```text
+core/balance/server_integrated_balance_contract.gd
+```
+
+Class:
+
+```text
+ServerIntegratedBalanceContract
+```
+
+No se dejó el nombre temporal:
+
+```text
+ServerF22IntegratedBalanceAudit
+```
+
+porque `F22` pertenece al roadmap, no al dominio permanente.
+
+El contract se ejecuta durante startup del Game Server desde:
+
+```text
+app/main.gd
+```
+
+Print positivo:
+
+```text
+ServerMain | Integrated Balance Contract validado.
+```
+
+Si falla:
+
+```text
+ServerMain | Integrated Balance Contract inválido: ...
+```
+
+y el server aborta startup.
+
+---
+
+# 28. INTEGRATED BALANCE — CLASS SNAPSHOTS
+
+El contract permanente fija actualmente:
+
+| Class / Level | Max HP | Max MP | Physical | Magic | Healing |
+|---|---:|---:|---:|---:|---:|
+| Warrior L1 | 200 | 60 | 60 | 10 | 10 |
+| Mage L1 | 115 | 295 | 15 | 90 | 80 |
+| Archer L1 | 130 | 130 | 60 | 15 | 15 |
+| Warrior L100 | 992 | 159 | 258 | 10 | 10 |
+| Mage L100 | 610 | 691 | 114 | 288 | 179 |
+| Archer L100 | 724 | 328 | 258 | 15 | 15 |
+
+También fija identidad relativa foundation:
+
+```text
+Max HP:
+Warrior > Archer > Mage
+
+Max MP:
+Mage > Archer > Warrior
+
+Magic Power:
+Mage > Archer > Warrior
+
+Healing Power:
+Mage > Archer > Warrior
+
+Attack Speed inicial:
+Archer > Warrior > Mage
+```
+
+Además comprueba:
+
+```text
+Crit Chance foundation = 0
+Crit Damage = 1.5
+Movement Speed = 4.0
+Attack Speed respeta fórmula por Class
+```
+
+---
+
+# 29. INTEGRATED BALANCE — BASIC ATTACK / ARMOR
+
+Warrior Level 1:
+
+```text
+Physical Power = 60
+Training Goblin Armor = 100
+```
+
+Casos contract:
+
+## Unarmed
+
+```text
+Base = 500
+Pre-Mitigation = 560
+Post-Mitigation = 509
+```
+
+## Bronze Sword +0
+
+```text
+Base = 1000
+Pre-Mitigation = 1060
+Post-Mitigation = 963
+```
+
+## Bronze Sword +7
+
+```text
+Base = 1150
+Pre-Mitigation = 1210
+Post-Mitigation = 1100
+```
+
+## Bronze Sword +13
+
+```text
+Base = 1500
+Pre-Mitigation = 1560
+Post-Mitigation = 1418
+```
+
+También comprueba que Attack Speed:
+
+```text
+effective cooldown < base cooldown
+```
+
+cuando multiplier > 1.
+
+---
+
+# 30. INTEGRATED BALANCE — ENHANCEMENT
+
+El contract fija explícitamente que las curvas son:
+
+```text
+flat cumulative bonuses
+```
+
+y comprueba:
+
+```text
+Bronze Sword:
++0  = 1000
++7  = 1150
++13 = 1500
+
+Leather Helmet:
++0  = 20
++7  = 27
++13 = 46
+```
+
+Además verifica monotonicidad:
+
+```text
+cada nivel de Enhancement
+debe mejorar el intrinsic bonus
+respecto al anterior
+```
+
+Requirement contract:
+
+```text
+Bronze Sword +13
+→ +15 STR requirement adicional
+```
+
+Warrior Level 1 base:
+
+```text
+STR 25
+
+Sword +0:
+requiere 15
+→ usable
+
+Sword +13:
+requiere 30
+→ insufficient_strength
+```
+
+---
+
+# 31. INTEGRATED BALANCE — SKILLS
+
+Heal:
+
+```text
+Mage L1 Healing Power 80
+→ Heal 80
+
+Warrior L1 Healing Power 10
+→ Heal 10
+```
+
+Learning foundation:
+
+```text
+Fire Ball:
+Mage
+Level 10
+ENE 50
+
+Poison:
+Archer
+Level 10
+AGI 45
+
+Heal:
+Warrior/Mage/Archer
+Level 5
+ENE 20
+```
+
+El Integrated Balance Contract también verifica que cada Skill sea
+matemáticamente alcanzable por su Class permitida en su propio minimum_level
+con los Stat Points disponibles.
+
+Ejemplos:
+
+```text
+Fire Ball:
+Mage L10
+Base ENE 35
+Need ENE 50
+Déficit 15
+Points disponibles 45
+→ alcanzable
+
+Poison:
+Archer L10
+Base AGI 30
+Need AGI 45
+Déficit 15
+Points disponibles 45
+→ alcanzable
+
+Heal Warrior:
+Warrior L5
+Base ENE 10
+Need ENE 20
+Déficit 10
+Points disponibles 20
+→ alcanzable
+```
+
+También vuelve a comprobar Reset-Safe Usage.
+
+---
+
+# 32. F22-K — E2E RUNTIME REAL
+
+Atilio durante cierre de F22-K:
+
+```text
+Level: 124
+Permanent STR: 37
+Permanent AGI: 15
+Permanent VIT: 25
+Permanent ENE: 10
+
+Physical Power: 330
+Magic Power: 10
+Healing Power: 10
+Attack Speed: 1.01666666666667
+Movement Speed: 4.0
+
+Bronze Sword durable: +4
+```
+
+Basic Attack real:
+
+```text
+Base Damage: 1080
+Physical Power: 330
+Pre-Crit: 1410
+Crit Chance: 0.0
+Critical: false
+Pre-Mitigation: 1410
+Armor: 100
+Post-Mitigation: 1281
+Damage: 1281
+```
+
+Esto prueba runtime:
+
+```text
+Enhancement +4
+→ Weapon Damage 1080
+→ + Physical Power 330
+→ 1410
+→ Crit false
+→ Armor 100
+→ 1281 final
+```
+
+Heal en ese mismo smoke:
+
+```text
+MP: 22
+Mana Cost: 40
+→ insufficient_mana
+```
+
+Ese rechazo fue correcto.
+
+Heal Scaling ya había sido probado positivamente en F22-J.
+
+---
+
+# 33. ARQUITECTURA AUTORITATIVA VIGENTE
 
 ```text
 Client
-= intención + representación + prediction limitada
+=
+intención + representación + prediction limitada
 
 Game Server
-= autoridad runtime/gameplay
+=
+autoridad runtime/gameplay
 
 Backend Laravel
-= API durable + transacciones
+=
+API durable + transacciones
 
 MySQL
-= verdad durable
+=
+verdad durable
 ```
 
 Nunca mover al Client:
@@ -996,7 +1636,7 @@ Nunca mover al Client:
 damage authoritative
 skill scaling authoritative
 equipment eligibility
-enhancement resolution
+enhancement level resolution
 enhancement RNG futuro
 critical RNG
 armor mitigation
@@ -1005,64 +1645,101 @@ learning requirements authoritative
 
 ---
 
-# 24. SIGUIENTE FASE
+# 34. F22 — CIERRE CANÓNICO
+
+F22 queda oficialmente:
 
 ```text
-F22-K — Integrated Balance Audit
+COMPLETE ✅
 ```
 
-Objetivo:
+Cubre:
 
 ```text
-auditar F22 como sistema integrado
-```
-
-Áreas:
-
-```text
-Class Primary Stats
-Derived Vitals
-Physical / Magic / Healing Power
+Primary Stats
+Derived Stats
+Vitals
+Physical/Magic/Healing Power
+Armor
 Crit
 Attack Speed
 Movement Speed
-Equipment Primary modifiers
+Equipment modifiers
+Effective Primary
+Equipment-aware Derived
 Weapon Damage
-Armor Rating
-Equipment requirements
-Enhancement scaling
-Skill scaling
-Skill learning requirements
-reset-safe usability
+Physical Defense Profile
+Equipment Usage Eligibility
+Enhancement durable foundation
+Enhancement persistence/network roundtrip
+Skill Scaling
+Skill Learning Requirements
+Reset-safe Skill Usage
+Integrated Balance Contract
 ```
 
-F22-K NO debe convertirse automáticamente en:
+No confundir cierre de F22 con implementación completa de todo el juego.
+
+Permanecen futuros:
 
 ```text
-Fire Ball implementation
-Poison implementation
-Jewel Enhancement system
-Reset implementation
+Fire Ball real
+Poison real
+Magic Damage / Resistances
+Status Effects / DoTs
+Jewel Enhancement gameplay
+Enhancement RNG
+Reset gameplay real
+más Equipment
+más Skills
+más contenido
 ```
-
-Esas features deben abrirse como bloques propios.
 
 ---
 
-# 25. CRITERIO DE ENTRADA A F22-K
+# 35. SIGUIENTE ROADMAP RECOMENDADO
+
+No existe un F23 histórico previo en los documentos canónicos.
+
+La siguiente fase recomendada es:
 
 ```text
-F22-J remoto verificado ✅
-PROJECT_MEMORY_5 creado ✅
-PROJECT_MEMORY_5 push remoto ⏳ pendiente al escribir este archivo
-repos limpios → verificar
+F23 — Skill Combat Effects
 ```
 
-No avanzar permanentemente a F22-K hasta que este documento esté commiteado, pusheado y remoto verificado.
+Motivo:
+
+```text
+F22 dejó Skill Scaling preparado.
+Magic Power ya existe autoritativamente.
+Fire Ball está aprendido/catalogado pero sin efecto real.
+Poison está aprendido/catalogado pero sin efecto real.
+```
+
+Orden recomendado:
+
+```text
+F23-A — Fire Ball Damage Foundation
+F23-B — Magic Damage / Target / Range Integration
+F23-C — Poison Status Effect / DoT Foundation
+```
+
+Antes de implementar permanentemente F23:
+
+```text
+1. PROJECT_MEMORY_5 actualizado
+2. commit
+3. push
+4. usuario dice "pusheado"
+5. verificar remoto
+6. recién entonces comenzar F23
+```
+
+Si se decide priorizar otro bloque, modificar primero este checkpoint canónico.
 
 ---
 
-# 26. DECISIONES QUE NO DEBEN PERDERSE
+# 36. DECISIONES QUE NO DEBEN PERDERSE
 
 ```text
 Permanent Primary ≠ Effective Primary.
@@ -1075,9 +1752,11 @@ Skill Learning Requirements NO se revalidan al castear.
 
 Derived consume Effective Primary.
 
-Equipment se conserva en rebuilds de Primary/Progression.
+Equipment se conserva al rebuild de Primary/Progression.
 
-Enhancement Level es durable por instancia.
+Enhancement Level es estado durable por instancia.
+
+Enhancement intrinsic curves son FLAT cumulative bonus, NO percentage.
 
 Client nunca decide Enhancement Level ni RNG.
 
@@ -1085,37 +1764,43 @@ Future Enhancement:
 Joya A +0→+6
 Joya B +6→+9
 +9→+13 deferred
-drag jewel sobre equipment en inventory
-target desequipado
+drag jewel sobre equipment en Inventory
+target debe estar desequipado
 failure baja 1 nivel
 RNG server-side
-jewel consumption + transition atómico.
+jewel consumption + enhancement transition debe ser atómico.
 
-Heal:
+Heal usa:
 0 + Healing Power * 1.0.
 
 Fire Ball / Poison siguen sin efecto real.
+
+Integrated Balance Contract es permanente:
+core/balance/server_integrated_balance_contract.gd
 ```
 
 ---
 
-# 27. RESUMEN PARA RETOMAR
+# 37. RESUMEN CORTO PARA RETOMAR
 
 ```text
 F22-G ✅ Armor / Crit
 F22-H ✅ Attack Speed / Movement
 F22-I ✅ Equipment + Enhancement Foundation
 F22-J ✅ Skill Scaling + Requirements + reset-safe usage
+F22-K ✅ Integrated Balance Contract
+
+F22 ✅ COMPLETE
 
 Client HEAD:
-4ff9c79b1fa3376bb155d318e18856da3807ccf9
+80d071be1eb06c9c0909011edf8547e7010f777c
 
 Game Server HEAD:
-cb84c83dfac5220b651159f09bab1af1a7bec563
+c6114f22c52630f190952c7f1c9360df2f6838b3
 
 Backend HEAD:
 ce3e0b02dbb1772204e12d1c2bb29d777b28b750
 
-NEXT:
-F22-K Integrated Balance Audit
+NEXT RECOMMENDED:
+F23 — Skill Combat Effects
 ```
