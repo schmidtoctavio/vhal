@@ -1,17 +1,27 @@
-# VHAL — PROJECT MEMORY 5 / F22 COMPLETE → F23 COMPLETE → COMBAT ROADMAP
+# VHAL — PROJECT MEMORY 5 / COMBAT FOUNDATION F23 → F26
 
 **Volumen:** 5  
 **Inicio:** 06/09/2026  
-**Última actualización canónica:** 06/09/2026  
+**Última actualización canónica:** 07/09/2026  
 **Motor Client / Game Server:** Godot 4.7.1  
 **Backend:** Laravel + MySQL  
 **Rama habitual:** `dev`
 
 ---
 
-# 0. ORDEN DE LECTURA Y PRECEDENCIA
+# 0. PROPÓSITO DE ESTE VOLUMEN
 
-Orden obligatorio:
+Este archivo es la continuidad canónica más reciente de VHAL.
+
+Reemplaza completamente la versión anterior de:
+
+```text
+PROJECT_MEMORY_5.md
+```
+
+sin reemplazar la historia conservada por los volúmenes anteriores.
+
+Orden obligatorio al retomar el proyecto:
 
 ```text
 1. PROJECT_MEMORY.md
@@ -19,37 +29,58 @@ Orden obligatorio:
 3. PROJECT_MEMORY_3.md
 4. PROJECT_MEMORY_4.md
 5. PROJECT_MEMORY_5.md
-6. futuros volúmenes
+6. futuros PROJECT_MEMORY_N.md
 7. repositorios reales branch dev
 ```
 
 Precedencia:
 
-> Este volumen prevalece para F22-G en adelante y para toda decisión de combate posterior cuando contradiga estados históricos anteriores.
+> El volumen más nuevo prevalece para el estado operativo actual cuando existe contradicción con un volumen anterior.
 
-Los repositorios reales en `dev` siguen prevaleciendo sobre memoria si el código cambió después de esta actualización.
+Y por encima de toda memoria:
 
-Historial:
+> El código realmente pusheado en `dev` prevalece si cambió después de la última actualización documental.
+
+Historial resumido:
 
 ```text
 PROJECT_MEMORY.md
-→ arquitectura/F00-F19 + contrato original de Combat/PvP
+→ arquitectura general
+→ F00-F19
+→ primer vertical slice real
 
 PROJECT_MEMORY_2.md
-→ F20/F21 + continuidad del input/combat foundation
+→ F20 Durable Character Runtime
+→ F21 Durable Skill Ownership / Learning
 
 PROJECT_MEMORY_3.md
-→ F22 Stats/Progression/Resets + taxonomía futura de Damage/Resistance/PvP
+→ F22 Stats / Progression / Reset design
+→ Primary Stats
+→ progression contracts
 
 PROJECT_MEMORY_4.md
-→ cierre Derived Stats + primeros consumers reales
+→ F22-F Derived Stats
+→ Max HP / MP
+→ Physical / Magic / Healing Power
+→ primeros consumers reales
 
 PROJECT_MEMORY_5.md
-→ F22-G→K
-→ F22 COMPLETE
-→ F23 Skill Combat Effects COMPLETE
-→ roadmap canónico de Combat F24+
+→ cierre F22 restante
+→ F23 Skill Combat Effects
+→ F24 Unified Damage & Mitigation
+→ F25 Hit Resolution & Defensive Outcomes
+→ F26 PvE Enemy Combat Loop
 ```
+
+Política de tamaño:
+
+```text
+~5000 líneas
+→ cerrar el volumen
+→ abrir PROJECT_MEMORY_6.md
+```
+
+Este volumen todavía tiene margen suficiente y por eso NO se abre `PROJECT_MEMORY_6.md` en este checkpoint.
 
 ---
 
@@ -59,8 +90,11 @@ Ciclo canónico:
 
 ```text
 FASE / ETAPA ACORDADA
-→ implementación manual
+→ revisar repositorios reales
+→ explicar scope
+→ implementación manual/controlada
 → test positivo
+→ corregir warnings/errors
 → git status
 → revisar scope
 → commit
@@ -75,12 +109,23 @@ Reglas vigentes:
 ```text
 No avanzar antes de "pusheado".
 No mezclar scopes.
+Preferir checkpoints pequeños.
+No convertir una etapa en refactor general por inercia.
+Usar git status como verificación local habitual.
 No hacer auditorías negativas de rutina.
 No usar git diff --check de rutina.
 No usar git diff --stat de rutina.
-Usar git status como verificación local habitual.
-No actualizar documentación salvo que esté explícitamente planificado o pedido.
 No crear commits por el usuario.
+No hacer push por el usuario salvo pedido explícito.
+No actualizar documentación en medio de gameplay salvo checkpoint documental acordado.
+```
+
+Objetivo habitual:
+
+```text
+0 parser errors
+0 warnings nuevos
+0 runtime errors inesperados
 ```
 
 Escenas y archivos:
@@ -93,15 +138,8 @@ Escenas y archivos:
 → puede entregarse completo o mediante cambios exactos
 
 .md canónico
-→ siempre archivo completo
-→ nunca patch
-```
-
-Objetivo habitual:
-
-```text
-0 warnings
-0 errors
+→ siempre entregar archivo completo para reemplazar
+→ nunca patch parcial
 ```
 
 Audits temporales:
@@ -119,7 +157,7 @@ Contracts permanentes:
 sí pueden permanecer
 ```
 
-si representan reglas de dominio/gameplay y no nombres temporales del roadmap.
+cuando representan reglas de dominio/gameplay y no nombres temporales del roadmap.
 
 ---
 
@@ -136,7 +174,7 @@ Backend:
 schmidtoctavio/vhal_backend
 ```
 
-Branch:
+Branch habitual:
 
 ```text
 dev
@@ -144,47 +182,61 @@ dev
 
 ---
 
-# 3. HEADS REMOTOS VERIFICADOS — 06/09/2026
+# 3. HEADS REMOTOS VERIFICADOS — 07/09/2026
 
 ## Client
 
 ```text
-616dcc5c5f42235ee8ef90c4b0c178e58425ea98
-docs: close F22 integrated balance
+51134e2e0033d70a1903153a94270aa8134aa1fb
+docs: close F23 and plan combat roadmap
 ```
 
-Este documento será el siguiente checkpoint documental del Client.
+No fueron necesarios cambios Client para F24/F25/F26-A-D.
+
+El Client ya podía representar:
+
+```text
+mob movement/state
+mob HP
+live character vitals
+movement corrections
+respawn position
+```
+
+mediante contratos autoritativos existentes.
 
 ## Game Server
 
 HEAD actual:
 
 ```text
-a4836954a3e51246993d919e9903e091fc5b0c8a
-feat: add poison periodic damage runtime
+a9af9a1a26e3f3fee7c0557fcbbca8d58b9ba4df
+feat: add authoritative pve enemy combat loop
 ```
 
-Cadena F23:
+Cadena reciente relevante:
 
 ```text
-48590affe224436e560b179a497cc20d546b8aca
-feat: add fire ball magic damage foundation
+91df340be277f45eaa61a22624512bccafb6a2f5
+feat: add unified damage taxonomy foundation
 
-b2564a2b5480138bedf9ad883c6737f4d0b3e180
-feat: integrate fire ball runtime combat
+dfc717fc2f66b65ef70a462d957a903fbd63b562
+feat: add damage resistance foundation
 
-a4836954a3e51246993d919e9903e091fc5b0c8a
-feat: add poison periodic damage runtime
-```
+37520ed3c9db1a65b9046311eec873452469f06b
+feat: add unified damage resolver
 
-Anterior F22:
+1e2704e4df939e1ddd50b6759c203f74a11ab8b8
+feat: migrate combat damage to unified resolver
 
-```text
-c6114f22c52630f190952c7f1c9360df2f6838b3
-feat: add integrated gameplay balance contract
+993f7802b0418b82c7aacc5bf233fcc6f54a7c38
+refactor: finalize unified combat damage domain
 
-cb84c83dfac5220b651159f09bab1af1a7bec563
-feat: add skill scaling and usage requirements
+7567d1d620028e3f46c5aaf85f6769953c5aa240
+feat: add hit resolution and defensive outcomes
+
+a9af9a1a26e3f3fee7c0557fcbbca8d58b9ba4df
+feat: add authoritative pve enemy combat loop
 ```
 
 ## Backend
@@ -196,11 +248,21 @@ ce3e0b02dbb1772204e12d1c2bb29d777b28b750
 feat: expose equipment enhancement persistence endpoint
 ```
 
-Backend no fue modificado durante F23.
+Backend no fue modificado durante F23/F24/F25/F26-A-D.
+
+Esto es correcto:
+
+```text
+Combat hot loop
+→ Game Server
+
+no
+→ Laravel por hit/tick/aggro/movement de mob
+```
 
 ---
 
-# 4. ESTADO GENERAL
+# 4. ESTADO GENERAL ACTUAL
 
 ```text
 F00-F19 ✅
@@ -220,22 +282,38 @@ F22-I ✅
 F22-J ✅
 F22-K ✅
 
-F22 ✅ COMPLETE
+F22 — Character Stats / Integrated Balance ✅ COMPLETE
 
-F23-A ✅
-F23-B ✅
-F23-C ✅
+F23-A ✅ Fire Ball Damage Foundation
+F23-B ✅ Fire Ball Runtime Combat
+F23-C ✅ Poison DoT Runtime
 
 F23 — Skill Combat Effects ✅ COMPLETE
+
+F24-A ✅ Damage Taxonomy + Resolution Context
+F24-B ✅ Damage Resistance Foundation
+F24-C ✅ Unified Damage Resolver
+F24-D ✅ Basic Attack / Fire Ball / Poison migration
+F24-E ✅ Unified Combat Damage audit/finalization
+
+F24 — Unified Damage & Mitigation ✅ COMPLETE
+
+F25 ✅ Hit Resolution & Defensive Outcomes COMPLETE
+
+F26-A ✅ Aggro / Threat foundation
+F26-B ✅ Mob movement / chase / leash / return
+F26-C ✅ Mob Attack Profile + authoritative attack
+F26-D ✅ Player damage / death / respawn
+F26-E ⏳ HP/MP Regeneration Policy
 ```
 
-Siguiente fase planificada:
+Siguiente etapa exacta:
 
 ```text
-F24 — Unified Damage & Mitigation
+F26-E — HP/MP Regeneration Policy
 ```
 
-F24 será el comienzo del nuevo arco de Combat.
+No abrir todavía F27.
 
 ---
 
@@ -260,7 +338,7 @@ identidad
 +
 API durable
 +
-transacciones
+transacciones persistentes
 
 MySQL
 =
@@ -274,13 +352,13 @@ Client intent
 → Game Server validation
 → Game Server runtime mutation
 → authoritative result/events
-→ clients
+→ Client representation
 ```
 
-INCORRECTO:
+Incorrecto:
 
 ```text
-attack/cast/tick
+attack/cast/mob tick/aggro/regen tick
 → Laravel
 → MySQL
 → esperar
@@ -293,28 +371,82 @@ No mover al Client:
 
 ```text
 damage
-hit
+hit roll
+miss/dodge/block result
 crit roll
 range authority
 cooldown authority
 mana authority
 armor mitigation
-resistance mitigation
+magic resistance mitigation
+element resistance mitigation
 skill scaling
 status effect tick authority
 mob HP
 player HP
-death
+mob aggro
+mob target selection
+mob chase authority
+mob attack
+player death
+respawn authority
+future regen tick
 PvP legality
 PK penalty
-future combat RNG
 ```
 
 ---
 
-# 6. INPUT CANÓNICO ESTILO MU
+# 6. DURABLE VS RUNTIME
 
-Este contrato viene desde Volumen 1 y fue reafirmado en los volúmenes posteriores.
+Durable actualmente según dominio:
+
+```text
+Account / Character identity
+Inventory
+Equipment
+Vault
+Level
+Experience
+Map
+Position
+Rotation Y
+Current HP
+Current MP
+Skill Ownership
+Skill Learning provenance
+Primary Stat allocations
+Equipment Enhancement Level
+```
+
+Runtime Game Server, no durable como estado vivo:
+
+```text
+Derived Stats finales
+cooldowns activos
+Basic Attack runtime
+Skill cast runtime
+mob HP runtime
+mob status effects
+mob aggro/threat
+mob combat target
+mob chase path
+mob return path
+mob attack cadence
+pending player respawn
+future combat timer
+future regen tick timer
+future out-of-combat timer
+WorldDrops no recogidos mientras vive GS
+```
+
+Regla:
+
+> No persistir en MySQL un dato porque exista; persistir sólo si necesita sobrevivir a restart/logout según su dominio.
+
+---
+
+# 7. INPUT CANÓNICO ESTILO MU
 
 Prioridad contextual del LEFT CLICK:
 
@@ -371,11 +503,11 @@ self
 entity
 ```
 
-`position` queda futuro.
+`position` sigue futuro.
 
 ---
 
-# 7. BASIC ATTACK — CONTRATO CANÓNICO
+# 8. BASIC ATTACK — CONTRATO CANÓNICO
 
 Basic Attack NO es una Skill.
 
@@ -385,7 +517,7 @@ Protocolo:
 GameServerCombatProtocol
 ```
 
-Client envía:
+Client envía intención equivalente a:
 
 ```text
 request_id
@@ -413,11 +545,11 @@ PlayerWorldSession
 → Basic Attack Profile
 → range
 → Attack Speed
-→ damage
-→ crit
-→ mitigation
-→ HP
-→ death
+→ Hit Resolution
+→ Damage Context
+→ Unified Damage Resolver
+→ mob HP
+→ death lifecycle
 ```
 
 Modalidades:
@@ -441,7 +573,7 @@ unarmed
 
 ---
 
-# 8. BASIC ATTACK — VALORES FOUNDATION ACTUALES
+# 9. BASIC ATTACK — FOUNDATION ACTUAL
 
 ## Unarmed
 
@@ -459,9 +591,9 @@ range = 2.0
 base_cooldown = 0.9
 ```
 
-Enhancement modifica el intrinsic weapon damage mediante bonus flat acumulado.
+Enhancement modifica intrinsic weapon damage mediante bonus flat acumulado.
 
-Ejemplo:
+Ejemplo durable probado:
 
 ```text
 Bronze Sword +4
@@ -469,198 +601,29 @@ Bronze Sword +4
 = 1080
 ```
 
-Current Basic Attack:
+Current offensive scaling:
 
 ```text
 Resolved Weapon / Unarmed Damage
 +
 Physical Power
-→ Pre-Crit
+=
+raw damage context
+```
+
+Luego:
+
+```text
+Hit Outcome
 → Critical si corresponde
-→ Pre-Mitigation
-→ Physical Armor
+→ School mitigation
+→ Element mitigation
 → Final Damage
 ```
 
 ---
 
-# 9. PHYSICAL DAMAGE / ARMOR ACTUAL
-
-Physical Armor mitigation está implementada.
-
-Foundation:
-
-```text
-K = 1000
-```
-
-Fórmula:
-
-```text
-post_damage
-=
-floor(
-	pre_damage * 1000
-	/
-	(armor + 1000)
-)
-```
-
-Daño positivo mínimo:
-
-```text
-1
-```
-
-Training Goblin:
-
-```text
-base_armor_rating = 100
-```
-
-Ejemplo real de Atilio:
-
-```text
-Bronze Sword +4
-Base Damage: 1080
-
-Physical Power: 330
-
-Pre-Crit:
-1080 + 330
-= 1410
-
-Critical:
-false
-
-Armor:
-100
-
-Post-Mitigation:
-floor(1410 * 1000 / 1100)
-= 1281
-```
-
-Resultado probado:
-
-```text
-Damage = 1281
-```
-
----
-
-# 10. CRITICAL ACTUAL
-
-Foundation vigente:
-
-```text
-Critical Strike Chance = 0.0
-Critical Damage Multiplier = 1.5
-```
-
-El Game Server realiza:
-
-```text
-crit roll
-```
-
-El Client nunca decide:
-
-```text
-critical success
-critical multiplier aplicado
-```
-
-IMPORTANTE:
-
-Volumen 3 contenía una dirección conceptual histórica de:
-
-```text
-Crit Chance base ~5%
-```
-
-pero ESO NO es el estado actual.
-
-La implementación real posterior prevalece:
-
-```text
-Crit Chance foundation = 0.0
-Crit Multiplier = 1.5
-```
-
-Futuro balance puede agregar fuentes reales de Crit sin reescribir el pipeline.
-
----
-
-# 11. ATTACK SPEED ACTUAL
-
-Attack Speed es Derived Stat y usa saturación por clase.
-
-## Warrior
-
-```text
-1
-+
-0.35 * AGI / (AGI + 300)
-```
-
-## Mage
-
-```text
-1
-+
-0.25 * AGI / (AGI + 350)
-```
-
-## Archer
-
-```text
-1
-+
-0.60 * AGI / (AGI + 250)
-```
-
-Basic Attack:
-
-```text
-effective_cooldown
-=
-base_cooldown
-/
-attack_speed_multiplier
-```
-
-AGI:
-
-```text
-sí
-→ aporta Attack Speed controlada
-
-no
-→ Movement Speed directa
-```
-
----
-
-# 12. MOVEMENT SPEED ACTUAL
-
-Foundation:
-
-```text
-Movement Speed = 4.0
-```
-
-Primary Stats NO aumentan Movement Speed directamente.
-
-Game Server usa la velocidad autoritativa.
-
-Client puede usarla para prediction.
-
-El Game Server sigue siendo autoridad de movimiento.
-
----
-
-# 13. PRIMARY → EFFECTIVE → DERIVED
+# 10. PRIMARY → EFFECTIVE → DERIVED
 
 Pipeline actual:
 
@@ -688,13 +651,13 @@ Allocated
 future Permanent Bonuses
 ```
 
-Equipment Requirements:
+Equipment Requirements usan:
 
 ```text
 Permanent Primary
 ```
 
-Skill Learning Requirements:
+Skill Learning Requirements usan:
 
 ```text
 Permanent Primary
@@ -723,7 +686,7 @@ Se recalculan en Game Server.
 
 ---
 
-# 14. CLASS DERIVED BALANCE ACTUAL
+# 11. CLASS DERIVED BALANCE ACTUAL
 
 ## Warrior
 
@@ -890,7 +853,7 @@ ENE
 
 ---
 
-# 15. PRIMARY STAT PHILOSOPHY — NO ROMPER
+# 12. PRIMARY STAT PHILOSOPHY — NO ROMPER
 
 Strength:
 
@@ -902,7 +865,8 @@ Agility:
 
 ```text
 ranged Physical identity
-Accuracy futura
+Accuracy
+Evasion
 Attack Speed pequeña/controlada
 ```
 
@@ -910,6 +874,7 @@ Vitality:
 
 ```text
 principalmente Max HP
+future HP Regen
 ```
 
 Energy:
@@ -918,11 +883,12 @@ Energy:
 Max MP
 Magic Power
 Healing Power
+future MP Regen
 ```
 
-Regla de balance:
+Regla:
 
-> Un Primary Stat no debe transformarse al mismo tiempo en la mejor fuente de daño, defensa, crit, velocidad y supervivencia.
+> Un Primary Stat no debe transformarse a la vez en la mejor fuente de daño, defensa, crit, velocidad y supervivencia.
 
 Tradeoff deseado:
 
@@ -942,7 +908,75 @@ daño puro
 
 ---
 
-# 16. VITALS — ÚNICO PIPELINE
+# 13. ATTACK SPEED ACTUAL
+
+Attack Speed es Derived Stat y usa saturación por clase.
+
+## Warrior
+
+```text
+1
++
+0.35 * AGI / (AGI + 300)
+```
+
+## Mage
+
+```text
+1
++
+0.25 * AGI / (AGI + 350)
+```
+
+## Archer
+
+```text
+1
++
+0.60 * AGI / (AGI + 250)
+```
+
+Basic Attack:
+
+```text
+effective_cooldown
+=
+base_cooldown
+/
+attack_speed_multiplier
+```
+
+AGI:
+
+```text
+sí
+→ aporta Attack Speed controlada
+
+no
+→ Movement Speed directa
+```
+
+---
+
+# 14. MOVEMENT SPEED ACTUAL
+
+Foundation:
+
+```text
+Movement Speed = 4.0
+```
+
+Primary Stats NO aumentan Movement Speed directamente.
+
+Game Server usa velocidad autoritativa.
+
+Client puede usarla para prediction.
+
+El Game Server sigue siendo autoridad de posición final.
+
+---
+
+# 15. VITALS — ÚNICO PIPELINE
 
 Game Server es autoridad de:
 
@@ -953,7 +987,7 @@ Max HP
 Max MP
 ```
 
-Todos los sistemas deben converger en los mismos Vitals:
+Todos los sistemas convergen en los mismos Vitals:
 
 ```text
 damage
@@ -966,15 +1000,14 @@ death
 respawn
 ```
 
-No crear:
+No crear estados separados como:
 
 ```text
 PotionHPSystem
 HealHPSystem
 CombatHPSystem
+MobDamageHPSystem
 ```
-
-con estados separados.
 
 Cambiar máximos live:
 
@@ -988,11 +1021,16 @@ Fresh bootstrap:
 current = max
 ```
 
-Durable runtime después puede restaurar current HP/MP clampado.
+Durable runtime:
+
+```text
+restaura current HP/MP
+→ clamp contra máximos derivados actuales
+```
 
 ---
 
-# 17. F22-I — EQUIPMENT / ENHANCEMENT CERRADO
+# 16. EQUIPMENT / ENHANCEMENT — ESTADO CANÓNICO
 
 Equipment puede contribuir a:
 
@@ -1006,6 +1044,12 @@ ENE
 Combat:
 weapon_damage
 armor_rating
+magic_resistance_rating
+elemental resistance ratings
+accuracy_rating
+evasion_rating
+dodge_chance
+block_chance
 future modifiers
 ```
 
@@ -1013,19 +1057,15 @@ Equipment es autoritativo y durable.
 
 Enhancement Level es estado durable por ItemInstance.
 
-Bronze Sword actual de Atilio:
+Bronze Sword de Atilio:
 
 ```text
 +4
 ```
 
----
+Enhancement usa BONUS FLAT ACUMULADO.
 
-# 18. ENHANCEMENT — CURVAS FLAT
-
-IMPORTANTE:
-
-> Enhancement usa BONUS FLAT ACUMULADO. NO porcentajes.
+NO porcentajes.
 
 Weapon Damage:
 
@@ -1065,110 +1105,13 @@ Armor Rating:
 +13  +26
 ```
 
-Ejemplos:
+Future Jewel System permanece diferido.
 
-```text
-Bronze Sword base 1000
-
-+4  = 1080
-+7  = 1150
-+13 = 1500
-```
-
-```text
-Leather Helmet base 20
-
-+7  = 27
-+13 = 46
-```
+No mezclarlo con Combat actual.
 
 ---
 
-# 19. ENHANCEMENT — FUTURE JEWEL SYSTEM
-
-Decidido pero NO implementado.
-
-Target:
-
-```text
-Equipment debe estar desequipado
-+
-en Inventory
-```
-
-UX:
-
-```text
-drag Jewel
-→ drop sobre Equipment
-```
-
-Future intent:
-
-```text
-jewel_uid
-target_item_uid
-```
-
-Client NO envía:
-
-```text
-current +N
-next +N
-probability
-RNG result
-success/failure
-authoritative container
-```
-
-Tiers:
-
-```text
-+0 → +6
-Joya A
-
-+6 → +9
-Joya B
-
-+9 → +13
-TBD
-```
-
-Failure actual decidido:
-
-```text
-baja 1 nivel
-```
-
-Ejemplo:
-
-```text
-+5
-→ fail
-→ +4
-```
-
-RNG:
-
-```text
-Game Server
-```
-
-Persistencia futura atómica:
-
-```text
-consume Jewel
-+
-persist Enhancement result
-```
-
-Nunca una sola mitad.
-
-Este sistema NO se mezcla con el arco inmediato de Combat F24+.
-
----
-
-# 20. F22-J — SKILL SCALING / LEARNING / RESET-SAFE
+# 17. SKILL SCALING / LEARNING / RESET-SAFE
 
 Skill Scaling:
 
@@ -1180,19 +1123,13 @@ Flat
 Power Source * Coefficient
 ```
 
-Power Sources:
+Power Sources actuales:
 
 ```text
 none
 physical_power
 magic_power
 healing_power
-```
-
-Game Server:
-
-```text
-ServerSkillScalingResolver
 ```
 
 Learning Requirements usan:
@@ -1228,157 +1165,29 @@ Learning Requirements
 Cast Requirements
 ```
 
-Una Skill ya aprendida:
+Una Skill ya aprendida no revalida al castear:
 
 ```text
-no revalida
 minimum learning Level
 learning Primary requirements
 reset_count
 ```
 
-durante el cast.
-
-Esta regla posterior reemplaza la dirección histórica vieja de Volumen 3 que sugería que una Skill aprendida podía quedar inutilizable post-Reset por perder requirements.
-
-Estado canónico ACTUAL:
-
-> Una Skill durablemente aprendida continúa usable post-Reset mientras cumpla las reglas live normales del cast.
+Ownership durable persiste.
 
 ---
 
-# 21. F22-K — INTEGRATED BALANCE CONTRACT
+# 18. F23 — SKILL COMBAT EFFECTS ✅ COMPLETE
 
-Artifact permanente:
-
-```text
-core/balance/server_integrated_balance_contract.gd
-```
-
-Class:
+## Heal
 
 ```text
-ServerIntegratedBalanceContract
+real
+→ usa Healing Power
+→ muta ServerVitalsState
 ```
 
-No contiene `F22` en el nombre permanente.
-
-Startup:
-
-```text
-ServerMain | Integrated Balance Contract validado.
-```
-
-El contract protege relaciones críticas del balance actual.
-
----
-
-# 22. INTEGRATED BALANCE SNAPSHOTS
-
-| Class / Level | Max HP | Max MP | Physical | Magic | Healing |
-|---|---:|---:|---:|---:|---:|
-| Warrior L1 | 200 | 60 | 60 | 10 | 10 |
-| Mage L1 | 115 | 295 | 15 | 90 | 80 |
-| Archer L1 | 130 | 130 | 60 | 15 | 15 |
-| Warrior L100 | 992 | 159 | 258 | 10 | 10 |
-| Mage L100 | 610 | 691 | 114 | 288 | 179 |
-| Archer L100 | 724 | 328 | 258 | 15 | 15 |
-
-Identidad relativa:
-
-```text
-HP:
-Warrior > Archer > Mage
-
-MP:
-Mage > Archer > Warrior
-
-Magic:
-Mage > Archer > Warrior
-
-Healing:
-Mage > Archer > Warrior
-
-Attack Speed inicial:
-Archer > Warrior > Mage
-```
-
----
-
-# 23. F23 — SKILL COMBAT EFFECTS COMPLETE ✅
-
-F23 cerró los dos consumers ofensivos que F22 había dejado deliberadamente pendientes.
-
-Breakdown:
-
-```text
-F23-A
-Fire Ball Damage Foundation
-✅
-
-F23-B
-Fire Ball Runtime Combat Integration
-✅
-
-F23-C
-Poison Status Effect / DoT Foundation
-✅
-```
-
-Resultado:
-
-```text
-Heal
-→ real
-
-Fire Ball
-→ real
-
-Poison
-→ real
-```
-
-Todos siguen Game Server authority.
-
----
-
-# 24. F23-A — FIRE BALL DAMAGE FOUNDATION ✅
-
-Se agregó:
-
-```text
-ServerSkillDamageProfile
-ServerSkillDamageRules
-```
-
-Fire Ball:
-
-```text
-mana = 30
-cooldown = 3.0
-target = entity
-
-Scaling:
-Flat 0
-+
-Magic Power * 1.0
-```
-
-Foundation inicial:
-
-```text
-Damage Type shorthand = magic
-```
-
-F23-A sólo estableció la semántica de daño.
-
-La mutación real del mob llegó en F23-B.
-
----
-
-# 25. F23-B — FIRE BALL RUNTIME ✅
-
-Fire Ball actual:
+## Fire Ball
 
 ```text
 Mana Cost = 30
@@ -1387,113 +1196,25 @@ Range = 6.0
 Target = entity
 
 Scaling:
-0 + Magic Power * 1.0
-
-Current mitigation:
-ninguna Magic Resistance todavía
-```
-
-Pipeline:
-
-```text
-Client cast intent
-→ SkillCastCoordinator
-→ learned ownership
-→ caster alive
-→ target
-→ same map
-→ target alive
-→ range
-→ cooldown
-→ mana
-→ Scaling Resolver
-→ raw Magic Damage
-→ WorldMobRegistry.apply_damage_to_mob()
-→ mob HP
-→ mob_state_updated
-→ Client
-```
-
-No existe un segundo lifecycle de muerte para Skills.
-
-Fire Ball usa:
-
-```text
-WorldMobRegistry.apply_damage_to_mob()
-```
-
-igual que las demás fuentes de damage.
-
----
-
-# 26. FIRE BALL — E2E REAL ✅
-
-Personaje:
-
-```text
-mago
-Character ID 6
-Class Mage
-Level 10
-
-Permanent ENE = 50
-Magic Power = 138
-```
-
-Fire Ball se aprendió por el flujo REAL:
-
-```text
-Skill Scroll durable
+Flat 0
 +
-Mage
-+
-Level 10
-+
-Permanent ENE 50
-+
-Skill Trainer
-→ durable learn
-→ Scroll consumed
-→ live SkillBook/Hotbar
+Magic Power * 1.0
 ```
 
-Cast real:
+Test histórico real:
 
 ```text
-Magic Power: 138
-
-Raw Damage:
-138
-
-Applied Damage:
-138
+Mage L10
+Magic Power 138
 
 Goblin:
 5000 → 4862
 
-MP:
-406 → 376
-
-Cooldown:
-3.0
+Damage = 138
+MP 406 → 376
 ```
 
-Client:
-
-```text
-Effect: damage
-Amount: 138
-```
-
-No hubo cambios de protocolo Client para inventar el resultado.
-
-El existing generic effect payload representó el resultado autoritativo.
-
----
-
-# 27. F23-C — POISON DoT ✅
-
-Poison actual:
+## Poison
 
 ```text
 Mana Cost = 20
@@ -1501,209 +1222,89 @@ Cooldown = 5.0 s
 Range = 6.0
 Target = entity
 
-Scaling per tick:
+Scaling por tick:
 Flat 0
 +
 Physical Power * 0.20
 
-Tick Interval:
-1.0 s
-
-Tick Count:
-5
-
-Duration:
-5.0 s
-
-Stacking:
-no
-
-Refresh Policy:
-replace
+Tick Interval = 1.0 s
+Tick Count = 5
+Duration = 5.0 s
+Stacking = no
+Refresh Policy = replace
 ```
 
-Foundation actual usa shorthand:
+Test histórico Lyra:
 
 ```text
-damage_type = poison
-```
-
-Esto será normalizado semánticamente en F24.
-
----
-
-# 28. POISON STATUS RUNTIME
-
-Nuevos conceptos permanentes:
-
-```text
-ServerSkillStatusEffectProfile
-ServerSkillPeriodicDamageRules
-WorldMobStatusEffectRuntime
-```
-
-Mob Runtime:
-
-```text
-status_effects_by_id
-```
-
-Policy:
-
-```text
-un solo status por effect_id
-
-nuevo Poison
-→ reemplaza/refresca el anterior
-```
-
-Scheduler:
-
-```text
-Game Server
-```
-
-Cada tick:
-
-```text
-Status Effect Runtime
-→ WorldMobRegistry.apply_damage_to_mob()
-→ HP
-→ mob_periodic_damage_applied
-→ WorldPresenceCoordinator
-→ same-map clients
-```
-
-Status effects se limpian en:
-
-```text
-death
-respawn
-```
-
----
-
-# 29. POISON — E2E REAL ✅
-
-Lyra:
-
-```text
-Archer
-Level 85
-
 Physical Power = 228
-```
 
-Cálculo:
+floor(228 * 0.20)
+= 45 damage/tick
 
-```text
-floor(
-	228 * 0.20
-)
-=
-45
-```
-
-Primer Poison:
-
-```text
-MP:
-298 → 278
-
-Mob:
-5000
-→ 4955
-→ 4910
-→ 4865
-→ 4820
-→ 4775
-```
-
-Segundo Poison:
-
-```text
-MP:
-278 → 258
-
-Mob:
-4775
-→ 4730
-→ 4685
-→ 4640
-→ 4595
-→ 4550
-```
-
-Cada cast:
-
-```text
 5 ticks
-45 damage/tick
-225 total
+= 225 total
 ```
 
-Replicación Client:
+Poison mantiene:
 
 ```text
-cada tick
-→ mob_state_updated
-→ MobActor HP refresh
+scaling source = Physical Power
 ```
 
-La muerte por periodic damage usa el mismo `apply_damage_to_mob()` y por diseño puede converger al mismo `mob_died` usado por EXP/Drop.
+pero defensivamente F24 formalizó:
 
-Un kill letal específico por Poison no fue necesario como test separado durante F23-C.
+```text
+school = magical
+element = poison
+```
+
+Scaling Source, Damage School y Damage Element son conceptos distintos.
 
 ---
 
-# 30. F23 — PRINCIPIO CRÍTICO: SCALING ≠ DAMAGE SCHOOL
+# 19. F24 — UNIFIED DAMAGE & MITIGATION ✅ COMPLETE
 
-A partir de F24 se debe conservar esta separación:
+F24 consolidó un único dominio de Damage para evitar pipelines paralelos.
 
-```text
-Scaling Source
-!=
-Damage School
-!=
-Damage Element
-```
-
-Ejemplo:
+Objetivo alcanzado:
 
 ```text
-Poison actual
-→ escala con Physical Power
-```
-
-Eso NO obliga a que defensivamente sea:
-
-```text
-physical / none
-```
-
-El diseño histórico de VHAL ya había definido:
-
-```text
+Basic Attack
+Fire Ball
 Poison
-→ magical / poison
+→ comparten primitives de Damage
 ```
 
-Por lo tanto F24 normalizará la taxonomía sin revertir el Scaling probado de F23.
+Sin convertir Heal en Damage.
+
+Artifacts permanentes principales incluyen:
+
+```text
+ServerDamageTaxonomy
+ServerDamageResolutionContext
+ServerDamageDefenseProfile
+ServerCharacterDamageDefenseProfileResolver
+ServerMobDamageDefenseProfileResolver
+ServerResistanceMitigationRules
+ServerDamageResolver
+ServerDamageResolutionResult
+```
+
+Integrated Balance Contract valida el dominio.
 
 ---
 
-# 31. TAXONOMÍA DE DAMAGE CANÓNICA FUTURA
+# 20. F24 — DAMAGE TAXONOMY
 
-Volumen 3 ya definió dos ejes.
-
-## Damage School
+School:
 
 ```text
 physical
 magical
 ```
 
-## Damage Element
+Element:
 
 ```text
 none
@@ -1713,36 +1314,7 @@ lightning
 poison
 ```
 
-Ejemplos canónicos:
-
-```text
-Basic Attack con Sword
-→ physical / none
-
-Fire Ball
-→ magical / fire
-
-Poison
-→ magical / poison
-```
-
-Esto reemplazará progresivamente los shorthands foundation actuales:
-
-```text
-physical
-magic
-poison
-```
-
-sin introducir un segundo sistema paralelo.
-
----
-
-# 32. DELIVERY / EFFECT SEMANTICS
-
-Además de School/Element, Combat debe poder distinguir cómo llega el efecto.
-
-Conceptualmente:
+Delivery:
 
 ```text
 direct
@@ -1752,686 +1324,1497 @@ periodic
 Ejemplos:
 
 ```text
-Sword
-→ direct
+Basic Attack Sword
+→ physical / none / direct
 
 Fire Ball
-→ direct
+→ magical / fire / direct
 
 Poison tick
-→ periodic
+→ magical / poison / periodic
 ```
 
-Esto es independiente de:
+Context separa:
 
 ```text
+raw_damage
 school
 element
-scaling source
+delivery
+can_critical
+source_kind
+source_id
 ```
 
-Sirve para políticas futuras como:
+Source kinds foundation:
 
 ```text
-crit eligibility
-block eligibility
-status application
-PvP tuning
-combat log
-VFX
+basic_attack
+skill
+status_effect
 ```
-
-No convertirlo en un enum gigante universal antes de necesitarlo.
 
 ---
 
-# 33. PIPELINE DE DAMAGE OBJETIVO
+# 21. F24 — DEFENSIVE PROFILE
 
-Pipeline canónico a consolidar desde F24:
-
-```text
-Attack / Skill Base
-↓
-Scaling
-↓
-Flat offensive modifiers
-↓
-% offensive modifiers cuando existan
-↓
-Hit / defensive outcome cuando corresponda
-↓
-Critical si la fuente lo permite
-↓
-School Mitigation
-├── Physical → Armor
-└── Magical → Magic Resistance
-↓
-Elemental Resistance
-↓
-PvP Combat Modifier futuro
-↓
-Final Damage
-↓
-ServerVitalsState / WorldMobRuntimeState
-↓
-Death transition
-```
-
-Regla:
-
-> No todas las fuentes tienen que participar en todas las capas.
-
-Ejemplos:
+Player y Mob pueden exponer un profile compatible con:
 
 ```text
-Poison DoT
-→ puede no criticar
-→ puede no ser bloqueable
-→ sí puede usar Resistance
-
-Heal
-→ no entra al Damage pipeline
+Armor Rating
+Magic Resistance Rating
+Fire Resistance Rating
+Cold Resistance Rating
+Lightning Resistance Rating
+Poison Resistance Rating
 ```
 
-El orden actual ya consolidado para Basic Attack es:
-
-```text
-Crit
-→ Armor
-```
-
-No revertirlo.
-
----
-
-# 34. SCHOOL MITIGATION
-
-## Physical
-
-Ya existe:
+Physical school consume:
 
 ```text
 Armor
 ```
+
+Magical school consume:
+
+```text
+Magic Resistance
+```
+
+Element `none`:
+
+```text
+no consume elemental resistance
+```
+
+Fire / Cold / Lightning / Poison:
+
+```text
+consume su rating correspondiente
+```
+
+Derived/equipment-resolved defenses NO son verdad durable final separada.
+
+Se reconstruyen desde fuentes reales.
+
+---
+
+# 22. F24 — MITIGATION FOUNDATION
+
+Rating mitigation usa foundation de diminishing returns equivalente a:
+
+```text
+post_damage
+=
+floor(
+	pre_damage * 1000
+	/
+	(rating + 1000)
+)
+```
+
+Daño positivo mínimo:
+
+```text
+1
+```
+
+Esto aplica por capa:
+
+```text
+School mitigation
+→ Element mitigation
+```
+
+Ejemplo Fire Ball del contract:
+
+```text
+Raw 138
+MR 100
+→ 125
+
+Fire Resistance 50
+→ 119
+```
+
+Ejemplo Poison del contract:
+
+```text
+Raw 45
+MR 80
+→ 41
+
+Poison Resistance 30
+→ 39
+```
+
+---
+
+# 23. F24/F25 — CURRENT DAMAGE PIPELINE
+
+Pipeline vigente:
+
+```text
+Raw Damage
+↓
+Hit / Defensive Outcome
+├── miss  → no Damage Resolver
+├── dodge → no Damage Resolver
+├── hit   → multiplier 1.0
+└── block → multiplier 0.5 foundation
+↓
+Post Outcome Damage
+↓
+Critical si can_critical
+↓
+School Mitigation
+├── physical → Armor
+└── magical  → Magic Resistance
+↓
+Element Mitigation
+├── none → 0 rating
+└── element → corresponding resistance
+↓
+future PvP modifier hook
+↓
+Final Damage
+```
+
+IMPORTANTE:
+
+```text
+Block
+→ ocurre antes de Critical + Mitigation
+```
+
+Current resolver recibe:
+
+```text
+outcome_damage_multiplier
+```
+
+Miss/Dodge no deberían entrar al resolver.
+
+---
+
+# 24. CRITICAL ACTUAL
 
 Foundation:
 
 ```text
-reduction
-=
-rating / (rating + 1000)
+Critical Strike Chance = 0.0
+Critical Damage Multiplier = 1.5
 ```
 
-equivalente a:
+Basic Attack:
 
 ```text
-remaining multiplier
-=
-1000 / (rating + 1000)
+can_critical = true
 ```
 
-## Magical
-
-F24 agregará:
+Fire Ball foundation:
 
 ```text
-Magic Resistance
+can_critical = false
 ```
 
-con una curva saturante equivalente como foundation inicial.
-
-Objetivo:
+Poison tick:
 
 ```text
-Magic Resistance rating
-→ diminishing returns
-→ nunca fácil 100% mitigation
+can_critical = false
 ```
 
-`K` podrá evolucionar por:
+Game Server realiza el roll.
+
+Client nunca decide Critical.
+
+Decisión histórica supersedida:
 
 ```text
-level
-content tier
-PvP profile
+Crit base ~5%
 ```
 
-sin cambiar la responsabilidad del resolver.
-
----
-
-# 35. ELEMENTAL RESISTANCES
-
-Dirección histórica:
+Estado real actual:
 
 ```text
-Fire Resistance
-Cold Resistance
-Lightning Resistance
-Poison Resistance
-```
-
-F24 debe dejar preparada la capa, pero no es obligatorio inventar Equipment/content de todos los elementos en el primer commit.
-
-Ejemplo:
-
-```text
-Fire Ball
-magical/fire
-↓
-Magic Resistance
-↓
-Fire Resistance
-```
-
-Poison:
-
-```text
-magical/poison
-↓
-Magic Resistance
-↓
-Poison Resistance
-```
-
-Sword:
-
-```text
-physical/none
-↓
-Armor
-↓
-sin elemental layer
+Crit Chance 0.0
+Crit Multiplier 1.5
 ```
 
 ---
 
-# 36. CRITICAL POLICY FUTURA
+# 25. F25 — HIT RESOLUTION & DEFENSIVE OUTCOMES ✅ COMPLETE
 
-Current real:
-
-```text
-Basic Attack
-→ Critical pipeline existe
-
-Crit Chance = 0
-Crit Multiplier = 1.5
-```
-
-Para Skills:
-
-```text
-Fire Ball
-Poison
-```
-
-todavía NO existe una decisión final de Crit por Skill.
-
-F24 debe representar explícitamente:
-
-```text
-can_critical
-```
-
-o política equivalente.
-
-Preservación inicial recomendada:
-
-```text
-Basic Attack
-→ mantiene Crit existente
-
-Fire Ball
-→ no agregar Crit por accidente
-
-Poison
-→ no crit por tick por defecto
-```
-
-Si en el futuro una Skill puede criticar:
-
-```text
-debe declararlo en su definition/profile
-```
-
-No inferirlo sólo porque hace damage.
-
----
-
-# 37. HIT / MISS / EVADE / BLOCK — TODAVÍA FUTURO
-
-Volumen 3 dejó definidos como Secondary Stats futuros:
+F25 dejó un dominio reutilizable para:
 
 ```text
 Accuracy
-Evasion / Dodge
-Block Chance
+Evasion
+Dodge
+Block
+miss/hit/dodge/block outcomes
 ```
 
-Todavía NO existen como resultado real de combate.
-
-No fingir que todo ataque futuro debe usarlos de la misma forma.
-
-F25 deberá definir policies por acción.
-
-Ejemplo conceptual:
+RNG:
 
 ```text
-Basic Attack
-→ Accuracy/Evasion aplicable
-→ Block según target/equipment
-
-Projectile Skill
-→ policy propia
-
-Poison tick
-→ no hace nuevo hit roll por cada tick
-```
-
-No implementar RNG en Client.
-
----
-
-# 38. PENETRATION / DAMAGE BONUSES — FUTURO
-
-Conceptos previstos:
-
-```text
-Armor Penetration
-Magic Penetration
-Elemental Penetration
-Physical Damage Bonus
-Magic Damage Bonus
-Skill Damage Bonus
-```
-
-No se implementan por completar una checklist.
-
-Se incorporarán cuando:
-
-```text
-Equipment
-Skill
-Buff
-Content
-```
-
-real necesite una fuente concreta.
-
-El unified Damage pipeline debe poder evolucionar sin reescribir Combat.
-
----
-
-# 39. RANGE / LINE OF SIGHT
-
-Game Server valida actualmente range.
-
-Current examples:
-
-```text
-Unarmed = 1.5
-Bronze Sword = 2.0
-Fire Ball = 6.0
-Poison = 6.0
-```
-
-Line-of-sight:
-
-```text
-todavía no implementada
-```
-
-Desde Volumen 1 estaba previsto:
-
-```text
-validar LOS cuando corresponda
-```
-
-LOS no debe depender del Client.
-
-El Client puede:
-
-```text
-raycast/picking
-feedback local
-```
-
-pero la legalidad real del cast/attack es server-side.
-
----
-
-# 40. AUTO-CHASE — DECISIÓN DE PRODUCTO / ROADMAP
-
-Auto-chase fue explícitamente diferido varias veces.
-
-No debe aparecer accidentalmente dentro de Movement, Basic Attack o Skills.
-
-Se reserva:
-
-```text
-F27 — Action Approach / Auto-Chase
-```
-
-Dirección planificada:
-
-```text
-Player intenta acción sobre target fuera de range
-↓
-crear una intención de approach/action
-↓
-acercarse mediante navegación
-↓
-cuando entra en range
-→ ejecutar la acción una vez
-```
-
-Casos:
-
-```text
-LEFT CLICK mob fuera de melee range
-→ acercarse
-→ Basic Attack
-
-RIGHT CLICK entity skill fuera de cast range
-→ acercarse
-→ cast
-```
-
-Debe cancelarse si ocurre, por ejemplo:
-
-```text
-nuevo input manual
-target muere
-target desaparece
-target cambia de mapa
-acción deja de ser válida
-```
-
-No enviar:
-
-```text
-attack request cada frame
-cast request cada frame
-```
-
-No mezclar este comportamiento con F24.
-
----
-
-# 41. RANGED BASIC ATTACK — FUTURO
-
-Basic Attack ya tiene mode previsto:
-
-```text
-ranged
-```
-
-Pero aún no existe un arma ranged real del vertical slice.
-
-Future:
-
-```text
-Bow / ranged weapon
-→ Equipment autoritativo
-→ ServerBasicAttackProfileResolver
-→ mode ranged
-→ range propio
-→ cadence propia
-→ hit policy propia
-```
-
-Client no enviará:
-
-```text
-soy ranged
-mi bow tiene range X
-```
-
-El Game Server lo deriva del Equipment.
-
----
-
-# 42. PROJECTILES — AUTORIDAD VS PRESENTACIÓN
-
-Cuando aparezcan projectiles reales:
-
-```text
-visual projectile
-!=
-autoridad de damage
-```
-
-Hay que decidir por Skill/Attack:
-
-```text
-instant authoritative resolution
-con projectile visual
-```
-
-o:
-
-```text
-server runtime projectile
-con travel/collision real
-```
-
-No asumir que todo proyectil visible necesita una entidad física server-side.
-
-F28 será el checkpoint para tomar esa decisión por tipo de acción.
-
----
-
-# 43. POSITION TARGET / AoE
-
-Target kinds previstos:
-
-```text
-self
-entity
-position
-```
-
-`position` todavía no está implementado.
-
-Future AoE:
-
-```text
-Client selecciona posición/intención
-→ Game Server valida posición
-→ range
-→ map
-→ LOS si aplica
-→ resuelve entidades afectadas
-→ aplica resultados
-```
-
-Client NO envía:
-
-```text
-lista autoritativa de víctimas
-```
-
----
-
-# 44. MOB COMBAT — GAP IMPORTANTE ACTUAL
-
-El Training Goblin actualmente:
-
-```text
-spawn ✅
-targetable ✅
-receive damage ✅
-death ✅
-drops ✅
-EXP ✅
-respawn ✅
-```
-
-Pero aún falta el loop ofensivo real del mob:
-
-```text
-aggro
-threat
-target selection
-chase
-leash
-mob Basic Attack / Skill
-damage al player
-player death
-```
-
-Esto estaba previsto desde el F17 histórico, pero no se implementó porque F17 priorizó el vertical slice mínimo.
-
-Se retoma formalmente en:
-
-```text
-F26 — PvE Enemy Combat Loop
-```
-
----
-
-# 45. THREAT / AGGRO — DIRECCIÓN
-
-No acoplar aggro directamente a:
-
-```text
-BasicAttackCoordinator
-Fire Ball
-Poison
-```
-
-Las fuentes de Combat deben emitir/aportar contexto suficiente.
-
-Un sistema futuro de threat podrá reaccionar a:
-
-```text
-damage
-heal
-proximity
-special skills
-```
-
-según reglas.
-
-Mob AI debe poder distinguir:
-
-```text
-idle
-aggro
-chase
-attack
-return/leash
-dead
-respawn
-```
-
-No convertir `WorldMobRuntimeState` en un God Object de AI.
-
----
-
-# 46. PLAYER DAMAGE / DEATH — DIRECCIÓN
-
-Mob attacks y PvP deben reutilizar:
-
-```text
-ServerVitalsState
-```
-
-Player death:
-
-```text
-HP > 0
-→ damage
-→ HP = 0
-→ authoritative death transition
-```
-
-Luego definir:
-
-```text
-movement lock
-cast lock
-basic attack lock
-respawn policy
-spawn point
-HP/MP restore policy
-death penalties futuras
-```
-
-No crear un segundo Vitals runtime.
-
----
-
-# 47. REGENERATION — FUTURE COMBAT SYSTEM
-
-Current:
-
-```text
-HP Regeneration = 0
-MP Regeneration = 0
-```
-
-Antes de implementarla definir:
-
-```text
-rate
-tick interval
-combat vs non-combat
-VIT/ENE scaling
-caps
-replication policy
-```
-
-Game Server:
-
-```text
-tick authority
+Game Server
 ```
 
 Client:
 
 ```text
-representation
+representación futura/feedback
 ```
 
-Se planifica dentro del cierre del PvE combat loop, no como side effect de otro cambio.
+Artifacts principales incluyen:
+
+```text
+ServerCombatHitProfile
+ServerCharacterCombatHitProfileResolver
+ServerMobCombatHitProfileResolver
+ServerHitResolutionRules
+ServerHitResolutionResult
+ServerHitResolutionContract
+```
+
+Basic Attack fue migrado al dominio.
+
+Mob Attack de F26 reutiliza las mismas primitives.
 
 ---
 
-# 48. GENERAL STATUS EFFECTS — DIRECCIÓN CANÓNICA
+# 26. CHARACTER HIT PROFILE FOUNDATION
 
-Poison es el primer DoT real, pero NO debe forzar que todos los status sean iguales.
-
-Categorías históricas:
+Resolución del Character:
 
 ```text
-Damage over Time
-Debuff
+BASE_ACCURACY_RATING = 100
+ACCURACY_PER_AGILITY = 2
+EVASION_PER_AGILITY = 1
+```
+
+Conceptualmente:
+
+```text
+Accuracy
+=
+100
++
+Effective AGI * 2
++
+Equipment Accuracy
+```
+
+```text
+Evasion
+=
+Effective AGI
++
+Equipment Evasion
+```
+
+Dodge:
+
+```text
+Equipment Dodge Chance
+```
+
+Block:
+
+```text
+Equipment Block Chance
+```
+
+Los Primary bonuses de Equipment participan mediante Effective Primary.
+
+---
+
+# 27. HIT CHANCE FOUNDATION
+
+Fórmula:
+
+```text
+si Evasion = 0
+→ Hit Chance = 1.0
+```
+
+En general:
+
+```text
+Hit Chance
+=
+Accuracy
+/
+(Accuracy + Evasion)
+```
+
+El resultado se clampa a:
+
+```text
+0.0 .. 1.0
+```
+
+Ejemplo F26 observado:
+
+```text
+Mob Accuracy = 100
+Player Evasion = 15
+
+Hit Chance
+=
+100 / 115
+=
+0.869565...
+```
+
+---
+
+# 28. DODGE / BLOCK FOUNDATION
+
+Caps:
+
+```text
+MAX_DODGE_CHANCE = 0.75
+MAX_BLOCK_CHANCE = 0.75
+```
+
+Block foundation:
+
+```text
+BLOCK_DAMAGE_MULTIPLIER = 0.50
+```
+
+Order:
+
+```text
+1. hit roll
+2. dodge roll
+3. block roll
+```
+
+Outcomes:
+
+```text
+miss
+→ multiplier 0
+→ no damage
+
+dodge
+→ multiplier 0
+→ no damage
+
+block
+→ multiplier 0.5
+→ daño continúa por unified resolver
+
+hit
+→ multiplier 1.0
+```
+
+Un ataque válido puede ser:
+
+```text
+accepted = true
++
+outcome miss/dodge
++
+0 HP mutation
+```
+
+Cooldown se consume porque la acción sí se ejecutó.
+
+---
+
+# 29. HIT POLICY — NO GENERALIZAR MAL
+
+No todas las Skills deben hacer el mismo hit roll.
+
+Current seguro:
+
+```text
+Basic Attack
+→ Hit Resolution
+
+Mob Basic Attack
+→ Hit Resolution
+
+Poison periodic ticks
+→ NO nuevo accuracy roll por cada tick
+
+Heal
+→ NO offensive hit resolution
+```
+
+Future projectile skills:
+
+```text
+policy propia declarada por definition/profile
+```
+
+No decidir por nombre dentro de coordinators.
+
+---
+
+# 30. F26 — PvE ENEMY COMBAT LOOP
+
+Objetivo:
+
+> Completar el loop ofensivo del primer Training Goblin antes de escalar a muchos mobs.
+
+Estado:
+
+```text
+F26-A ✅
+Aggro / Threat foundation
+
+F26-B ✅
+Mob movement / chase / leash / return
+
+F26-C ✅
+Mob Attack Profile + authoritative attack
+
+F26-D ✅
+Player damage / death / respawn
+
+F26-E ⏳
+HP/MP Regeneration Policy
+```
+
+Commit actual que cierra A-D:
+
+```text
+a9af9a1a26e3f3fee7c0557fcbbca8d58b9ba4df
+feat: add authoritative pve enemy combat loop
+```
+
+---
+
+# 31. TRAINING GOBLIN — CURRENT FOUNDATION
+
+Identidad:
+
+```text
+mob_type_id = training_goblin
+entity_id = mob_test_town_001
+map = test_town
+spawn = (4, 0, 4)
+level = 1
+max_hp = 5000
+EXP reward = 50
+mob respawn delay = 3.0 s
+```
+
+Damage Defense:
+
+```text
+Armor = 100
+Magic Resistance = 0
+Fire Resistance = 0
+Cold Resistance = 0
+Lightning Resistance = 0
+Poison Resistance = 0
+```
+
+Hit Profile:
+
+```text
+Accuracy = 100
+Evasion = 0
+Dodge = 0.0
+Block = 0.0
+```
+
+PvE Combat:
+
+```text
+Aggro Radius = 5.0
+Leash Radius = 10.0
+Combat Movement Speed = 2.5
+Attack Range = 1.5
+Attack Cooldown = 1.25 s
+Base Attack Damage = 200
+```
+
+Estos números son foundation de prueba.
+
+NO balance definitivo.
+
+---
+
+# 32. MOB COMBAT RUNTIME
+
+Se agregó runtime separado del mob para evitar convertir `WorldMobRuntimeState` en un God Object.
+
+Concepto principal:
+
+```text
+WorldMobRuntimeState
+└── combat_runtime
+```
+
+Artifact:
+
+```text
+WorldMobCombatRuntime
+```
+
+Estados conceptuales:
+
+```text
+idle
+chasing / combat movement
+attacking / target retained
+returning
+```
+
+El runtime mantiene datos temporales como:
+
+```text
+target_peer_id
+combat state
+attack cadence/deadline
+repath timing
+return state
+```
+
+No persistirlo.
+
+---
+
+# 33. MOB DEFINITION — PvE COMBAT PROFILE
+
+`WorldMobDefinition` ahora posee:
+
+```text
+aggro_radius
+leash_radius
+combat_movement_speed
+attack_range
+attack_cooldown_seconds
+base_attack_damage
+```
+
+Validation exige que, si existe cualquier parte del PvE combat profile, sea completo.
+
+Relaciones importantes:
+
+```text
+leash_radius >= aggro_radius
+attack_range <= aggro_radius
+combat_movement_speed > 0
+attack_cooldown > 0
+base_attack_damage > 0
+```
+
+Profile incompleto:
+
+```text
+inválido
+```
+
+---
+
+# 34. F26-A — AGGRO / TARGET FOUNDATION ✅
+
+Current acquisition principal:
+
+```text
+proximity
+```
+
+Flow:
+
+```text
+mob idle
+→ busca target válido cercano
+→ nearest target dentro de aggro radius
+→ acquire target
+```
+
+Validación del target incluye conceptualmente:
+
+```text
+sesión existe
+target vivo
+same map
+target válido
+```
+
+Mob también escucha damage recibido para poder reaccionar a Combat source/context cuando corresponda.
+
+Threat completo multi-source queda evolutivo.
+
+Foundation actual logra:
+
+```text
+proximity aggro real
+combat target real
+invalidación de target
+release
+```
+
+No persistir target/threat.
+
+---
+
+# 35. F26-B — CHASE / LEASH / RETURN ✅
+
+Mob movement es Game Server authoritative.
+
+Usa navegación existente.
+
+No duplica un segundo world movement engine.
+
+Cadence interna actual relevante:
+
+```text
+Mob state replication sample = 0.10 s
+Repath interval = 250 ms
+```
+
+Flow:
+
+```text
+target fuera de attack range
+→ chase
+→ navegación
+→ actualizar posición del mob
+→ replicar mob state
+```
+
+Cuando entra en range:
+
+```text
+chase termina
+→ attack phase
+```
+
+Leash:
+
+```text
+mob/target excede policy desde spawn
+→ release target
+→ returning
+```
+
+Return:
+
+```text
+returning
+→ navega al spawn
+→ al alcanzar spawn
+→ combat reset
+→ idle
+```
+
+Target inválido:
+
+```text
+death/disconnect/map invalid/etc.
+→ release
+→ return
+```
+
+---
+
+# 36. MOVEMENT COORDINATION PLAYER + MOB
+
+F26 tocó `MovementCoordinator` porque player movement y mob combat necesitan convivir sin dos autoridades distintas sobre navegación.
+
+Regla:
+
+```text
+Player movement
+→ MovementCoordinator / WorldMovementSystem
+
+Mob combat movement
+→ MobCombatCoordinator
+→ WorldNavigationRegistry primitives
+```
+
+No duplicar:
+
+```text
+NavMesh
+map registry
+world map authority
+```
+
+Client sigue sin decidir movimiento del mob.
+
+---
+
+# 37. F26-C — MOB BASIC ATTACK ✅
+
+Mob attack usa un profile/ruleset propio de dominio:
+
+```text
+ServerMobBasicAttackRules
+ServerMobCombatRules
+```
+
+Pero reutiliza primitives generales de Combat:
+
+```text
+ServerCombatHitProfile
+ServerHitResolutionRules
+ServerDamageResolutionContext
+ServerDamageResolver
+ServerCharacterDamageDefenseProfileResolver
+ServerVitalsState
+```
+
+Pipeline:
+
+```text
+Mob Definition
+→ target session
+→ attack range
+→ attack cooldown
+→ mob Hit Profile
+→ character Hit Profile
+→ Hit Resolution
+→ physical/none/direct Damage Context
+→ Character Damage Defense Profile
+→ Unified Damage Resolver
+→ ServerVitalsState
+→ authoritative vitals replication
+```
+
+No existe:
+
+```text
+player.hp -= 200
+```
+
+hardcodeado en MobActor/Client.
+
+---
+
+# 38. MOB ATTACK — CURRENT DAMAGE
+
+Training Goblin:
+
+```text
+Raw Damage = 200
+School = physical
+Element = none
+Delivery = direct
+```
+
+Current Atilio test:
+
+```text
+Armor = 0
+```
+
+Por eso hits normales observados:
+
+```text
+Raw = 200
+Outcome multiplier = 1.0
+Post Outcome = 200
+Armor = 0
+Final = 200
+```
+
+Último golpe:
+
+```text
+HP remaining = 184
+Final Damage = 200
+Applied Damage = 184
+HP = 0
+```
+
+Clamp correcto del Vitals runtime.
+
+---
+
+# 39. F26-D — PLAYER DAMAGE / DEATH / RESPAWN ✅
+
+Player damage converge en:
+
+```text
+ServerVitalsState
+```
+
+No existe segundo Vitals para PvE.
+
+Death:
+
+```text
+HP > 0
+→ mob damage
+→ HP = 0
+→ player defeated
+```
+
+Al morir:
+
+```text
+mob libera aggro
+target_dead
+player queda pendiente de respawn
+```
+
+Player respawn delay actual:
+
+```text
+3.0 s
+```
+
+Current respawn foundation:
+
+```text
+position = (0, 0, 0)
+HP = max_hp
+MP = max_mp
+```
+
+Respawn es autoritativo.
+
+Client recibe:
+
+```text
+live vitals
+movement/position final
+```
+
+---
+
+# 40. F26 A-D — TEST E2E REAL ✅
+
+Personaje:
+
+```text
+Atilio
+Warrior
+Level 124
+```
+
+Snapshot observado:
+
+```text
+Max HP = 1184
+Max MP = 183
+```
+
+Mob:
+
+```text
+Training Goblin
+5000/5000
+spawn (4,0,4)
+```
+
+Secuencia comprobada:
+
+```text
+1. conexión/autenticación
+2. world snapshot
+3. mob spawn
+4. proximity aggro
+5. attack range
+6. mob attack
+7. player se aleja
+8. goblin chase
+9. player vuelve a detenerse
+10. goblin alcanza attack range
+11. hits + miss reales
+12. player HP llega a 0
+13. aggro liberado por target_dead
+14. player respawn después de 3 s
+15. player HP/MP full
+16. posición (0,0,0)
+17. mob vuelve al spawn
+18. return completed en (4,0,4)
+```
+
+Vitals observados:
+
+```text
+1184
+→ 984
+→ 784
+→ 584
+→ 384
+→ 184
+→ 0
+→ respawn 1184
+```
+
+MP al respawn:
+
+```text
+183/183
+```
+
+Hit Resolution real observado:
+
+```text
+Mob Accuracy = 100
+Player Evasion = 15
+Hit Chance ≈ 0.869565
+```
+
+También ocurrió:
+
+```text
+Outcome = miss
+→ sin daño
+```
+
+Esto valida que F25 no quedó sólo como contract sintético.
+
+---
+
+# 41. F26 — ARCHIVOS PRINCIPALES
+
+Nuevos/permanentes del checkpoint A-D:
+
+```text
+app/coordinators/mob_combat_coordinator.gd
+core/balance/server_pve_enemy_combat_contract.gd
+core/combat/server_mob_basic_attack_rules.gd
+core/combat/server_mob_combat_rules.gd
+core/world/mobs/world_mob_combat_runtime.gd
+```
+
+Más sus `.uid` correspondientes.
+
+Integración/modificación:
+
+```text
+app/coordinators/movement_coordinator.gd
+app/main.gd
+app/main.tscn
+core/balance/server_integrated_balance_contract.gd
+core/world/mobs/world_mob_definition.gd
+core/world/mobs/world_mob_registry.gd
+core/world/mobs/world_mob_runtime_state.gd
+```
+
+`ServerPveEnemyCombatContract` es permanente porque valida reglas reales del dominio.
+
+---
+
+# 42. INTEGRATED BALANCE / STARTUP CONTRACTS
+
+Startup actual valida, entre otros:
+
+```text
+Mob Drop Catalog Contract
+Class Stats Catalog Contract
+Skill Catalog Contract
+Skill Learning Catalog Contract
+Integrated Balance Contract
+Equipment Domain Contract
+Equipment Snapshot Contract
+Equipment Transfer Contract
+Basic Attack Profile Contract
+Physical Defense Profile Contract
+Hit Resolution Contract integrado
+PvE Enemy Combat Contract integrado
+```
+
+Objetivo:
+
+```text
+cambiar balance conscientemente
+!=
+romper relaciones críticas sin enterarse
+```
+
+No crear contracts con nombres temporales de roadmap cuando la regla es permanente.
+
+---
+
+# 43. F26-E — SIGUIENTE CHECKPOINT EXACTO
+
+Nombre:
+
+```text
+F26-E — HP/MP Regeneration Policy
+```
+
+Objetivo:
+
+> Incorporar regeneración autoritativa de HP/MP al Game Server sin duplicar Vitals ni mezclarla con MobCombatCoordinator.
+
+No empezar F27 antes de cerrar F26-E.
+
+---
+
+# 44. F26-E — POLÍTICA INICIAL ACORDADA
+
+Implementar:
+
+```text
+Tick autoritativo = 1.0 s
+```
+
+Jugador muerto:
+
+```text
+HP <= 0
+→ no regenera
+```
+
+Recurso lleno:
+
+```text
+current >= max
+→ no mutar
+→ no broadcast inútil
+```
+
+HP Regen:
+
+```text
+sólo fuera de combate
+```
+
+MP Regen foundation:
+
+```text
+sólo fuera de combate
+```
+
+Salida de combate:
+
+```text
+5.0 s
+sin interacción hostil
+```
+
+Actividad de combate debe incluir al menos:
+
+```text
+recibir daño de mob
+realizar una acción ofensiva válida contra mob
+```
+
+No inventar un segundo Combat state aislado.
+
+Reutilizar puntos autoritativos existentes.
+
+---
+
+# 45. F26-E — REGEN VALUES
+
+`ServerCharacterDerivedStatsState` ya posee foundation histórica para:
+
+```text
+hp_regeneration
+mp_regeneration
+```
+
+Hasta ahora esos valores permanecieron en:
+
+```text
+0
+```
+
+F26-E debe convertirlos en consumers reales.
+
+Fuente conceptual:
+
+```text
+VIT
+→ HP Regeneration
+
+ENE
+→ MP Regeneration
+```
+
+Pero la primera fórmula debe ser:
+
+```text
+mínima
+explícita
+centralizada
+fácil de balancear
+```
+
+NO crear todavía una fórmula compleja definitiva.
+
+NO hardcodear cantidades de regen dentro del coordinator.
+
+Valores:
+
+```text
+Derived Stats / Balance Contract
+→ coordinator consume
+```
+
+---
+
+# 46. F26-E — CLAMP
+
+Siempre:
+
+```text
+hp = min(max_hp, hp + hp_regen)
+mp = min(max_mp, mp + mp_regen)
+```
+
+Usar primitives existentes de Vitals.
+
+No mutar diccionarios arbitrarios.
+
+No crear un segundo HP/MP state.
+
+---
+
+# 47. F26-E — REPLICATION
+
+Todo cambio real de regen debe reutilizar el pipeline que actualmente produce:
+
+```text
+Vitals autoritativos actualizados
+```
+
+Flow:
+
+```text
+Game Server regen tick
+→ ServerVitalsState mutation
+→ authoritative vitals event
+→ GameServerClient
+→ PlayerRuntimeState
+→ HUD
+```
+
+No crear:
+
+```text
+regen_protocol.gd
+```
+
+sólo porque la causa del cambio fue regeneración, salvo necesidad estructural real demostrada.
+
+El Client no necesita conocer cómo se calculó el tick para representar HP/MP.
+
+---
+
+# 48. F26-E — COMBAT TIMER
+
+Estado temporal requerido:
+
+```text
+last_hostile_activity
+in_combat / equivalent
+regen accumulator/tick timing
+```
+
+Todo esto:
+
+```text
+runtime Game Server
+```
+
+NO persistir:
+
+```text
+combat timer
+out-of-combat deadline
+regen tick accumulator
+```
+
+Muerte/respawn:
+
+```text
+limpiar/resetear correctamente
+```
+
+Después del respawn:
+
+```text
+no debe quedar combat lock residual permanente
+```
+
+---
+
+# 49. F26-E — RESPONSABILIDAD ARQUITECTÓNICA
+
+No convertir:
+
+```text
+MobCombatCoordinator
+```
+
+en un sistema general de regeneración.
+
+Preferencia:
+
+```text
+responsabilidad propia
+```
+
+por ejemplo:
+
+```text
+CharacterRegenCoordinator
+```
+
+o nombre equivalente coherente con el código real.
+
+Debe reutilizar:
+
+```text
+ServerVitalsState
+PlayerWorldSession/runtime state
+Derived Stats
+Integrated Balance Contract
+BasicAttackCoordinator / SkillCastCoordinator integration points
+MobCombatCoordinator integration points
+existing vitals replication
+```
+
+Evitar dependencia circular.
+
+---
+
+# 50. F26-E — TESTS MANUALES REQUERIDOS
+
+## Test 1 — daño
+
+```text
+Training Goblin golpea player
+→ HP baja
+→ mientras está en combat
+→ NO regen
+```
+
+## Test 2 — escapar
+
+```text
+player se aleja
+→ mob pierde/rompe combate según policy
+→ esperar 5 s
+→ regen comienza
+→ HP/MP suben autoritativamente
+```
+
+## Test 3 — caps
+
+```text
+llegar a max HP/MP
+→ nunca superar máximos
+→ no ticks inútiles posteriores
+```
+
+## Test 4 — reingreso
+
+```text
+regen activa
+→ entrar nuevamente en combat
+→ regen se detiene inmediatamente
+```
+
+## Test 5 — muerte
+
+```text
+morir
+→ no regen mientras muerto
+→ respawn
+→ no stale combat lock
+```
+
+Al terminar implementación:
+
+```text
+NO commit
+NO push
+```
+
+Primero:
+
+```text
+test
+→ logs Client + GS
+→ git status
+→ revisar scope
+→ commit
+→ push
+```
+
+---
+
+# 51. QUÉ NO IMPLEMENTAR EN F26-E
+
+No agregar:
+
+```text
+consumibles
+life steal
+mana steal
+regen buffs
+regen debuffs
+regen por equipment especial
+resting/campfire
+food
+status effects generales
+visual FX de regen
+fórmulas definitivas complejas
+```
+
+No modificar salvo necesidad estricta:
+
+```text
+Inventory
+Equipment
+Drops
+Skill ownership
+Progression durable
+Backend Laravel
+World navigation
+UI
+```
+
+---
+
+# 52. ROADMAP CANÓNICO POST-F26
+
+```text
+F27 — Action Approach / Auto-Chase
+
+F28 — Ranged / LOS / Projectile / Position Combat
+
+F29 — General Status Effects / Crowd Control
+
+F30 — PvP Combat Foundation
+
+F31 — PK / Sin / Auto-Defense
+
+F32 — Combat Presentation & Feel
+```
+
+No abrir dos bloques grandes simultáneamente.
+
+---
+
+# 53. F27 — ACTION APPROACH / AUTO-CHASE
+
+Auto-chase sigue deliberadamente diferido.
+
+Objetivo UX:
+
+```text
+click target fuera de range
+→ no exigir clicks repetidos
+→ approach mediante navegación
+→ al entrar en range
+→ ejecutar acción una vez
+```
+
+Casos:
+
+```text
+Basic Attack
+entity Skill
+future NPC action si alguna vez aplica
+```
+
+Debe reutilizar navegación existente.
+
+No duplicar `WorldMovementSystem`.
+
+Cancellation/replacement debe ser explícito:
+
+```text
+nuevo input
+target muerto
+target desaparece
+target cambia mapa
+acción deja de ser válida
+```
+
+No mandar attack/cast request cada frame.
+
+---
+
+# 54. F28 — RANGED / LOS / PROJECTILE / POSITION
+
+Incluye progresivamente:
+
+```text
+ranged Basic Attack real
+Bow foundation
+line-of-sight
+projectile policy
+position target
+AoE target resolution
+```
+
+LOS:
+
+```text
+Game Server authority
+```
+
+Client puede hacer:
+
+```text
+picking
+preview
+feedback
+```
+
+pero no autoriza hit.
+
+Projectile visible:
+
+```text
+!= damage authority
+```
+
+Cada acción decidirá:
+
+```text
+instant authoritative + visual projectile
+```
+
+o:
+
+```text
+server projectile runtime
+```
+
+según necesidad real.
+
+---
+
+# 55. F29 — GENERAL STATUS EFFECTS / CC
+
+Poison es el primer DoT real.
+
+No asumir que todos los statuses son Poison.
+
+Categorías:
+
+```text
 Buff
-Soft Control
-Hard Control
+Debuff
+DoT
+Soft CC
+Hard CC
 ```
 
-Ejemplos futuros:
+Necesita policies de:
 
 ```text
-slow
-attack speed reduction
-armor reduction
-silence
-root
-stun
-damage buff
-defense buff
+duration
+stacking
+refresh
+source attribution
+expiration
+replication
 ```
 
-Necesitan policies propias.
-
----
-
-# 49. ANTI-PERMACONTROL
-
-Decisión histórica:
+Anti-permacontrol obligatorio:
 
 ```text
 NO permanent stun
@@ -2439,33 +2822,20 @@ NO permanent root
 NO permanent silence
 ```
 
-Future defensive concepts:
+Future:
 
 ```text
 Tenacity
 Control Resistance
 Diminishing Returns
 duration caps
-immunity windows cuando corresponda
+immunity windows si corresponde
 ```
 
-PvP no debe convertirse en:
+DoTs:
 
 ```text
-primer CC conecta
-→ jugador nunca vuelve a jugar
-```
-
-F29 será el bloque dedicado.
-
----
-
-# 50. DoT STACKING
-
-Decisión:
-
-```text
-DoTs NO stackean infinitamente por defecto
+NO stackean infinitamente por defecto
 ```
 
 Poison actual:
@@ -2475,32 +2845,40 @@ same effect_id
 → replace
 ```
 
-Future skills pueden declarar otra policy explícita:
-
-```text
-replace
-refresh
-limited stacks
-independent sources
-```
-
-pero debe ser decisión de definition/domain.
-
-No hardcodear todas las policies dentro de `WorldMobRegistry`.
-
 ---
 
-# 51. PvP — INPUT CANÓNICO
+# 56. F30 — PvP COMBAT FOUNDATION
+
+Input futuro:
 
 ```text
-CTRL + LEFT CLICK player
-→ BASIC ATTACK PvP
+CTRL + LEFT player
+→ Basic Attack PvP
 
-CTRL + RIGHT CLICK player
-→ SELECTED SKILL PvP
+CTRL + RIGHT player
+→ selected Skill PvP
 ```
 
-No convertir click normal sobre otro player en ataque accidental.
+No convertir click normal en ataque accidental.
+
+PvP debe reutilizar Combat.
+
+NO crear:
+
+```text
+PvPDamageSystem
+```
+
+paralelo.
+
+Pipeline:
+
+```text
+normal Combat resolution
+→ PvP modifier layer
+→ Player ServerVitalsState
+→ player death
+```
 
 Game Server valida:
 
@@ -2508,7 +2886,7 @@ Game Server valida:
 target player
 same map
 range
-line of sight cuando corresponda
+LOS
 safe zone
 map PvP policy
 attacker state
@@ -2525,106 +2903,28 @@ kill
 
 ---
 
-# 52. PvP — ARQUITECTURA
+# 57. F31 — PK / SIN / AUTO-DEFENSE
 
-PvP debe reutilizar Combat.
-
-NO crear:
+Separación obligatoria:
 
 ```text
-PvPDamageSystem
-```
+Combat
+→ hit / damage / death
 
-con fórmulas completamente paralelas.
+PvP Domain
+→ legalidad / aggression / self-defense
 
-Pipeline:
+PK/Sin Domain
+→ penalización
 
-```text
-normal Combat resolution
-↓
-PvP Combat Profile / Modifier layer
-↓
-player Vitals
-↓
-player death
-```
+Backend
+→ criminal state durable
 
-La capa PvP puede ajustar:
+Presence
+→ replica estado necesario
 
-```text
-damage multipliers
-CC duration
-healing rules
-certain caps
-```
-
-sin duplicar todo el dominio.
-
----
-
-# 53. SAFE ZONES / MAP PvP POLICY
-
-Game Server debe decidir:
-
-```text
-si el mapa permite PvP
-si la posición pertenece a Safe Zone
-si existe un modo/evento especial
-```
-
-Client puede mostrar feedback.
-
-Client no decide legalidad.
-
-Future map/world definitions deben exponer los datos necesarios.
-
----
-
-# 54. PK / SIN — ESTADOS CANÓNICOS
-
-Dirección histórica:
-
-```text
-Inocente
-↓
-Diablillo
-↓
-Delincuente
-↓
-Pecador / Sinner
-```
-
-Thresholds exactos:
-
-```text
-TBD
-```
-
-El estado se deriva de una métrica durable server/backend-side como:
-
-```text
-sin points
-criminal points
-penalizable player kills
-```
-
-Nombre técnico final se decide al implementar.
-
----
-
-# 55. AUTO-DEFENSE / LEGÍTIMA DEFENSA
-
-Regla canónica:
-
-```text
-A agrede primero a B
-↓
-Game Server registra agresión válida
-↓
-B obtiene autorización temporal de defensa contra A
-↓
-B puede responder/matar a A
-sin recibir penalización PK por esa defensa
+Client
+→ representa visual/feedback
 ```
 
 Auto-defense:
@@ -2633,171 +2933,45 @@ Auto-defense:
 runtime Game Server
 ```
 
-No debe persistirse como una condena durable.
-
-Future decisions:
+Criminal/Sin:
 
 ```text
-duration
-multiple aggressors
-third-party intervention
-party
-guild
-duel
-event map
+durable
 ```
 
----
-
-# 56. SINNER / PECADOR
-
-Estado máximo previsto:
+Sinner máximo:
 
 ```text
 Pecador / Sinner
 ```
 
-Regla:
+Otros players podrán atacarlo sin penalización según futura policy.
+
+Client red tint:
 
 ```text
-otros players pueden atacarlo
-sin ser penalizados por ese ataque
+representa estado autoritativo
 ```
 
-Presentación:
+Priest Confession depende de:
 
 ```text
-body
-armor
-weapon
-wings
-main visual components
-→ red tint
+PvP real
+PK/Sin real
+Economy real
 ```
 
-Client representa un estado autoritativo.
-
-Client NO decide:
-
-```text
-este player es Sinner
-```
+No implementarlo antes.
 
 ---
 
-# 57. PRIEST / CONFESSION
+# 58. F32 — COMBAT PRESENTATION & FEEL
 
-Future NPC service:
-
-```text
-Priest / Sacerdote
-```
-
-Flujo:
+Gameplay authority:
 
 ```text
-player con pecado
-→ interactúa con Priest
-→ GS calcula costo
-→ muestra deuda
-→ player acepta
-→ durable currency transaction
-→ sin state reducido/limpiado
-```
-
-Costo:
-
-```text
-escala con gravedad del pecado
-```
-
-Fórmula:
-
-```text
-TBD
-```
-
-No implementar Priest antes de tener:
-
-```text
-PvP
-PK/Sin
-currency real
-```
-
----
-
-# 58. PvE REDEMPTION
-
-Vía alternativa:
-
-```text
-matar mobs válidos
-→ reducir pecado lentamente
-```
-
-Objetivo:
-
-```text
-Priest
-→ rápido / costoso
-
-PvE
-→ lento / gratuito
-```
-
-Future anti-exploit:
-
-```text
-mob level
-player level
-zone
-diminishing returns
-valid kill criteria
-```
-
----
-
-# 59. PK ARCHITECTURE
-
-Separación obligatoria:
-
-```text
-Combat
-→ determina hit / damage / death
-
-PvP Domain
-→ determina legalidad/aggression/self-defense
-
-PK/Sin Domain
-→ determina penalización
-
-Backend
-→ persiste criminal state durable
-
-Presence
-→ replica estado necesario
-
-Client
-→ representa color/feedback
-```
-
-No meter todo dentro de:
-
-```text
-BasicAttackCoordinator
-```
-
----
-
-# 60. COMBAT PRESENTATION
-
-Regla:
-
-```text
-gameplay authority
 !=
-presentation
+Presentation
 ```
 
 Client será dueño visual de:
@@ -2808,913 +2982,121 @@ cast animations
 hit reactions
 death animations
 respawn visuals
-VFX
-SFX
+Fire Ball VFX
+Poison VFX
+projectile visuals
 floating damage numbers
 floating heal numbers
-status effect visuals
-projectile visuals cuando sean presentation-only
-combat feedback
-```
-
-Pero esos elementos representan resultados del Game Server.
-
-No deben autorizar damage.
-
----
-
-# 61. CURRENT VISUAL LIMITATIONS
-
-Actualmente varias representaciones siguen foundation/placeholder.
-
-Ejemplos:
-
-```text
-MobActor technical representation
-death visual placeholder
-sin final combat animations
-sin hit reactions finales
-sin floating damage numbers
-sin Fire Ball VFX final
-sin Poison VFX final
-```
-
-No mezclar un mega art pass con la foundation mecánica.
-
-Combat Presentation tendrá su propio checkpoint.
-
----
-
-# 62. ROADMAP CANÓNICO DE COMBAT — F24+
-
-A partir de este documento queda PLANIFICADO el siguiente arco.
-
-```text
-F24 — Unified Damage & Mitigation
-
-F25 — Hit Resolution & Defensive Outcomes
-
-F26 — PvE Enemy Combat Loop
-
-F27 — Action Approach / Auto-Chase
-
-F28 — Ranged / LOS / Projectile / Position Combat
-
-F29 — General Status Effects / Crowd Control
-
-F30 — PvP Combat Foundation
-
-F31 — PK / Sin / Auto-Defense
-
-F32 — Combat Presentation & Feel
-```
-
-Este orden puede subdividirse en commits pequeños.
-
-No abrir dos fases grandes a la vez.
-
----
-
-# 63. F24 — UNIFIED DAMAGE & MITIGATION
-
-Objetivo:
-
-> Tener un único modelo semántico para describir y resolver daño físico, mágico y elemental sin crear pipelines paralelos para Basic Attack, Fire Ball y Poison.
-
-Estado:
-
-```text
-⏳ NEXT
-```
-
-Breakdown planificado:
-
-```text
-F24-A
-Damage Taxonomy + Resolution Context
-
-F24-B
-Magic Resistance + Elemental Resistance foundation
-
-F24-C
-Unified Damage Resolver
-
-F24-D
-Migrate/verify Basic Attack + Fire Ball + Poison
-
-F24-E
-Integrated Combat Damage Audit
-```
-
-No es necesario que los nombres exactos de archivos lleven `F24`.
-
-Los artifacts permanentes deben tener nombres de dominio.
-
----
-
-# 64. F24-A — DAMAGE TAXONOMY
-
-Debe formalizar:
-
-```text
-school:
-physical
-magical
-
-element:
-none
-fire
-cold
-lightning
-poison
-
-delivery:
-direct
-periodic
-```
-
-Y separar:
-
-```text
-scaling
-school
-element
-delivery
-critical policy
-```
-
-No duplicar `ServerSkillDamageProfile` con una segunda arquitectura.
-
-Debe evolucionarse/migrarse el dominio existente.
-
-Preservar behavior actual mientras se normaliza semántica.
-
----
-
-# 65. F24-B — RESISTANCE FOUNDATION
-
-Agregar progresivamente:
-
-```text
-Magic Resistance
-
-Fire Resistance
-Cold Resistance
-Lightning Resistance
-Poison Resistance
-```
-
-No es requisito agregar Equipment real de todos esos ratings en el mismo commit.
-
-Puede comenzar con:
-
-```text
-ratings 0
-```
-
-y contracts sintéticos.
-
-Player y Mob deben poder exponer un defensive profile compatible.
-
-No guardar estos valores finales como verdad durable si son derivables.
-
----
-
-# 66. F24-C — UNIFIED DAMAGE RESOLVER
-
-Resolver conceptualmente:
-
-```text
-Damage Input
-↓
-Critical policy/result
-↓
-School resistance
-↓
-Element resistance
-↓
-future PvP modifier hook
-↓
-Final Damage
-```
-
-Debe devolver breakdown útil para:
-
-```text
-logs
-tests
-combat result
-future damage numbers
-balance audit
-```
-
-Ejemplo conceptual:
-
-```text
-raw_damage
-critical
-pre_mitigation
-school_rating
-post_school
-element_rating
-post_element
-final_damage
-```
-
-No permitir que Coordinators copien fórmulas.
-
----
-
-# 67. F24-D — MIGRACIÓN SIN REGRESIÓN
-
-Basic Attack:
-
-```text
-debe conservar exactamente su Armor behavior actual
-```
-
-Fire Ball:
-
-```text
-magic shorthand
-→ magical/fire
-```
-
-Poison:
-
-```text
-poison shorthand
-→ magical/poison
-```
-
-Poison conserva:
-
-```text
-Physical Power * 0.20 per tick
-```
-
-Scaling NO cambia por normalizar Damage taxonomy.
-
-Heal queda fuera del Damage resolver.
-
----
-
-# 68. F24-E — COMBAT DAMAGE AUDIT
-
-Actualizar/expandir el contract permanente, sin nombres de roadmap en artifacts.
-
-Debe fijar casos representativos como:
-
-```text
-Physical / none
-Magic / fire
-Magic / poison
-zero resistance
-positive resistance
-crit off
-crit on sintético cuando corresponda
-periodic damage
-```
-
-Objetivo:
-
-```text
-cambiar balance conscientemente
-≠
-romper una fórmula sin enterarse
-```
-
----
-
-# 69. F25 — HIT RESOLUTION & DEFENSIVE OUTCOMES
-
-Estado:
-
-```text
-⏳ PLANNED
-```
-
-Scope:
-
-```text
-Accuracy
-Evasion / Dodge
-Block
-hit/miss/evade/block result vocabulary
-action-specific policies
-```
-
-Reglas:
-
-```text
-RNG → Game Server
-
-Client
-→ representación
-```
-
-No todas las Skills deben hacer el mismo hit roll.
-
-No usar Evasion como segunda Armor.
-
-No usar Block como sinónimo de Evasion.
-
----
-
-# 70. F25 — POLICY POR ACCIÓN
-
-Ejemplos de diseño a resolver:
-
-```text
-Basic Attack
-→ Accuracy/Evasion aplicable
-→ Block según target/equipment
-
-Projectile Skill
-→ policy propia
-
-Poison cast
-→ hit/application roll si corresponde
-→ los ticks posteriores NO hacen cinco nuevos accuracy rolls
-
-Heal
-→ no aplica hit resolution ofensiva
-```
-
-No decidir por nombre de Skill dentro del coordinator.
-
-Usar definition/profile.
-
----
-
-# 71. F26 — PvE ENEMY COMBAT LOOP
-
-Estado:
-
-```text
-⏳ PLANNED
-```
-
-Completar lo que el F17 histórico dejó fuera.
-
-Breakdown conceptual:
-
-```text
-F26-A
-Aggro / Threat foundation
-
-F26-B
-Mob movement / chase / leash / return
-
-F26-C
-Mob Attack Profile + authoritative attack
-
-F26-D
-Player damage / death / respawn
-
-F26-E
-HP/MP Regeneration policy
-```
-
-Un único Training Goblin completo antes de crear muchos mobs.
-
----
-
-# 72. F26 — MOB ATTACK
-
-Mob attack debe usar:
-
-```text
-definition/profile
-→ range
-→ cadence
-→ damage source
-→ unified Damage Resolver
-→ Player ServerVitalsState
-```
-
-No:
-
-```text
-mob.gd
-→ player.hp -= 10
-```
-
-Mob offensive damage y Player offensive damage deben compartir primitives de Combat cuando semánticamente corresponda.
-
----
-
-# 73. F26 — THREAT / LEASH
-
-Necesita definir:
-
-```text
-aggro acquisition
-threat sources
-target selection
-chase range
-leash distance
-return to spawn
-target invalidation
-death/reset
-```
-
-No persistir threat en MySQL.
-
-Runtime Game Server.
-
----
-
-# 74. F27 — ACTION APPROACH / AUTO-CHASE
-
-Estado:
-
-```text
-⏳ PLANNED
-```
-
-Objetivo UX:
-
-```text
-click target fuera de range
-→ no exigir clicks repetidos manualmente
-→ acercarse
-→ ejecutar acción al entrar en range
-```
-
-Debe reutilizar navegación.
-
-No duplicar `WorldMovementSystem`.
-
-Casos:
-
-```text
-Basic Attack
-Skill entity target
-future NPC action si alguna vez aplica
-```
-
-Cancellation y replacement de intents deben ser explícitos.
-
----
-
-# 75. F28 — RANGED / LOS / PROJECTILE / POSITION
-
-Estado:
-
-```text
-⏳ PLANNED
-```
-
-Incluye progresivamente:
-
-```text
-ranged Basic Attack real
-Bow foundation
-line-of-sight
-projectile policy
-position target
-AoE target resolution
-```
-
-No es necesario implementar todo en un solo commit.
-
----
-
-# 76. F28 — PROJECTILE DECISION
-
-Cada acción podrá declarar algo equivalente a:
-
-```text
-instant
-projectile visual
-server projectile runtime
-```
-
-Decidir por necesidad real.
-
-No crear cientos de server projectile entities sólo porque existe una animación visible.
-
-No permitir que un visual projectile Client determine hit.
-
----
-
-# 77. F29 — GENERAL STATUS EFFECTS / CC
-
-Estado:
-
-```text
-⏳ PLANNED
-```
-
-Poison será el primer consumer heredado.
-
-Objetivo:
-
-```text
-generalizar sin romper Poison
-```
-
-Scope:
-
-```text
-Buff
-Debuff
-DoT
-Soft CC
-Hard CC
-
-duration
-stacking
-refresh
-source attribution
-expiration
-replication
-```
-
-Luego:
-
-```text
-Tenacity
-Control Resistance
-Diminishing Returns
-duration caps
-```
-
----
-
-# 78. F30 — PvP COMBAT FOUNDATION
-
-Estado:
-
-```text
-⏳ PLANNED
-```
-
-Implementar primero Combat PvP SIN mezclar todavía todo PK/Sin.
-
-Scope:
-
-```text
-CTRL + LEFT player
-CTRL + RIGHT player
-
-player target resolution
-same map
-safe zone / map policy
-range / LOS
-Basic Attack PvP
-Skill PvP
-Player Vitals
-Player death
-PvP Combat Profile
-```
-
-No empezar PK antes de que player-vs-player combat funcione como sistema limpio.
-
----
-
-# 79. F30 — PvP COMBAT PROFILE
-
-Debe ser una capa sobre Combat.
-
-Ejemplo conceptual:
-
-```text
-PvE Final Damage
-→ normal content modifier
-
-PvP
-→ same resolver
-→ PvP modifier layer
-```
-
-Puede ajustar en el futuro:
-
-```text
-damage
-healing
-CC duration
-certain caps
-```
-
-No duplicar todas las fórmulas PvE.
-
----
-
-# 80. F31 — PK / SIN / AUTO-DEFENSE
-
-Estado:
-
-```text
-⏳ PLANNED
-```
-
-Breakdown conceptual:
-
-```text
-F31-A
-Aggression Context + Auto-Defense
-
-F31-B
-Durable Sin / Criminal State
-
-F31-C
-Sinner Presence + Red Visual State
-
-F31-D
-Priest Confession
-
-F31-E
-PvE Redemption
-```
-
-Economía real deberá existir antes de cobrar una Confession real.
-
----
-
-# 81. F32 — COMBAT PRESENTATION & FEEL
-
-Estado:
-
-```text
-⏳ PLANNED
-```
-
-Una vez estable el backbone mecánico:
-
-```text
-Basic Attack animation
-Skill cast animation
-Fire Ball visual
-Poison visual
-projectiles
-hit reaction
-death animation
-respawn visual
-floating damage
-floating healing
 critical feedback
-miss/evade/block feedback
-status effect feedback
+miss/dodge/block feedback
+status visuals
 SFX
-camera feedback cuando corresponda
+camera feedback
 ```
 
-Autoridad permanece en Game Server.
+Pero todo representa resultados del Game Server.
+
+Nunca autoriza damage.
 
 ---
 
-# 82. QUÉ NO METER AUTOMÁTICAMENTE EN COMBAT
+# 59. CURRENT VISUAL LIMITATIONS
 
-No agregar por inercia:
+La mecánica ya avanzó más que la presentación.
 
-```text
-50 Skills
-20 mobs
-bosses
-guild wars
-events
-full endgame
-mass PvP
-all elemental gear
-all CC types
-all projectiles
-all weapon classes
-```
-
-Primero:
+Todavía existen placeholders/foundation en:
 
 ```text
-una capability
-→ real
-→ probada
-→ reusable
+MobActor representation
+combat animations finales
+hit reactions
+death presentation
+floating damage
+Fire Ball VFX
+Poison VFX
+miss/dodge/block visual feedback
 ```
 
-Después contenido.
+No mezclar un mega art pass con el backbone mecánico.
+
+F32 sigue dedicado a eso.
 
 ---
 
-# 83. EQUIPMENT / COMBAT FUTURO
+# 60. CURRENT TEST CHARACTER — ATILIO
 
-Equipment futuro puede aportar:
-
-```text
-Armor
-Magic Resistance
-Elemental Resistances
-Accuracy
-Block
-Crit
-Attack Speed
-Damage modifiers
-Penetration
-```
-
-Pero cada modifier entra sólo cuando exista su dominio real.
-
-No agregar stats de Equipment que Combat todavía no sabe resolver.
-
----
-
-# 84. RESET / COMBAT
-
-Reset futuro:
-
-```text
-Level 400
-→ Reset NPC
-→ Backend atomic transaction
-→ Level 1
-→ reset_count +1
-→ normal allocations cleared
-→ reset budget
-```
-
-Skills:
-
-```text
-ownership persiste
-usage reset-safe
-```
-
-Equipment inválido después de Reset:
-
-```text
-no puede permanecer equipado
-```
-
-Derived/Vitals:
-
-```text
-rebuild
-```
-
-Reset no se implementa dentro del arco inmediato F24.
-
----
-
-# 85. CURRENT TEST CHARACTERS
-
-## Atilio
+Checkpoint F26 observado:
 
 ```text
 Character ID 1
-Warrior
+Name Atilio
+Class Warrior
 Level 124
-EXP 50
 Reset 0
+```
 
-Primary revision 3
+Primary snapshot observado:
+
+```text
+Base:
+STR 25
+AGI 15
+VIT 25
+ENE 10
+
+Allocated:
+STR +12
+AGI +0
+VIT +0
+ENE +0
 
 Permanent:
 STR 37
 AGI 15
 VIT 25
 ENE 10
-
-Physical Power 330
-Magic Power 10
-Healing Power 10
-
-Bronze Sword durable +4
-Heal learned
 ```
 
-## Lyra
+Derived snapshot observado:
 
 ```text
-Character ID 2
-Archer
-Level 85
-Reset 0
+Max HP = 1184
+Max MP = 183
+Physical Power = 330
+Magic Power = 10
+Healing Power = 10
+Crit Chance = 0.0
+Crit Multiplier = 1.5
+Attack Speed ≈ 1.0166667
+Movement Speed = 4.0
+```
 
-Primary revision 0
-Allocated 0/0/0/0
+Skill:
 
-Permanent:
-STR 15
-AGI 30
-VIT 15
-ENE 15
-
-Physical Power 228
-Magic Power 15
-Healing Power 15
-
-Skills:
+```text
 heal
-poison
 ```
 
-Durante F23-C:
+Equipment histórico:
 
 ```text
-MP terminó observado en 258/298
-```
-
-## ProgAudit
-
-```text
-Character ID 5
-Warrior
-Level 11
-EXP 65/400
-
-Primary revision 7
-
-Permanent:
-STR 27
-AGI 15
-VIT 27
-ENE 13
-
-Max HP 288
-Max MP 79
-Physical 84
-Magic 13
-Healing 13
-
-Heal learned
-```
-
-## mago
-
-```text
-Character ID 6
-Mage
-Level 10
-
-Permanent ENE 50
-
-Max HP 160
-Max MP 406
-Magic Power 138
-
-Fire Ball learned
-```
-
-Fire Ball se aprendió mediante el flujo real de Trainer.
-
----
-
-# 86. F23 — AUDIT RESULT SUMMARY
-
-Fire Ball:
-
-```text
-Magic Power 138
-Raw 138
-Applied 138
-Goblin 5000 → 4862
-MP 406 → 376
-Cooldown 3.0
-```
-
-Poison Lyra:
-
-```text
-Physical Power 228
-Damage/tick 45
-Ticks 5
-Duration 5
-Total 225
-Cooldown 5
-Mana 20
-```
-
-Basic Attack regression durante F23-B:
-
-```text
-continuó funcionando
-```
-
-Startup durante F23-A/B/C:
-
-```text
-Skill Catalog Contract validado
-Integrated Balance Contract validado
-Game Server listening
-0 warnings/errors observados
+Bronze Sword +4
 ```
 
 ---
 
-# 87. DECISIONES HISTÓRICAS SUPERSEDIDAS
-
-Para evitar contradicciones entre volúmenes:
+# 61. DECISIONES HISTÓRICAS SUPERSEDIDAS
 
 ## Poison scaling
 
-Histórico conceptual de Volumen 3:
+Histórico conceptual:
 
 ```text
 Energy principal
 + posible Agility
 ```
 
-Estado REAL posterior F23:
+Estado real:
 
 ```text
 Physical Power * 0.20 per tick
@@ -3722,13 +3104,15 @@ Physical Power * 0.20 per tick
 
 Prevalece F23.
 
-Damage defensive taxonomy futura:
+## Poison defensive taxonomy
+
+Estado real F24:
 
 ```text
-magical / poison
+magical / poison / periodic
 ```
 
-es independiente del Scaling source.
+Independiente del scaling source.
 
 ## Reset Skill Usage
 
@@ -3736,16 +3120,14 @@ Histórico:
 
 ```text
 Skill aprendida podría quedar no usable post-reset
-por requirements
+por learning requirements
 ```
 
-Estado REAL F22-J:
+Estado real:
 
 ```text
 learning requirements no se revalidan al cast
 ```
-
-Prevalece F22-J.
 
 ## Critical
 
@@ -3755,14 +3137,12 @@ Histórico conceptual:
 base ~5%
 ```
 
-Estado REAL:
+Estado real:
 
 ```text
 Crit Chance 0.0
 Crit Multiplier 1.5
 ```
-
-Prevalece F22-G.
 
 ## Attack Speed
 
@@ -3772,21 +3152,64 @@ Histórico conceptual:
 generic percent bonus
 ```
 
-Estado REAL:
+Estado real:
 
 ```text
 class-specific diminishing curves
 ```
 
-Prevalece F22-H.
+## Damage pipeline
+
+Histórico PM5 previo:
+
+```text
+F24 planned
+```
+
+Estado real actual:
+
+```text
+F24 complete
+unified resolver live
+```
+
+## Hit / Dodge / Block
+
+Histórico PM5 previo:
+
+```text
+future F25
+```
+
+Estado real actual:
+
+```text
+F25 complete
+Basic Attack + Mob Attack consumers reales
+```
+
+## Mob offensive combat
+
+Histórico PM5 previo:
+
+```text
+gap F26 planned
+```
+
+Estado real actual:
+
+```text
+F26-A/B/C/D complete
+E2E tested
+```
 
 ---
 
-# 88. REGLAS DE COMBAT QUE NO DEBEN REGRESIONAR
+# 62. REGLAS DE COMBAT QUE NO DEBEN REGRESIONAR
 
 ```text
 1. Client nunca decide damage final.
-2. Backend nunca entra al hot loop por hit/cast/tick.
+2. Backend nunca entra al hot loop por hit/cast/tick/aggro/regen.
 3. Basic Attack es independiente de Skills.
 4. LEFT CLICK mob = Basic Attack PvE.
 5. RIGHT CLICK = selected Skill.
@@ -3800,110 +3223,176 @@ Prevalece F22-H.
 13. Physical Power alimenta Basic Attack.
 14. Magic Power alimenta Fire Ball.
 15. Healing Power alimenta Heal.
-16. Poison actual escala con Physical Power * 0.20.
-17. Poison ticks son server-side.
-18. Poison no stackea infinitamente.
-19. Current Poison replace policy se conserva hasta decisión explícita.
-20. WorldMobRegistry centraliza damage/death de mobs.
-21. EXP/Drop no dependen de BasicAttackCoordinator.
-22. Future Skill kills deben converger al mismo death lifecycle.
-23. Armor usa diminishing rating.
-24. Crit ocurre antes de Armor en el Basic Attack actual.
-25. AGI no aumenta Movement Speed directamente.
-26. Derived Stats no son verdad durable final.
-27. Vitals son compartidos por todas las fuentes de HP/MP.
-28. Damage Scaling, School y Element son conceptos distintos.
-29. Auto-chase sólo entra en su checkpoint dedicado.
-30. LOS será server-side cuando corresponda.
-31. DoTs no stackean infinitamente por defecto.
-32. CC futuro debe tener anti-permacontrol.
-33. PvP reutiliza Combat, no duplica un engine aparte.
-34. PK/Sin es dominio separado de hit/damage.
-35. Auto-defense es runtime Game Server.
-36. Criminal/Sin state durable pertenece a Backend/MySQL.
-37. Sinner red tint es representación de estado autoritativo.
-38. Priest confession depende de PvP/Sin + Economy real.
-39. Combat presentation no decide gameplay.
-40. No escalar contenido masivo antes de estabilizar cada nueva capability.
+16. Poison escala con Physical Power * 0.20.
+17. Poison es magical/poison/periodic defensivamente.
+18. Poison ticks son server-side.
+19. Poison no stackea infinitamente.
+20. Current Poison same-effect policy = replace.
+21. WorldMobRegistry centraliza damage/death de mobs.
+22. EXP/Drop no dependen de BasicAttackCoordinator.
+23. Skill kills convergen al mismo mob death lifecycle.
+24. Armor usa diminishing rating.
+25. Magic Resistance usa misma family de diminishing rating foundation.
+26. Element Resistances son segunda capa después de School.
+27. Crit no es decidido por Client.
+28. Block ocurre antes de Critical/Mitigation como multiplier foundation.
+29. Miss/Dodge no mutan HP.
+30. Acción válida con miss/dodge puede seguir accepted=true.
+31. Dodge y Block tienen cap foundation 0.75.
+32. Block foundation conserva 50% de damage antes de crit/mitigation.
+33. Accuracy/Evasion usan profiles, no fórmulas copiadas en coordinators.
+34. Current Character Accuracy = 100 + Effective AGI*2 + Equipment.
+35. Current Character Evasion = Effective AGI + Equipment.
+36. Hit Chance = Accuracy/(Accuracy+Evasion), con Evasion 0 → 1.0.
+37. AGI no aumenta Movement Speed directamente.
+38. Derived Stats no son verdad durable final.
+39. Vitals son compartidos por todas las fuentes de HP/MP.
+40. Damage Scaling, School, Element y Delivery son conceptos distintos.
+41. Basic Attack = physical/none/direct.
+42. Fire Ball = magical/fire/direct.
+43. Fire Ball foundation no crithea.
+44. Poison tick no crithea.
+45. Poison tick no hace nuevo hit roll por tick.
+46. Heal no usa offensive hit resolution.
+47. Mob Attack reutiliza Hit + Unified Damage + ServerVitalsState.
+48. Mob aggro es runtime Game Server.
+49. Mob target selection es server-side.
+50. Mob movement/chase/return es server-side.
+51. Mob combat profile vive en definition/domain, no Client.
+52. Training Goblin actual es foundation, no balance final.
+53. Player death por PvE es autoritativa.
+54. Player respawn actual = 3 s, position (0,0,0), full HP/MP.
+55. Mob libera target al morir el player.
+56. Mob retorna a spawn tras release/leash/target invalid.
+57. F26-E regen debe reutilizar Vitals/Derived, no crear segundo sistema.
+58. Regen timer/combat timer serán runtime, no durable.
+59. Auto-chase sólo entra en F27.
+60. LOS será server-side cuando corresponda.
+61. DoTs no stackean infinitamente por defecto.
+62. CC futuro debe tener anti-permacontrol.
+63. PvP reutiliza Combat, no duplica engine.
+64. PK/Sin es dominio separado de hit/damage.
+65. Auto-defense es runtime Game Server.
+66. Criminal/Sin state durable pertenece a Backend/MySQL.
+67. Sinner red tint es representación de estado autoritativo.
+68. Priest confession depende de PvP/Sin + Economy real.
+69. Combat presentation no decide gameplay.
+70. No escalar contenido masivo antes de estabilizar cada capability.
 ```
 
 ---
 
-# 89. NEXT EXACT CHECKPOINT
+# 63. NEXT EXACT CHECKPOINT
 
-Antes de escribir código F24:
+Estado de repositorios al momento de este documento:
 
 ```text
-1. reemplazar PROJECT_MEMORY_5.md con este archivo
+Client dev
+→ 51134e2e0033d70a1903153a94270aa8134aa1fb
+
+Game Server dev
+→ a9af9a1a26e3f3fee7c0557fcbbca8d58b9ba4df
+
+Backend dev
+→ ce3e0b02dbb1772204e12d1c2bb29d777b28b750
+```
+
+Antes de escribir F26-E en un nuevo chat:
+
+```text
+1. reemplazar PROJECT_MEMORY_5.md con ESTE archivo completo
 2. git status en Client
 3. confirmar que sólo cambió PROJECT_MEMORY_5.md
 4. commit documental
 5. push dev
 6. usuario dice "pusheado"
 7. verificar remoto
-8. recién entonces abrir F24-A
+8. recién entonces abrir F26-E
 ```
 
-Commit sugerido:
+Commit documental sugerido:
 
 ```text
-docs: close F23 and plan combat roadmap
+docs: update combat state through F26 pve loop
 ```
 
 Después:
 
 ```text
-F24-A — Damage Taxonomy + Resolution Context
+F26-E — HP/MP Regeneration Policy
 ```
-
-Será el próximo cambio permanente de gameplay.
 
 ---
 
-# 90. RESUMEN CORTO PARA RETOMAR
+# 64. PROMPT DE RETOMA PARA NUEVO CHAT
 
 ```text
-F22 ✅ COMPLETE
+Continuamos VHAL desde los PROJECT_MEMORY canónicos.
 
-F23-A Fire Ball Damage Foundation ✅
-F23-B Fire Ball Runtime Combat ✅
-F23-C Poison DoT Runtime ✅
+Leer obligatoriamente, en orden:
+PROJECT_MEMORY.md
+PROJECT_MEMORY_2.md
+PROJECT_MEMORY_3.md
+PROJECT_MEMORY_4.md
+PROJECT_MEMORY_5.md
 
-F23 — Skill Combat Effects ✅ COMPLETE
+y después revisar los repositorios reales en branch dev.
+
+Estado actual:
+
+F24 — Unified Damage & Mitigation ✅ COMPLETE
+F25 — Hit Resolution & Defensive Outcomes ✅ COMPLETE
+F26-A/B/C/D — PvE Enemy Combat Loop ✅ COMPLETE, probado E2E y pusheado
+
+Game Server HEAD esperado:
+a9af9a1a26e3f3fee7c0557fcbbca8d58b9ba4df
+feat: add authoritative pve enemy combat loop
+
+Siguiente scope ÚNICO:
+F26-E — HP/MP Regeneration Policy.
+
+No abrir F27 todavía.
+
+Mantener workflow:
+implementación → test → git status → review scope → commit → push → "pusheado".
 ```
 
-Current Heads:
+---
+
+# 65. RESUMEN CORTO PARA RETOMAR
 
 ```text
-Client:
-616dcc5c5f42235ee8ef90c4b0c178e58425ea98
+VHAL ya tiene:
 
-Game Server:
-a4836954a3e51246993d919e9903e091fc5b0c8a
+F22 Stats/Balance ✅
+F23 Heal + Fire Ball + Poison ✅
+F24 Unified Damage + Resistances ✅
+F25 Accuracy/Evasion/Dodge/Block ✅
+F26-A Aggro ✅
+F26-B Chase/Leash/Return ✅
+F26-C Mob Attack ✅
+F26-D Player Death/Respawn ✅
 
-Backend:
-ce3e0b02dbb1772204e12d1c2bb29d777b28b750
-```
+Training Goblin actual:
+Aggro 5
+Leash 10
+Move 2.5
+Range 1.5
+Cooldown 1.25
+Damage 200
+Accuracy 100
 
-Combat roadmap:
-
-```text
-F24 Unified Damage & Mitigation
-F25 Hit Resolution & Defensive Outcomes
-F26 PvE Enemy Combat Loop
-F27 Action Approach / Auto-Chase
-F28 Ranged / LOS / Projectile / Position Combat
-F29 General Status Effects / Crowd Control
-F30 PvP Combat Foundation
-F31 PK / Sin / Auto-Defense
-F32 Combat Presentation & Feel
-```
+Test E2E:
+aggro
+→ chase
+→ hit/miss
+→ player HP 1184→0
+→ release
+→ respawn 3 s
+→ full HP/MP
+→ mob return spawn
+✅
 
 NEXT:
-
-```text
-PROJECT_MEMORY_5 docs checkpoint
-→ push
-→ remote verification
-→ F24-A
+F26-E HP/MP Regeneration Policy
 ```
