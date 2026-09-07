@@ -420,7 +420,16 @@ func _process_movement_decision(
 	)
 
 
-	if request_id != latest_move_request_id:
+	var is_server_initiated_movement := (
+		request_id == 0
+	)
+
+
+	if (
+		not is_server_initiated_movement
+		and
+		request_id != latest_move_request_id
+	):
 		return
 
 
