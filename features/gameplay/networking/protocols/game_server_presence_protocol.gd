@@ -587,6 +587,14 @@ func _parse_world_mob_snapshot(
 		)
 	)
 
+	var status_effects := (
+		_parse_mob_status_effects(
+			data.get(
+				"status_effects",
+				[]
+			)
+		)
+	)
 
 	return {
 		"entity_id": entity_id,
@@ -609,6 +617,8 @@ func _parse_world_mob_snapshot(
 			"max_mp": max_mp,
 		},
 
+		"status_effects": status_effects,
+
 		"world": {
 			"map_id": map_id,
 
@@ -617,6 +627,210 @@ func _parse_world_mob_snapshot(
 			"rotation_y": rotation_y,
 		},
 	}
+
+# =========================================================
+# PARSE MOB STATUS EFFECTS
+# =========================================================
+
+func _parse_mob_status_effects(
+	value: Variant
+) -> Array:
+	var result: Array = []
+
+
+	if typeof(value) != TYPE_ARRAY:
+		return result
+
+
+	var entries: Array = (
+		value
+	)
+
+
+	for entry_value: Variant in entries:
+		if typeof(entry_value) != TYPE_DICTIONARY:
+			continue
+
+
+		var entry: Dictionary = (
+			entry_value
+		)
+
+
+		var effect_id := String(
+			entry.get(
+				"effect_id",
+				""
+			)
+		).strip_edges().to_lower()
+
+
+		var category := String(
+			entry.get(
+				"category",
+				""
+			)
+		).strip_edges().to_lower()
+
+
+		var stacks := int(
+			entry.get(
+				"stacks",
+				1
+			)
+		)
+
+
+		var remaining_duration_seconds := maxf(
+			float(
+				entry.get(
+					"remaining_duration_seconds",
+					0.0
+				)
+			),
+			0.0
+		)
+
+
+		if (
+			effect_id.is_empty()
+			or
+			category.is_empty()
+			or
+			stacks <= 0
+		):
+			continue
+
+
+		var source_value: Variant = (
+			entry.get(
+				"source",
+				{}
+			)
+		)
+
+
+		var modifiers_value: Variant = (
+			entry.get(
+				"modifiers",
+				{}
+			)
+		)
+
+
+		var control_value: Variant = (
+			entry.get(
+				"control",
+				{}
+			)
+		)
+
+
+		var periodic_value: Variant = (
+			entry.get(
+				"periodic",
+				{}
+			)
+		)
+
+
+		result.append(
+			{
+				"runtime_key": String(
+					entry.get(
+						"runtime_key",
+						effect_id
+					)
+				),
+
+				"effect_id": effect_id,
+
+				"category": category,
+
+				"stacks": stacks,
+
+				"max_stacks": maxi(
+					int(
+						entry.get(
+							"max_stacks",
+							1
+						)
+					),
+					1
+				),
+
+				"remaining_duration_seconds": (
+					remaining_duration_seconds
+				),
+
+				"source": (
+					(
+						source_value
+						as
+						Dictionary
+					).duplicate(
+						true
+					)
+					if
+					typeof(source_value)
+					==
+					TYPE_DICTIONARY
+					else
+					{}
+				),
+
+				"modifiers": (
+					(
+						modifiers_value
+						as
+						Dictionary
+					).duplicate(
+						true
+					)
+					if
+					typeof(modifiers_value)
+					==
+					TYPE_DICTIONARY
+					else
+					{}
+				),
+
+				"control": (
+					(
+						control_value
+						as
+						Dictionary
+					).duplicate(
+						true
+					)
+					if
+					typeof(control_value)
+					==
+					TYPE_DICTIONARY
+					else
+					{}
+				),
+
+				"periodic": (
+					(
+						periodic_value
+						as
+						Dictionary
+					).duplicate(
+						true
+					)
+					if
+					typeof(periodic_value)
+					==
+					TYPE_DICTIONARY
+					else
+					{}
+				),
+			}
+		)
+
+
+	return result
 
 # =========================================================
 # ROSTER INICIAL DEL MUNDO

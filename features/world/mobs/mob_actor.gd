@@ -25,6 +25,7 @@ var hp: int = 1
 
 var max_hp: int = 1
 
+var active_status_effects: Array = []
 
 # =========================================================
 # REFERENCIAS
@@ -157,6 +158,28 @@ func setup(
 	if new_alive != (new_hp > 0):
 		return false
 
+	var status_effects_value: Variant = (
+		snapshot.get(
+			"status_effects",
+			[]
+		)
+	)
+
+
+	if typeof(status_effects_value) != TYPE_ARRAY:
+		return false
+
+
+	var new_status_effects: Array = (
+		(
+			status_effects_value
+			as
+			Array
+		).duplicate(
+			true
+		)
+	)
+
 	var world_value: Variant = (
 		snapshot.get(
 			"world",
@@ -213,6 +236,10 @@ func setup(
 
 	max_hp = new_max_hp
 
+	active_status_effects = (
+		new_status_effects
+	)
+
 	position = world_position
 
 	rotation.y = world_rotation_y
@@ -241,6 +268,8 @@ func setup(
 		hp,
 		"/",
 		max_hp,
+		" | Status Effects: ",
+		active_status_effects.size(),
 		" | Posición: ",
 		position
 	)
@@ -277,12 +306,92 @@ func _refresh_labels() -> void:
 
 
 	if vitals_label != null:
+		var status_labels := PackedStringArray()
+
+
+		for status_value: Variant in active_status_effects:
+			if typeof(status_value) != TYPE_DICTIONARY:
+				continue
+
+
+			var status: Dictionary = (
+				status_value
+			)
+
+
+			var effect_id := String(
+				status.get(
+					"effect_id",
+					""
+				)
+			).strip_edges()
+
+
+			if effect_id.is_empty():
+				continue
+
+
+			var display_effect_id := (
+				effect_id
+				.replace(
+					"_",
+					" "
+				)
+				.capitalize()
+			)
+
+
+			var stacks := maxi(
+				int(
+					status.get(
+						"stacks",
+						1
+					)
+				),
+				1
+			)
+
+
+			if stacks > 1:
+				status_labels.append(
+					(
+						"%s x%d"
+						%
+						[
+							display_effect_id,
+							stacks,
+						]
+					)
+				)
+
+			else:
+				status_labels.append(
+					display_effect_id
+				)
+
+
+		var status_text := ""
+
+
+		if not status_labels.is_empty():
+			status_text = (
+				"\n["
+				+
+				" | ".join(
+					status_labels
+				)
+				+
+				"]"
+			)
+
+
 		vitals_label.text = (
-			"%d / %d HP"
+			"%d / %d HP%s"
 			%
 			[
 				hp,
 				max_hp,
+				status_text,
 			]
 		)
 

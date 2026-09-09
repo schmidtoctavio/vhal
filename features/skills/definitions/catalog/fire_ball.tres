@@ -7,7 +7,7 @@
 script = ExtResource("1_tfa2p")
 skill_id = &"fire_ball"
 display_name = "Fire Ball"
-description = "Lanza una bola de fuego sobre una posición y daña a los enemigos cercanos."
+description = "Lanza una bola de fuego sobre una posición, daña a los enemigos cercanos y los aturde brevemente."
 icon = ExtResource("1_ui36o")
 target_kind = "position"
 mana_cost = 30
