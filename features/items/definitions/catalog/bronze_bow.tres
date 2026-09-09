@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ItemDefinition" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://features/items/definitions/item_definition.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://icon.svg" id="2_icon"]
+
+[resource]
+script = ExtResource("1_item")
+item_id = &"bronze_bow"
+display_name = "Bronze Bow"
+description = "Un arco básico de entrenamiento."
+icon = ExtResource("2_icon")
+item_type = 2
+equipment_category_id = "weapon"
+hand_equip_mode_id = "two_hand"
+grid_height = 3

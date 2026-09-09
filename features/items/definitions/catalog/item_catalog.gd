@@ -10,6 +10,10 @@ const BRONZE_SWORD: ItemDefinition = preload(
 	"res://features/items/definitions/catalog/bronze_sword.tres"
 )
 
+const BRONZE_BOW: ItemDefinition = preload(
+	"res://features/items/definitions/catalog/bronze_bow.tres"
+)
+
 const HEALTH_POTION: ItemDefinition = preload(
 	"res://features/items/definitions/catalog/health_potion.tres"
 )
@@ -30,6 +34,7 @@ const SKILL_SCROLL_HEAL: ItemDefinition = preload(
 	"res://features/items/definitions/catalog/skill_scroll_heal.tres"
 )
 
+
 # =========================================================
 # CATÁLOGO
 # =========================================================
@@ -45,6 +50,9 @@ static func get_definition(
 	match normalized_id:
 		"bronze_sword":
 			return BRONZE_SWORD
+
+		"bronze_bow":
+			return BRONZE_BOW
 
 		"health_potion":
 			return HEALTH_POTION

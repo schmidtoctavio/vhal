@@ -199,11 +199,19 @@ func send_skill_cast_request(
 	var normalized_target: Dictionary = {}
 
 
+	# -----------------------------------------------------
+	# SELF
+	# -----------------------------------------------------
+
 	if target_kind == "self":
 		normalized_target = {
 			"kind": "self",
 		}
 
+
+	# -----------------------------------------------------
+	# ENTITY
+	# -----------------------------------------------------
 
 	elif target_kind == "entity":
 		var entity_id_value: Variant = (
@@ -235,6 +243,86 @@ func send_skill_cast_request(
 			"kind": "entity",
 
 			"entity_id": entity_id,
+		}
+
+
+	# -----------------------------------------------------
+	# POSITION
+	# -----------------------------------------------------
+
+	elif target_kind == "position":
+		var position_value: Variant = (
+			target.get(
+				"position",
+				null
+			)
+		)
+
+
+		if typeof(position_value) != TYPE_DICTIONARY:
+			return ERR_INVALID_PARAMETER
+
+
+		var position_data: Dictionary = (
+			position_value
+		)
+
+
+		if (
+			not position_data.has("x")
+			or
+			not position_data.has("y")
+			or
+			not position_data.has("z")
+		):
+			return ERR_INVALID_PARAMETER
+
+
+		var x_value: Variant = (
+			position_data["x"]
+		)
+
+		var y_value: Variant = (
+			position_data["y"]
+		)
+
+		var z_value: Variant = (
+			position_data["z"]
+		)
+
+
+		if (
+			typeof(x_value) != TYPE_FLOAT
+			and
+			typeof(x_value) != TYPE_INT
+		):
+			return ERR_INVALID_PARAMETER
+
+
+		if (
+			typeof(y_value) != TYPE_FLOAT
+			and
+			typeof(y_value) != TYPE_INT
+		):
+			return ERR_INVALID_PARAMETER
+
+
+		if (
+			typeof(z_value) != TYPE_FLOAT
+			and
+			typeof(z_value) != TYPE_INT
+		):
+			return ERR_INVALID_PARAMETER
+
+
+		normalized_target = {
+			"kind": "position",
+
+			"position": {
+				"x": float(x_value),
+				"y": float(y_value),
+				"z": float(z_value),
+			},
 		}
 
 

@@ -541,6 +541,118 @@ func _request_move_to_screen_position(
 	get_viewport().set_input_as_handled()
 
 # =========================================================
+# RESOLVER POSITION TARGET DESDE PANTALLA
+#
+# Esto es solamente picking local.
+#
+# La posición NO se vuelve autoritativa por haber sido
+# resuelta acá.
+# El Game Server la proyecta y valida nuevamente.
+# =========================================================
+
+func resolve_world_target_position(
+	screen_position: Vector2
+) -> Dictionary:
+	if player_actor == null:
+		return {
+			"ok": false,
+		}
+
+
+	if world_camera == null:
+		return {
+			"ok": false,
+		}
+
+
+	var ray_origin := (
+		world_camera.project_ray_origin(
+			screen_position
+		)
+	)
+
+	var ray_direction := (
+		world_camera.project_ray_normal(
+			screen_position
+		)
+	)
+
+	var ray_end := (
+		ray_origin
+		+
+		ray_direction
+		*
+		RAY_LENGTH
+	)
+
+
+	var space_state := (
+		player_actor
+		.get_world_3d()
+		.direct_space_state
+	)
+
+
+	var excluded_rids: Array[RID] = [
+		player_actor.get_rid()
+	]
+
+
+	if player_actor.interaction_area != null:
+		excluded_rids.append(
+			player_actor.interaction_area.get_rid()
+		)
+
+
+	var query := (
+		PhysicsRayQueryParameters3D.create(
+			ray_origin,
+			ray_end
+		)
+	)
+
+
+	query.collide_with_bodies = true
+
+	query.collide_with_areas = false
+
+	query.exclude = excluded_rids
+
+
+	var result := (
+		space_state.intersect_ray(
+			query
+		)
+	)
+
+
+	if result.is_empty():
+		return {
+			"ok": false,
+		}
+
+
+	var position_value: Variant = (
+		result.get(
+			"position",
+			null
+		)
+	)
+
+
+	if typeof(position_value) != TYPE_VECTOR3:
+		return {
+			"ok": false,
+		}
+
+
+	return {
+		"ok": true,
+
+		"position": position_value,
+	}
+
+# =========================================================
 # RESOLVER TARGET DE MOB
 # =========================================================
 

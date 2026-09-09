@@ -17,6 +17,7 @@ extends Resource
 
 @export var icon: Texture2D
 
+
 # =========================================================
 # TARGETING
 # =========================================================
@@ -25,14 +26,18 @@ const TARGET_SELF: String = "self"
 
 const TARGET_ENTITY: String = "entity"
 
+const TARGET_POSITION: String = "position"
+
 
 @export_group("Targeting")
 
 @export_enum(
 	"self",
-	"entity"
+	"entity",
+	"position"
 )
 var target_kind: String = TARGET_SELF
+
 
 # =========================================================
 # COSTOS

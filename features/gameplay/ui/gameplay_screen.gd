@@ -834,7 +834,7 @@ func _on_move_target_requested(
 # =========================================================
 
 func _on_skill_cast_requested(
-	_screen_position: Vector2,
+	screen_position: Vector2,
 	target_entity_id: String
 ) -> void:
 	if player_state == null:
@@ -923,6 +923,66 @@ func _on_skill_cast_requested(
 			),
 		}
 
+	# -----------------------------------------------------
+	# POSITION
+	# -----------------------------------------------------
+
+	elif (
+		target_kind
+		==
+		SkillDefinition.TARGET_POSITION
+	):
+		var position_result := (
+			player_input_controller
+			.resolve_world_target_position(
+				screen_position
+			)
+		)
+
+
+		if not bool(
+			position_result.get(
+				"ok",
+				false
+			)
+		):
+			print(
+				"GameplayScreen | Cast omitido",
+				" | Skill: ",
+				skill_id,
+				" | Reason: position_target_required"
+			)
+
+
+			return
+
+
+		var position_value: Variant = (
+			position_result.get(
+				"position",
+				null
+			)
+		)
+
+
+		if typeof(position_value) != TYPE_VECTOR3:
+			return
+
+
+		var world_position: Vector3 = (
+			position_value
+		)
+
+
+		target = {
+			"kind": "position",
+
+			"position": {
+				"x": world_position.x,
+				"y": world_position.y,
+				"z": world_position.z,
+			},
+		}
 
 	# -----------------------------------------------------
 	# CONFIGURACIÓN DE SKILL INVÁLIDA
