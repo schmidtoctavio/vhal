@@ -819,11 +819,19 @@ func _on_pvp_basic_attack_requested(
 
 
 	print(
-		"GameplayScreen | PvP Basic Attack target preparado",
+		"GameplayScreen | PvP Basic Attack solicitado",
 		" | Entity: ",
 		entity_id
 	)
 
+
+	basic_attack_intent_requested.emit(
+		{
+			"kind": "entity",
+
+			"entity_id": entity_id,
+		}
+	)
 
 func _on_pvp_skill_cast_requested(
 	_screen_position: Vector2,
