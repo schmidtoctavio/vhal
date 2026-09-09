@@ -693,6 +693,21 @@ func _spawn_player_from_state() -> bool:
 			_on_basic_attack_requested
 		)
 
+	if not player_input_controller.pvp_basic_attack_requested.is_connected(
+		_on_pvp_basic_attack_requested
+	):
+		player_input_controller.pvp_basic_attack_requested.connect(
+			_on_pvp_basic_attack_requested
+		)
+
+
+	if not player_input_controller.pvp_skill_cast_requested.is_connected(
+		_on_pvp_skill_cast_requested
+	):
+		player_input_controller.pvp_skill_cast_requested.connect(
+			_on_pvp_skill_cast_requested
+		)
+
 	if not player_input_controller.npc_clicked.is_connected(
 		_on_npc_clicked
 	):
@@ -783,6 +798,52 @@ func _refresh_character_debug() -> void:
 		character.character_class,
 		" | Nivel: ",
 		character.level
+	)
+
+# =========================================================
+# PvP TARGETING FOUNDATION
+# =========================================================
+
+func _on_pvp_basic_attack_requested(
+	target_entity_id: String
+) -> void:
+	var entity_id := (
+		target_entity_id
+		.strip_edges()
+		.to_lower()
+	)
+
+
+	if entity_id.is_empty():
+		return
+
+
+	print(
+		"GameplayScreen | PvP Basic Attack target preparado",
+		" | Entity: ",
+		entity_id
+	)
+
+
+func _on_pvp_skill_cast_requested(
+	_screen_position: Vector2,
+	target_entity_id: String
+) -> void:
+	var entity_id := (
+		target_entity_id
+		.strip_edges()
+		.to_lower()
+	)
+
+
+	if entity_id.is_empty():
+		return
+
+
+	print(
+		"GameplayScreen | PvP Skill target preparado",
+		" | Entity: ",
+		entity_id
 	)
 
 # =========================================================

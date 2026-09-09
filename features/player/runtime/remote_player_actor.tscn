@@ -3,6 +3,10 @@
 [ext_resource type="Script" uid="uid://6tqpv7d6v860" path="res://features/player/runtime/remote_player_actor.gd" id="1_5axhk"]
 [ext_resource type="PackedScene" uid="uid://em77q7ge8ffh" path="res://features/player/visual/character_visual.tscn" id="2_elfek"]
 
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_tnipg"]
+radius = 0.4
+height = 0.9
+
 [node name="RemotePlayerActor" type="Node3D" unique_id=870407550]
 script = ExtResource("1_5axhk")
 
@@ -11,3 +15,11 @@ script = ExtResource("1_5axhk")
 [node name="NameLabel" type="Label3D" parent="." unique_id=1652997866]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0)
 billboard = 1
+
+[node name="PvpTargetArea" type="Area3D" parent="." unique_id=2143476062]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+collision_layer = 16
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PvpTargetArea" unique_id=518816250]
+shape = SubResource("CapsuleShape3D_tnipg")

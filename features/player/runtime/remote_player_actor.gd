@@ -39,6 +39,31 @@ var level: int = 1
 var map_id: String = ""
 
 # =========================================================
+# PvP TARGET
+# =========================================================
+
+func get_pvp_entity_id() -> String:
+	if peer_id <= 1:
+		return ""
+
+
+	return (
+		"player:"
+		+
+		str(peer_id)
+	)
+
+
+func is_pvp_targetable() -> bool:
+	return (
+		peer_id > 1
+		and
+		character_id > 0
+		and
+		not map_id.is_empty()
+	)
+
+# =========================================================
 # ESTADO DE MOVIMIENTO REMOTO
 # =========================================================
 

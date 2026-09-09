@@ -22,6 +22,16 @@ signal basic_attack_requested(
 	target_entity_id: String
 )
 
+signal pvp_basic_attack_requested(
+	target_entity_id: String
+)
+
+
+signal pvp_skill_cast_requested(
+	screen_position: Vector2,
+	target_entity_id: String
+)
+
 signal world_drop_pickup_requested(
 	entity_id: String
 )
@@ -199,6 +209,20 @@ func _input(
 		# -------------------------------------------------
 
 		if mouse_event.ctrl_pressed:
+			var pvp_target_entity_id := (
+				_resolve_pvp_player_entity_id(
+					mouse_event.position
+				)
+			)
+
+
+			if not pvp_target_entity_id.is_empty():
+				pvp_skill_cast_requested.emit(
+					mouse_event.position,
+					pvp_target_entity_id
+				)
+
+
 			get_viewport().set_input_as_handled()
 
 
@@ -255,6 +279,19 @@ func _input(
 	# -----------------------------------------------------
 
 	if mouse_event.ctrl_pressed:
+		var pvp_target_entity_id := (
+			_resolve_pvp_player_entity_id(
+				mouse_event.position
+			)
+		)
+
+
+		if not pvp_target_entity_id.is_empty():
+			pvp_basic_attack_requested.emit(
+				pvp_target_entity_id
+			)
+
+
 		get_viewport().set_input_as_handled()
 
 
@@ -651,6 +688,168 @@ func resolve_world_target_position(
 
 		"position": position_value,
 	}
+
+# =========================================================
+# RESOLVER TARGET PvP
+#
+# CLIENT-SIDE PICKING ÚNICAMENTE.
+#
+# El resultado NO autoriza PvP.
+#
+# La selección local sólo identifica qué RemotePlayerActor
+# estaba debajo del cursor.
+# =========================================================
+
+func _resolve_pvp_player_entity_id(
+	screen_position: Vector2
+) -> String:
+	if player_actor == null:
+		return ""
+
+
+	if world_camera == null:
+		return ""
+
+
+	var ray_origin := (
+		world_camera.project_ray_origin(
+			screen_position
+		)
+	)
+
+
+	var ray_direction := (
+		world_camera.project_ray_normal(
+			screen_position
+		)
+	)
+
+
+	var ray_end := (
+		ray_origin
+		+
+		ray_direction
+		*
+		RAY_LENGTH
+	)
+
+
+	var space_state := (
+		player_actor
+		.get_world_3d()
+		.direct_space_state
+	)
+
+
+	var query := (
+		PhysicsRayQueryParameters3D.create(
+			ray_origin,
+			ray_end
+		)
+	)
+
+
+	query.collide_with_bodies = false
+
+	query.collide_with_areas = true
+
+
+	# -----------------------------------------------------
+	# Collision Layer 5 únicamente.
+	#
+	# 1 << 4 = 16
+	# -----------------------------------------------------
+
+	query.collision_mask = 16
+
+
+	var result := (
+		space_state.intersect_ray(
+			query
+		)
+	)
+
+
+	if result.is_empty():
+		return ""
+
+
+	var collider_value: Variant = (
+		result.get(
+			"collider",
+			null
+		)
+	)
+
+
+	var remote_player := (
+		_find_remote_player_actor_from_collider(
+			collider_value
+		)
+	)
+
+
+	if remote_player == null:
+		return ""
+
+
+	if not remote_player.is_pvp_targetable():
+		return ""
+
+
+	var entity_id := (
+		remote_player.get_pvp_entity_id()
+	)
+
+
+	if entity_id.is_empty():
+		return ""
+
+
+	print(
+		"PlayerInputController | Target PvP detectado",
+		" | Entity: ",
+		entity_id,
+		" | Peer: ",
+		remote_player.peer_id,
+		" | Personaje: ",
+		remote_player.character_name
+	)
+
+
+	return entity_id
+
+
+# =========================================================
+# BUSCAR REMOTE PLAYER DESDE COLLIDER
+# =========================================================
+
+func _find_remote_player_actor_from_collider(
+	collider_value: Variant
+) -> RemotePlayerActor:
+	var current_node := (
+		collider_value
+		as Node
+	)
+
+
+	while current_node != null:
+		var remote_player := (
+			current_node
+			as RemotePlayerActor
+		)
+
+
+		if remote_player != null:
+			return remote_player
+
+
+		current_node = (
+			current_node.get_parent()
+		)
+
+
+	return null
 
 # =========================================================
 # RESOLVER TARGET DE MOB
