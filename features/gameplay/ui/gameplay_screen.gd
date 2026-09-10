@@ -837,6 +837,14 @@ func _on_pvp_skill_cast_requested(
 	_screen_position: Vector2,
 	target_entity_id: String
 ) -> void:
+	if player_state == null:
+		return
+
+
+	if player_state.skill_hotbar == null:
+		return
+
+
 	var entity_id := (
 		target_entity_id
 		.strip_edges()
@@ -848,10 +856,71 @@ func _on_pvp_skill_cast_requested(
 		return
 
 
+	var skill := (
+		player_state
+		.skill_hotbar
+		.get_selected_skill()
+	)
+
+
+	if skill == null:
+		return
+
+
+	var skill_id := String(
+		skill.skill_id
+	).strip_edges().to_lower()
+
+
+	if skill_id.is_empty():
+		return
+
+
+	var target_kind := String(
+		skill.target_kind
+	).strip_edges().to_lower()
+
+
+	# F30-C:
+	# Ctrl+Right sobre Player sólo ejecuta Entity Skills.
+	#
+	# Position Skills pasan a F30-D.
+	# Self Skills no deben transformarse en PvP target.
+
+	if (
+		target_kind
+		!=
+		SkillDefinition.TARGET_ENTITY
+	):
+		print(
+			"GameplayScreen | PvP Skill omitida",
+			" | Skill: ",
+			skill_id,
+			" | Target Kind: ",
+			target_kind,
+			" | Reason: entity_skill_required"
+		)
+
+
+		return
+
+
 	print(
-		"GameplayScreen | PvP Skill target preparado",
+		"GameplayScreen | PvP Skill solicitada",
+		" | Skill: ",
+		skill_id,
 		" | Entity: ",
 		entity_id
+	)
+
+
+	skill_cast_intent_requested.emit(
+		skill_id,
+		{
+			"kind": "entity",
+
+			"entity_id": entity_id,
+		}
 	)
 
 # =========================================================
