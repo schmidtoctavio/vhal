@@ -1,7 +1,9 @@
 [gd_scene format=3 uid="uid://b50hn6l67nwcv"]
 
 [ext_resource type="Script" uid="uid://cs1nv835806qx" path="res://features/characters/ui/character_create_screen.gd" id="1_7g6dn"]
+[ext_resource type="Theme" uid="uid://2jgeamx0m0wb" path="res://assets/ui/vhal/theme/vhal_ui_theme.tres" id="1_el51j"]
 [ext_resource type="PackedScene" uid="uid://bwwkopw7i2hwa" path="res://shared/ui/generic_button.tscn" id="2_el51j"]
+[ext_resource type="Texture2D" uid="uid://yrmou6m8piug" path="res://assets/ui/vhal/panels/window_frame_generic.png" id="3_hkysp"]
 
 [node name="CharacterCreateScreen" type="Control" unique_id=93574927]
 layout_mode = 3
@@ -10,6 +12,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("1_el51j")
 script = ExtResource("1_7g6dn")
 
 [node name="Background" type="ColorRect" parent="." unique_id=8506279]
@@ -44,15 +47,16 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -151.0
+offset_top = 16.0
 offset_right = 151.0
-offset_bottom = 34.0
+offset_bottom = 50.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 24
 text = "CREAR PERSONAJE"
 horizontal_alignment = 1
 
 [node name="CreationPanel" type="Control" parent="UILayer" unique_id=1546527634]
-custom_minimum_size = Vector2(360, 430)
+custom_minimum_size = Vector2(360, 400)
 layout_mode = 1
 anchors_preset = 6
 anchor_left = 1.0
@@ -65,15 +69,36 @@ offset_bottom = 215.0
 grow_horizontal = 0
 grow_vertical = 2
 
-[node name="PanelBackground" type="ColorRect" parent="UILayer/CreationPanel" unique_id=1903869571]
+[node name="PanelBackgroundMargin" type="MarginContainer" parent="UILayer/CreationPanel" unique_id=2069434831]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="PanelBackground" type="ColorRect" parent="UILayer/CreationPanel/PanelBackgroundMargin" unique_id=1808531048]
+layout_mode = 2
 mouse_filter = 2
-color = Color(0.6666667, 0.039215688, 0.047058824, 0.0627451)
+color = Color(0.0627451, 0.07058824, 0.08627451, 1)
+
+[node name="PanelFrame" type="NinePatchRect" parent="UILayer/CreationPanel" unique_id=480226951]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_hkysp")
+draw_center = false
+patch_margin_left = 38
+patch_margin_top = 38
+patch_margin_right = 38
+patch_margin_bottom = 38
 
 [node name="ContentMargin" type="MarginContainer" parent="UILayer/CreationPanel" unique_id=958505792]
 layout_mode = 1
