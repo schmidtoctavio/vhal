@@ -1,22 +1,21 @@
 [gd_scene format=3 uid="uid://s7leud2k6pax"]
 
-[ext_resource type="Texture2D" uid="uid://dppbcprorsb43" path="res://assets/ui/vhal/slots/slot_normal.png" id="1_fs6j1"]
-[ext_resource type="Texture2D" uid="uid://b66uhojhdhppt" path="res://assets/ui/vhal/slots/slot_hover.png" id="2_5owf7"]
+[ext_resource type="Texture2D" uid="uid://crdx66c5i3g2w" path="res://assets/ui/vhal/slots/item_slot_normal.png" id="1_bw5wb"]
 [ext_resource type="Script" uid="uid://cfrh15df8f4n" path="res://features/items/ui/item_slot.gd" id="2_fs6j1"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ft44e"]
-texture = ExtResource("1_fs6j1")
+texture = ExtResource("1_bw5wb")
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_0mh36"]
-texture = ExtResource("2_5owf7")
-modulate_color = Color(0.7666196, 0.76661956, 0.76661956, 1)
+texture = ExtResource("1_bw5wb")
+modulate_color = Color(1.353256, 1.3319061, 1.353256, 1)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_lu7ke"]
-texture = ExtResource("2_5owf7")
+texture = ExtResource("1_bw5wb")
 modulate_color = Color(0.36282945, 0.36282945, 0.36282945, 1)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_wtsi1"]
-texture = ExtResource("1_fs6j1")
+texture = ExtResource("1_bw5wb")
 modulate_color = Color(0.09239707, 0.09239706, 0.09239706, 1)
 
 [node name="ItemSlot" type="Button" unique_id=447231750]

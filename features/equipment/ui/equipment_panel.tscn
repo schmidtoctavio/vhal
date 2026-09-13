@@ -1,21 +1,35 @@
 [gd_scene format=3 uid="uid://b0n65pcpcprme"]
 
-[ext_resource type="Texture2D" uid="uid://c44dvek1tqhn6" path="res://assets/ui/kenney_adventure/pannels/panel_brown_dark.png" id="1_e20hi"]
 [ext_resource type="Script" uid="uid://cxhibxq8d6buh" path="res://features/equipment/ui/equipment_panel.gd" id="2_57add"]
 [ext_resource type="PackedScene" uid="uid://bfd8lhb01abi3" path="res://features/equipment/ui/equipment_slot.tscn" id="2_e20hi"]
+[ext_resource type="Texture2D" uid="uid://dbjrhl5378rl2" path="res://assets/ui/vhal/equipment_slots/slot_equip_helm.png" id="4_hhmiy"]
+[ext_resource type="Texture2D" uid="uid://nvv2tv1ehrv" path="res://assets/ui/vhal/equipment_slots/slot_equip_armor.png" id="5_goifn"]
+[ext_resource type="Texture2D" uid="uid://bgylacmt3jw8t" path="res://assets/ui/vhal/equipment_slots/slot_equip_pants.png" id="6_goifn"]
+[ext_resource type="Texture2D" uid="uid://6k1w43nxxe3b" path="res://assets/ui/vhal/equipment_slots/slot_equip_gloves.png" id="6_q6ven"]
+[ext_resource type="Texture2D" uid="uid://cyl6otbe6prmf" path="res://assets/ui/vhal/equipment_slots/slot_equip_boots.png" id="7_33ikj"]
+[ext_resource type="Texture2D" uid="uid://cj5m8pnkb552w" path="res://assets/ui/vhal/equipment_slots/slot_equip_weapon.png" id="8_lm40w"]
+[ext_resource type="Texture2D" uid="uid://cyetx6u7uabbl" path="res://assets/ui/vhal/equipment_slots/slot_equip_ring.png" id="9_lfaue"]
+[ext_resource type="Texture2D" uid="uid://b42gm0idef5uu" path="res://assets/ui/vhal/equipment_slots/slot_equip_offhand.png" id="10_q6ven"]
+[ext_resource type="Texture2D" uid="uid://fr04042gmsyf" path="res://assets/ui/vhal/equipment_slots/slot_equip_wings.png" id="11_33ikj"]
+[ext_resource type="Texture2D" uid="uid://dxrv3in31s173" path="res://assets/ui/vhal/equipment_slots/slot_equip_pendant.png" id="12_lm40w"]
 
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_tnipg"]
-texture = ExtResource("1_e20hi")
-texture_margin_left = 16.0
-texture_margin_top = 16.0
-texture_margin_right = 16.0
-texture_margin_bottom = 16.0
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lm40w"]
+bg_color = Color(0.08235294, 0.08627451, 0.09803922, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.44705883, 0.3372549, 0.15294118, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [node name="EquipmentPanel" type="PanelContainer" unique_id=143240848]
 custom_minimum_size = Vector2(290, 300)
 offset_right = 360.0
 offset_bottom = 270.0
-theme_override_styles/panel = SubResource("StyleBoxTexture_tnipg")
+theme_override_styles/panel = SubResource("StyleBoxFlat_lm40w")
 script = ExtResource("2_57add")
 
 [node name="ContentMargin" type="MarginContainer" parent="." unique_id=1550567042]
@@ -28,85 +42,84 @@ theme_override_constants/margin_bottom = 8
 [node name="EquipmentLayout" type="Control" parent="ContentMargin" unique_id=1305196880]
 layout_mode = 2
 
-[node name="EquipmentTitle" type="Label" parent="ContentMargin/EquipmentLayout" unique_id=612458491]
-layout_mode = 0
-offset_left = 10.0
-offset_top = 5.0
-offset_right = 132.0
-offset_bottom = 28.0
-text = "EQUIPAMIENTO"
-horizontal_alignment = 1
-
 [node name="HeadSlot" parent="ContentMargin/EquipmentLayout" unique_id=1692424194 instance=ExtResource("2_e20hi")]
 layout_mode = 0
-offset_left = 118.0
+offset_left = 120.0
 offset_top = 28.0
-offset_right = 172.0
+offset_right = 170.0
 offset_bottom = 78.0
 text = "HEAD"
+placeholder_icon = ExtResource("4_hhmiy")
 
 [node name="ChestSlot" parent="ContentMargin/EquipmentLayout" unique_id=1661387509 instance=ExtResource("2_e20hi")]
 layout_mode = 0
-offset_left = 117.0
+offset_left = 120.0
 offset_top = 84.0
-offset_right = 174.0
+offset_right = 170.0
 offset_bottom = 134.0
 text = "CHEST"
 slot_id = &"chest"
+placeholder_icon = ExtResource("5_goifn")
 
 [node name="PantsSlot" parent="ContentMargin/EquipmentLayout" unique_id=1253355209 instance=ExtResource("2_e20hi")]
 layout_mode = 0
-offset_left = 118.0
+offset_left = 120.0
 offset_top = 136.0
-offset_right = 176.0
+offset_right = 170.0
 offset_bottom = 186.0
 text = "PANTS"
 slot_id = &"pants"
+placeholder_icon = ExtResource("6_goifn")
 
 [node name="GlovesSlot" parent="ContentMargin/EquipmentLayout" unique_id=1654688961 instance=ExtResource("2_e20hi")]
 layout_mode = 0
-offset_left = 82.0
+offset_left = 89.0
 offset_top = 200.0
-offset_right = 145.0
+offset_right = 139.0
 offset_bottom = 250.0
 text = "GLOVES"
 slot_id = &"gloves"
+placeholder_icon = ExtResource("6_q6ven")
 
 [node name="BootsSlot" parent="ContentMargin/EquipmentLayout" unique_id=240095784 instance=ExtResource("2_e20hi")]
 layout_mode = 0
-offset_left = 165.0
-offset_top = 214.0
-offset_right = 224.0
-offset_bottom = 264.0
+offset_left = 170.0
+offset_top = 200.0
+offset_right = 220.0
+offset_bottom = 250.0
 text = "BOOTS"
 slot_id = &"boots"
+placeholder_icon = ExtResource("7_33ikj")
 
 [node name="MainHandSlot" parent="ContentMargin/EquipmentLayout" unique_id=1217972902 instance=ExtResource("2_e20hi")]
 layout_mode = 0
-offset_left = 25.0
+offset_left = 34.0
 offset_top = 100.0
-offset_right = 92.0
-offset_bottom = 151.0
+offset_right = 84.0
+offset_bottom = 150.0
 text = "MAIN"
 slot_id = &"main_hand"
+placeholder_icon = ExtResource("8_lm40w")
 
 [node name="OffHandSlot" parent="ContentMargin/EquipmentLayout" unique_id=464494350 instance=ExtResource("2_e20hi")]
 layout_mode = 0
-offset_left = 205.0
+offset_left = 214.0
 offset_top = 102.0
-offset_right = 272.0
+offset_right = 264.0
 offset_bottom = 152.0
 text = "OFF"
 slot_id = &"off_hand"
+placeholder_icon = ExtResource("10_q6ven")
 
 [node name="WingsSlot" parent="ContentMargin/EquipmentLayout" unique_id=220090904 instance=ExtResource("2_e20hi")]
 layout_mode = 0
-offset_left = 190.0
+offset_left = 195.0
 offset_top = 18.0
-offset_right = 249.0
+offset_right = 245.0
 offset_bottom = 68.0
 text = "WINGS"
 slot_id = &"wings"
+placeholder_icon = ExtResource("11_33ikj")
 
 [node name="PendantSlot" parent="ContentMargin/EquipmentLayout" unique_id=1173493330 instance=ExtResource("2_e20hi")]
 layout_mode = 0
@@ -115,14 +128,16 @@ offset_top = 74.0
 offset_right = 208.0
 offset_bottom = 106.0
 slot_id = &"pendant"
+placeholder_icon = ExtResource("12_lm40w")
 
 [node name="LeftRingSlot" parent="ContentMargin/EquipmentLayout" unique_id=879719064 instance=ExtResource("2_e20hi")]
 layout_mode = 0
 offset_left = 71.0
-offset_top = 157.0
+offset_top = 160.0
 offset_right = 103.0
-offset_bottom = 189.0
+offset_bottom = 192.0
 slot_id = &"ring_left"
+placeholder_icon = ExtResource("9_lfaue")
 
 [node name="RightRingSlot" parent="ContentMargin/EquipmentLayout" unique_id=177346221 instance=ExtResource("2_e20hi")]
 layout_mode = 0
@@ -131,3 +146,4 @@ offset_top = 160.0
 offset_right = 218.0
 offset_bottom = 192.0
 slot_id = &"ring_right"
+placeholder_icon = ExtResource("9_lfaue")

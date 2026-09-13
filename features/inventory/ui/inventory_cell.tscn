@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://cqse0iuppu6i4"]
 
-[ext_resource type="Texture2D" uid="uid://dppbcprorsb43" path="res://assets/ui/vhal/slots/slot_normal.png" id="1_d8q0i"]
+[ext_resource type="Texture2D" uid="uid://crdx66c5i3g2w" path="res://assets/ui/vhal/slots/item_slot_normal.png" id="1_vkisg"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_2m14e"]
-texture = ExtResource("1_d8q0i")
+texture = ExtResource("1_vkisg")
 
 [node name="InventoryCell" type="PanelContainer" unique_id=404118048]
 custom_minimum_size = Vector2(40, 40)

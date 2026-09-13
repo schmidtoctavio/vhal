@@ -1,8 +1,9 @@
 [gd_scene format=3 uid="uid://b0oajamd8txe4"]
 
 [ext_resource type="Script" uid="uid://bsdcr5e5qdi22" path="res://features/auth/ui/login_screen.gd" id="1_q5lm8"]
-[ext_resource type="Texture2D" uid="uid://s4c4onontmm4" path="res://assets/ui/vhal/panels/panel_frame_ornate_red.png" id="2_wp4a1"]
 [ext_resource type="PackedScene" uid="uid://bwwkopw7i2hwa" path="res://shared/ui/generic_button.tscn" id="3_ef46a"]
+[ext_resource type="Texture2D" uid="uid://yrmou6m8piug" path="res://assets/ui/vhal/panels/window_frame_generic.png" id="3_qmxht"]
+[ext_resource type="Theme" uid="uid://2jgeamx0m0wb" path="res://assets/ui/vhal/theme/vhal_ui_theme.tres" id="3_wp4a1"]
 
 [node name="LoginScreen" type="Control" unique_id=1223611037]
 layout_mode = 3
@@ -11,6 +12,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("3_wp4a1")
 script = ExtResource("1_q5lm8")
 
 [node name="Background" type="ColorRect" parent="." unique_id=1838439466]
@@ -35,16 +37,36 @@ grow_vertical = 2
 custom_minimum_size = Vector2(420, 350)
 layout_mode = 2
 
-[node name="PanelFrame" type="TextureRect" parent="CenterArea/LoginPanel" unique_id=212598043]
+[node name="PanelBackgroundMargin" type="MarginContainer" parent="CenterArea/LoginPanel" unique_id=1388903878]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 22
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 22
+
+[node name="PanelBackground" type="ColorRect" parent="CenterArea/LoginPanel/PanelBackgroundMargin" unique_id=1891417307]
+layout_mode = 2
 mouse_filter = 2
-texture = ExtResource("2_wp4a1")
-expand_mode = 1
+color = Color(0.0627451, 0.07058824, 0.08627451, 1)
+
+[node name="PanelFrame" type="NinePatchRect" parent="CenterArea/LoginPanel" unique_id=622977236]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_qmxht")
+draw_center = false
+patch_margin_left = 38
+patch_margin_top = 38
+patch_margin_right = 38
+patch_margin_bottom = 38
 
 [node name="ContentMargin" type="MarginContainer" parent="CenterArea/LoginPanel" unique_id=2116726544]
 layout_mode = 1
@@ -53,18 +75,18 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 58
-theme_override_constants/margin_top = 55
-theme_override_constants/margin_right = 58
-theme_override_constants/margin_bottom = 50
+theme_override_constants/margin_left = 38
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 38
+theme_override_constants/margin_bottom = 32
 
 [node name="LoginContent" type="VBoxContainer" parent="CenterArea/LoginPanel/ContentMargin" unique_id=1673552388]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 
 [node name="TitleLabel" type="Label" parent="CenterArea/LoginPanel/ContentMargin/LoginContent" unique_id=601785888]
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 16
 text = "INICIAR SESIÓN"
 horizontal_alignment = 1
 
@@ -76,7 +98,7 @@ layout_mode = 2
 text = "USUARIO"
 
 [node name="UsernameInput" type="LineEdit" parent="CenterArea/LoginPanel/ContentMargin/LoginContent/UsernameGroup" unique_id=1601696651]
-custom_minimum_size = Vector2(0, 38)
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 placeholder_text = "Ingresá tu usuario"
 
@@ -88,7 +110,7 @@ layout_mode = 2
 text = "CONTRASEÑA"
 
 [node name="PasswordInput" type="LineEdit" parent="CenterArea/LoginPanel/ContentMargin/LoginContent/PasswordGroup" unique_id=1719836682]
-custom_minimum_size = Vector2(0, 38)
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
 placeholder_text = "Ingresá tu contraseña"
 secret = true
