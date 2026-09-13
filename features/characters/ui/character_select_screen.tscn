@@ -1,7 +1,9 @@
 [gd_scene format=3 uid="uid://714i0frowacj"]
 
+[ext_resource type="Theme" uid="uid://2jgeamx0m0wb" path="res://assets/ui/vhal/theme/vhal_ui_theme.tres" id="1_dmkp8"]
 [ext_resource type="Script" uid="uid://dkqutsqmddunn" path="res://features/characters/ui/character_select_screen.gd" id="1_tbvb3"]
 [ext_resource type="PackedScene" uid="uid://bwwkopw7i2hwa" path="res://shared/ui/generic_button.tscn" id="2_dmkp8"]
+[ext_resource type="Texture2D" uid="uid://yrmou6m8piug" path="res://assets/ui/vhal/panels/window_frame_generic.png" id="3_tb0u5"]
 
 [node name="CharacterSelectScreen" type="Control" unique_id=655020592]
 layout_mode = 3
@@ -10,6 +12,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("1_dmkp8")
 script = ExtResource("1_tbvb3")
 
 [node name="Background" type="ColorRect" parent="." unique_id=509208887]
@@ -47,25 +50,49 @@ offset_left = -151.0
 offset_right = 151.0
 offset_bottom = 34.0
 grow_horizontal = 2
-theme_override_font_sizes/font_size = 24
+offset_transform_position = Vector2(0, 16)
+theme_override_font_sizes/font_size = 20
 text = "SELECCIÓN DE PERSONAJE"
 horizontal_alignment = 1
 
 [node name="CharacterInfoPanel" type="Control" parent="UILayer" unique_id=1863252509]
 custom_minimum_size = Vector2(300, 170)
 anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
+offset_left = 20.0
+offset_top = 60.0
+offset_right = 320.0
+offset_bottom = 230.0
 
-[node name="PanelBackground" type="ColorRect" parent="UILayer/CharacterInfoPanel" unique_id=1513401535]
+[node name="PanelBackgroundMargin" type="MarginContainer" parent="UILayer/CharacterInfoPanel" unique_id=987120309]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="PanelBackground" type="ColorRect" parent="UILayer/CharacterInfoPanel/PanelBackgroundMargin" unique_id=1128491782]
+layout_mode = 2
 mouse_filter = 2
-color = Color(0.6666667, 0.039215688, 0.047058824, 0.0627451)
+color = Color(0.0627451, 0.07058824, 0.08627451, 1)
+
+[node name="PanelFrame" type="NinePatchRect" parent="UILayer/CharacterInfoPanel" unique_id=1522300930]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_tb0u5")
+draw_center = false
+patch_margin_left = 38
+patch_margin_top = 38
+patch_margin_right = 38
+patch_margin_bottom = 38
 
 [node name="ContentMargin" type="MarginContainer" parent="UILayer/CharacterInfoPanel" unique_id=1508704078]
 layout_mode = 1
@@ -74,10 +101,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 18
-theme_override_constants/margin_top = 14
-theme_override_constants/margin_right = 18
-theme_override_constants/margin_bottom = 14
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 26
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 26
 
 [node name="InfoContent" type="VBoxContainer" parent="UILayer/CharacterInfoPanel/ContentMargin" unique_id=1457876337]
 layout_mode = 2
@@ -118,7 +145,7 @@ offset_top = -40.0
 offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 0
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 alignment = 1
 
 [node name="CreateButton" parent="UILayer/ActionsRow" unique_id=4979020 instance=ExtResource("2_dmkp8")]
